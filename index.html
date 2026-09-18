@@ -178,7 +178,7 @@
             if (savedData) {
                 activeDates = JSON.parse(savedData);
                 if (activeDates.length > 0) {
-                    selectedDateId = activeDates[0].id; // Выбираем первый проект
+                    selectedDateId = activeDates[0].id;
                 }
             }
 
@@ -229,13 +229,19 @@
             const closeModal = () => {
                 modal.classList.remove('modal-active');
                 setTimeout(() => modal.classList.add('hidden'), 300);
-                dateInput.value = ''; titleInput.value = ''; costInput.value = ''; methodInput.value = ''; calcPeople.value = ''; calcRate.value = '';
             };
 
+            // Исправленная кнопка "Добавить" (без вызова closeModal)
             document.getElementById('add-date-btn').addEventListener('click', () => {
-                closeModal(); // очищаем
+                dateInput.value = ''; 
+                titleInput.value = ''; 
+                costInput.value = ''; 
+                methodInput.value = ''; 
+                calcPeople.value = ''; 
+                calcRate.value = '';
                 openModal(false);
             });
+            
             document.getElementById('cancel-date').addEventListener('click', closeModal);
 
             // Сохранение проекта
@@ -260,7 +266,7 @@
                 const existingIndex = activeDates.findIndex(proj => proj.id === projectData.id);
                 
                 if (isEditMode && existingIndex > -1) {
-                    projectData.isPaid = activeDates[existingIndex].isPaid; // сохраняем статус оплаты при редактировании
+                    projectData.isPaid = activeDates[existingIndex].isPaid;
                     activeDates[existingIndex] = projectData;
                 } else {
                     if (existingIndex > -1) activeDates[existingIndex] = projectData;
@@ -382,6 +388,12 @@
                     titleInput.value = date.title;
                     costInput.value = date.cost;
                     methodInput.value = date.method;
+                    
+                    // Поля калькулятора можно очистить при редактировании, 
+                    // так как мы меняем финальную сумму
+                    calcPeople.value = '';
+                    calcRate.value = '';
+                    
                     openModal(true);
                 }
             });
