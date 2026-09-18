@@ -106,23 +106,31 @@
 
     <!-- Дашборд -->
     <div class="px-4 grid grid-cols-3 gap-3 mb-3">
-        <div class="bg-green-900/20 p-3 rounded-2xl border border-green-500/30 flex flex-col items-center justify-center shadow-[0_0_15px_rgba(34,197,94,0.1)] transition-colors" id="dash-card-paid">
+        <div class="bg-green-900/20 p-3 rounded-2xl border border-green-500/30 flex flex-col items-center justify-center shadow-[0_0_15px_rgba(34,197,94,0.1)] transition-transform duration-200" id="dash-card-paid">
             <div class="text-[10px] text-green-500/90 uppercase tracking-wider mb-1 font-semibold">Оплачено</div>
             <div class="text-sm font-bold text-green-400" id="dash-paid">0 ₽</div>
         </div>
-        <div class="bg-yellow-900/20 p-3 rounded-2xl border border-yellow-500/30 flex flex-col items-center justify-center shadow-[0_0_15px_rgba(234,179,8,0.1)] transition-colors" id="dash-card-pending">
+        <div class="bg-yellow-900/20 p-3 rounded-2xl border border-yellow-500/30 flex flex-col items-center justify-center shadow-[0_0_15px_rgba(234,179,8,0.1)] transition-transform duration-200" id="dash-card-pending">
             <div class="text-[10px] text-yellow-500/90 uppercase tracking-wider mb-1 font-semibold">Остаток</div>
             <div class="text-sm font-bold text-yellow-400" id="dash-pending">0 ₽</div>
         </div>
-        <div class="bg-blue-900/20 p-3 rounded-2xl border border-blue-500/30 flex flex-col items-center justify-center shadow-[0_0_15px_rgba(59,130,246,0.1)] transition-colors" id="dash-card-total">
+        <div class="bg-blue-900/20 p-3 rounded-2xl border border-blue-500/30 flex flex-col items-center justify-center shadow-[0_0_15px_rgba(59,130,246,0.1)] transition-transform duration-200" id="dash-card-total">
             <div class="text-[10px] text-blue-400/90 uppercase tracking-wider mb-1 font-semibold">Всего</div>
             <div class="text-sm font-bold text-blue-400" id="dash-total">0 ₽</div>
         </div>
     </div>
     
-    <!-- Фильтр Дашборда (Чипсы) -->
-    <div class="px-4 mb-6 flex gap-2 overflow-x-auto hidden-scrollbar pb-2 snap-x" id="dashboard-team-filter">
-        <!-- JS вставит кнопки (Все, Весь ФОТ, Зломанов и тд) -->
+    <!-- Фильтр Дашборда (Выпадающий список) -->
+    <div class="px-4 mb-6 relative">
+        <div class="absolute inset-y-0 left-7 flex items-center pointer-events-none">
+            <i data-lucide="users" class="w-4 h-4 text-gray-400" id="filter-icon"></i>
+        </div>
+        <select id="dashboard-team-filter" class="w-full bg-gray-800/80 text-white text-[16px] font-bold rounded-xl py-3 pl-10 pr-10 outline-none border border-white/10 appearance-none shadow-sm transition-colors focus:border-blue-500 cursor-pointer">
+            <!-- JS вставит <option> -->
+        </select>
+        <div class="absolute inset-y-0 right-7 flex items-center pointer-events-none">
+            <i data-lucide="chevron-down" class="w-4 h-4 text-gray-400"></i>
+        </div>
     </div>
 
     <!-- Кнопки управления -->
@@ -268,7 +276,7 @@
                     </button>
                 </div>
 
-                <!-- Сумма и Оплата -->
+                <!-- Сумма и Оплата общие -->
                 <div class="relative mt-2">
                     <span class="absolute left-4 top-3 text-gray-500 font-medium">₽</span>
                     <input type="number" id="new-project-cost" placeholder="Итоговая смета (все расходы)" class="w-full bg-gray-950 text-white text-sm rounded-xl py-3 pl-9 pr-4 outline-none border border-gray-700 block transition-colors focus:border-blue-500">
@@ -296,7 +304,6 @@
         document.addEventListener('DOMContentLoaded', () => {
             lucide.createIcons();
 
-            // База сотрудников
             const PREDEFINED_TEAM = [
                 "Зломанов Олег Викторович",
                 "Дубовой Андрей Николаевич",
@@ -307,9 +314,8 @@
             let activeProjects = [];
             let selectedProjectId = null;
             let isEditMode = false;
-            let currentDashFilter = 'Все (Смета)'; // Текущий фильтр дашборда
+            let currentDashFilter = 'Все проекты'; // Стартовый фильтр
 
-            // Загрузка и миграция
             const savedData = localStorage.getItem('amProdData');
             if (savedData) {
                 const parsed = JSON.parse(savedData);
@@ -353,7 +359,7 @@
             const dashTotal = document.getElementById('dash-total');
             const dashPaid = document.getElementById('dash-paid');
             const dashPending = document.getElementById('dash-pending');
-            const filterContainer = document.getElementById('dashboard-team-filter');
+            const filterSelect = document.getElementById('dashboard-team-filter');
 
             function saveDataLocally() {
                 localStorage.setItem('amProdData', JSON.stringify(activeProjects));
@@ -363,10 +369,10 @@
 
             // --- ДАШБОРД (ФИЛЬТРЫ И РАСЧЕТЫ) ---
             function renderDashboardFilters() {
-                filterContainer.innerHTML = '';
+                filterSelect.innerHTML = '';
                 
                 // Собираем уникальные имена (База + добавленные вручную)
-                const filters = ['Все (Смета)', 'Весь ФОТ', ...PREDEFINED_TEAM];
+                const filters = ['Все проекты', 'Весь ФОТ', ...PREDEFINED_TEAM];
                 activeProjects.forEach(p => {
                     (p.team || []).forEach(m => {
                         if (!filters.includes(m.name)) filters.push(m.name);
@@ -374,39 +380,29 @@
                 });
 
                 filters.forEach(f => {
-                    const btn = document.createElement('button');
-                    const isActive = currentDashFilter === f;
-                    
-                    let bgClass = isActive ? 'bg-gradient-to-r from-blue-600 to-purple-600 text-white border-transparent' : 'bg-gray-800 text-gray-400 border-white/10 hover:bg-gray-700';
-                    if(isActive && f !== 'Все (Смета)' && f !== 'Весь ФОТ') {
-                        // Для людей выделяем другим цветом
-                        bgClass = 'bg-gradient-to-r from-emerald-600 to-teal-600 text-white border-transparent';
-                    }
-
-                    btn.className = `snap-center shrink-0 px-4 py-2 rounded-full text-[11px] font-bold uppercase tracking-wider whitespace-nowrap transition-all border shadow-sm ${bgClass}`;
-                    btn.textContent = f;
-                    
-                    btn.onclick = () => { 
-                        currentDashFilter = f; 
-                        renderDashboardFilters(); 
-                        updateDashboard(); 
-                    };
-                    filterContainer.appendChild(btn);
+                    const opt = document.createElement('option');
+                    opt.value = f;
+                    opt.textContent = f;
+                    if (currentDashFilter === f) opt.selected = true;
+                    filterSelect.appendChild(opt);
                 });
             }
+
+            filterSelect.addEventListener('change', (e) => {
+                currentDashFilter = e.target.value;
+                updateDashboard();
+            });
 
             function updateDashboard() {
                 let total = 0, paid = 0, pending = 0;
                 
                 activeProjects.forEach(p => {
-                    if (currentDashFilter === 'Все (Смета)') {
-                        // Считаем общую смету проектов
+                    if (currentDashFilter === 'Все проекты') {
                         total += p.cost || 0;
                         if (p.isPaid) paid += p.cost || 0;
                         else pending += p.cost || 0;
                     } 
                     else if (currentDashFilter === 'Весь ФОТ') {
-                        // Считаем сумму всех гонораров команды
                         let projectFot = 0;
                         p.team.forEach(m => projectFot += m.fee);
                         total += projectFot;
@@ -414,7 +410,6 @@
                         else pending += projectFot;
                     } 
                     else {
-                        // Считаем конкретного человека
                         const member = (p.team || []).find(m => m.name === currentDashFilter);
                         if (member) {
                             total += member.fee || 0;
@@ -428,11 +423,21 @@
                 dashPaid.textContent = `${paid.toLocaleString('ru-RU')} ₽`;
                 dashPending.textContent = `${pending.toLocaleString('ru-RU')} ₽`;
                 
-                // Подсветка карточек если выбран человек
+                // Анимация карточек при смене фильтра
                 const cards = [document.getElementById('dash-card-paid'), document.getElementById('dash-card-pending'), document.getElementById('dash-card-total')];
-                if (currentDashFilter !== 'Все (Смета)' && currentDashFilter !== 'Весь ФОТ') {
-                    cards.forEach(c => c.classList.add('scale-105'));
-                    setTimeout(() => cards.forEach(c => c.classList.remove('scale-105')), 200);
+                cards.forEach(c => c.classList.add('scale-[1.03]'));
+                setTimeout(() => cards.forEach(c => c.classList.remove('scale-[1.03]')), 200);
+
+                // Окрашиваем селект, если выбран человек
+                const icon = document.getElementById('filter-icon');
+                if (currentDashFilter !== 'Все проекты' && currentDashFilter !== 'Весь ФОТ') {
+                    filterSelect.classList.remove('bg-gray-800/80', 'text-white');
+                    filterSelect.classList.add('bg-blue-900/40', 'text-blue-300', 'border-blue-500/50');
+                    if(icon) icon.classList.replace('text-gray-400', 'text-blue-400');
+                } else {
+                    filterSelect.classList.add('bg-gray-800/80', 'text-white');
+                    filterSelect.classList.remove('bg-blue-900/40', 'text-blue-300', 'border-blue-500/50');
+                    if(icon) icon.classList.replace('text-blue-400', 'text-gray-400');
                 }
             }
 
@@ -463,14 +468,12 @@
             function renderTeamSelection(existingTeam = []) {
                 teamSelectionList.innerHTML = '';
                 
-                // Рендерим предопределенных
                 PREDEFINED_TEAM.forEach(name => {
                     const memberData = existingTeam.find(m => m.name === name) || { fee: '' };
                     const isChecked = !!existingTeam.find(m => m.name === name);
                     addTeamMemberRow(name, memberData.fee, isChecked, true);
                 });
 
-                // Рендерим добавленных вручную, которых нет в базе
                 existingTeam.forEach(member => {
                     if (!PREDEFINED_TEAM.includes(member.name)) {
                         addTeamMemberRow(member.name, member.fee, true, false);
@@ -492,7 +495,6 @@
                         <input type="number" class="team-fee w-20 shrink-0 bg-gray-900 text-white text-xs rounded p-1.5 outline-none border border-gray-600 focus:border-blue-500 transition-colors text-right ${isChecked ? '' : 'opacity-30'}" placeholder="0 ₽" value="${fee}" ${isChecked ? '' : 'disabled'}>
                     `;
                 } else {
-                    // Кастомная строка (можно редактировать имя)
                     row.innerHTML = `
                         <input type="checkbox" class="team-checkbox shrink-0 hidden" value="custom" checked>
                         <input type="text" class="custom-team-name flex-1 bg-gray-900 text-white text-[11px] rounded p-1.5 outline-none border border-gray-600 focus:border-purple-500" placeholder="ФИО или Роль" value="${name}">
@@ -567,7 +569,6 @@
             document.getElementById('cancel-date').addEventListener('click', closeModal);
 
             document.getElementById('save-date').addEventListener('click', () => {
-                // Сбор дат
                 const dateRows = document.querySelectorAll('.date-row');
                 const extractedDates = [];
                 dateRows.forEach(row => {
@@ -579,20 +580,16 @@
                 if (extractedDates.length === 0) { alert('Укажите хотя бы одну дату!'); return; }
                 extractedDates.sort((a,b) => new Date(a.date) - new Date(b.date));
 
-                // Сбор команды
                 const extractedTeam = [];
                 document.querySelectorAll('.custom-team-row').forEach(row => {
                     const checkbox = row.querySelector('.team-checkbox');
                     if (checkbox && checkbox.checked) {
-                        // Имя берем либо из чекбокса (если predefined), либо из инпута (если custom)
                         let memberName = checkbox.value;
                         if(memberName === 'custom') {
                             const nameInput = row.querySelector('.custom-team-name');
                             memberName = nameInput ? nameInput.value.trim() : '';
                         }
-                        
                         const feeVal = row.querySelector('.team-fee').value;
-                        
                         if (memberName) {
                             extractedTeam.push({ name: memberName, fee: feeVal ? Number(feeVal) : 0 });
                         }
@@ -701,12 +698,10 @@
 
                 document.getElementById('project-title-label').textContent = project.title;
                 
-                // Контрагент
                 const contrLabel = document.getElementById('project-contractor-label');
                 if(project.contractor) { contrLabel.classList.remove('hidden'); contrLabel.textContent = `Контрагент: ${project.contractor}`; }
                 else { contrLabel.classList.add('hidden'); }
 
-                // Яндекс Карты (Адрес)
                 const addrLink = document.getElementById('project-address-link');
                 const addrText = document.getElementById('project-address-text');
                 if(project.address) {
@@ -717,7 +712,6 @@
                     addrLink.classList.add('hidden');
                 }
                 
-                // Рендер списка дат с погодой
                 const datesContainer = document.getElementById('project-dates-container');
                 datesContainer.innerHTML = '';
                 project.dates.forEach(async (d, index) => {
@@ -758,7 +752,6 @@
                     }
                 });
 
-                // Рендер команды (ФОТ)
                 const teamContainer = document.getElementById('project-team-container');
                 const teamListHtml = document.getElementById('project-team-list');
                 if (project.team && project.team.length > 0) {
@@ -780,7 +773,6 @@
                     teamContainer.classList.add('hidden');
                 }
 
-                // Финансы
                 const financeBlock = document.getElementById('finance-block');
                 const projectCostLabel = document.getElementById('project-cost-label');
                 const projectMethodLabel = document.getElementById('project-method-label');
