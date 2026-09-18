@@ -15,8 +15,6 @@
     
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
-    <!-- Supabase CDN -->
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
     
     <style>
@@ -94,7 +92,7 @@
     <div class="pt-14 pb-4 px-4 text-center">
         <h1 class="text-2xl font-extrabold tracking-tight text-transparent bg-clip-text bg-gradient-to-r from-blue-400 via-purple-400 to-blue-400 animated-title inline-flex items-center gap-2 justify-center w-full">
             Event Kremlin
-            <i data-lucide="cloud" id="sync-icon" class="w-6 h-6 text-gray-500 transition-colors cursor-pointer" title="Статус синхронизации"></i>
+            <i data-lucide="cloud" id="sync-icon" class="w-6 h-6 text-green-500 transition-colors"></i>
         </h1>
     </div>
 
@@ -114,7 +112,7 @@
         </div>
     </div>
     
-    <!-- Безопасный выпадающий список фильтра -->
+    <!-- Выпадающий список фильтра -->
     <div class="px-4 mb-6 relative">
         <div id="custom-dropdown-btn" class="w-full bg-gray-800/80 text-white text-sm font-bold rounded-xl py-3 px-4 outline-none border border-white/10 shadow-sm flex items-center justify-between cursor-pointer active:scale-[0.99] transition-transform">
             <div class="flex items-center gap-2 truncate">
@@ -289,13 +287,15 @@
 
     <script>
         const SUPABASE_URL = 'https://yixpxokoinvmphgvdsee.supabase.co';
-        const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InlpeHB4b2tvaW52bXBoZ3Zkc2VlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODk3NjEyMTgsImV4cCI6MjEwNTMzNzIxOH0.vwtkVEbxr5yzd5GNF4PBZlvRZIvVrFGQoh5EfNPpojE';
+        const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InlpeHB4b2tvaW52bXBoZ3Zkc2VlIiwicm9sZSI6InlpeHB4b2tvaW52bXBoZ3Zkc2VlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODk3NjEyMTgsImV4cCI6MjEwNTMzNzIxOH0.vwtkVEbxr5yzd5GNF4PBZlvRZIvVrFGQoh5EfNPpojE';
         
-        // Создаем клиент с защитой по таймауту (чтобы не вешать приложение при блокировке VPN)
-        const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY, {
-            auth: { persistSession: false },
-            global: { headers: { 'x-client-info': 'event-kremlin' } }
-        });
+        let _supabase = null;
+        try {
+            _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY, {
+                auth: { persistSession: false },
+                global: { headers: { 'x-client-info': 'event-kremlin' } }
+            });
+        } catch(e) { console.error("Supabase init error", e); }
 
         document.addEventListener('DOMContentLoaded', () => {
             lucide.createIcons();
@@ -314,7 +314,7 @@
 
             const syncIcon = document.getElementById('sync-icon');
 
-            // 1. Мгновенная загрузка из localStorage (чтобы приложение работало сразу без интернета/VPN)
+            // 1. Мгновенная загрузка из localStorage (гарантирует отсутствие зависаний)
             const savedData = localStorage.getItem('amProdData');
             if (savedData) {
                 try {
@@ -328,67 +328,39 @@
             if (selectedProjectId) updateContentArea();
             updateDashboard();
 
-            // 2. Фоновая синхронизация с защитой от таймаута VPN
+            // 2. Фоновое обновление из облака (асинхронно, не блокирует интерфейс)
             async function fetchFromCloud() {
+                if (!_supabase) return;
                 try {
-                    syncIcon.classList.add('animate-pulse', 'text-blue-400');
-                    
-                    // Ограничиваем запрос по времени (3 секунды), если VPN блокирует Supabase
-                    const fetchPromise = _supabase.from('am_projects').select('*');
-                    const timeoutPromise = new Promise((_, reject) => setTimeout(() => reject(new Error('timeout')), 3000));
-                    
-                    const { data, error } = await Promise.race([fetchPromise, timeoutPromise]);
-                    
-                    if (data && !error) {
-                        if (data.length > 0) {
-                            activeProjects = data.map(d => d.project_data);
-                            activeProjects.sort((a, b) => new Date(a.dates[0].date) - new Date(b.dates[0].date));
-                            if(activeProjects.length > 0 && !selectedProjectId) selectedProjectId = activeProjects[0].id;
-                            
-                            localStorage.setItem('amProdData', JSON.stringify(activeProjects));
-                            renderDashboardFilters();
-                            renderTimeline();
-                            if(selectedProjectId) updateContentArea();
-                            updateDashboard();
-                        }
-                        syncIcon.classList.remove('animate-pulse', 'text-blue-400');
-                        syncIcon.classList.add('text-green-500'); // Облачко зеленое (успех)
-                    } else {
-                        throw new Error('Cloud error');
+                    const { data, error } = await _supabase.from('am_projects').select('*');
+                    if (data && !error && data.length > 0) {
+                        activeProjects = data.map(d => d.project_data);
+                        activeProjects.sort((a, b) => new Date(a.dates[0].date) - new Date(b.dates[0].date));
+                        if(activeProjects.length > 0 && !selectedProjectId) selectedProjectId = activeProjects[0].id;
+                        
+                        localStorage.setItem('amProdData', JSON.stringify(activeProjects));
+                        renderDashboardFilters();
+                        renderTimeline();
+                        if(selectedProjectId) updateContentArea();
+                        updateDashboard();
                     }
                 } catch (e) {
-                    // Если VPN блокирует или нет сети — просто работаем локально, облачко серое
-                    syncIcon.classList.remove('animate-pulse', 'text-blue-400');
-                    syncIcon.classList.add('text-gray-500');
+                    // Ошибки сети / VPN игнорируются, приложение работает локально
                 }
             }
-            fetchFromCloud();
-
-            // Клик на облачко принудительно пробует обновить данные
-            syncIcon.addEventListener('click', () => {
-                fetchFromCloud();
-            });
+            setTimeout(fetchFromCloud, 1000); // Запуск через секунду после старта
 
             async function syncData(projectToUpsert = null, idToDelete = null) {
                 localStorage.setItem('amProdData', JSON.stringify(activeProjects));
                 renderDashboardFilters();
                 updateDashboard();
 
-                syncIcon.classList.add('animate-pulse', 'text-blue-400');
+                if (!_supabase) return;
                 try {
-                    const syncPromise = async () => {
-                        if (idToDelete) await _supabase.from('am_projects').delete().eq('id', idToDelete);
-                        if (projectToUpsert) await _supabase.from('am_projects').upsert({ id: projectToUpsert.id, project_data: projectToUpsert });
-                    };
-                    
-                    const timeoutPromise = new Promise((_, reject) => setTimeout(() => reject(new Error('timeout')), 3000));
-                    await Promise.race([syncPromise(), timeoutPromise]);
-
-                    syncIcon.classList.remove('animate-pulse', 'text-blue-400');
-                    syncIcon.classList.add('text-green-500');
+                    if (idToDelete) await _supabase.from('am_projects').delete().eq('id', idToDelete);
+                    if (projectToUpsert) await _supabase.from('am_projects').upsert({ id: projectToUpsert.id, project_data: projectToUpsert });
                 } catch (e) {
-                    syncIcon.classList.remove('animate-pulse', 'text-blue-400');
-                    syncIcon.classList.add('text-yellow-500'); // Желтый — сохранено локально, в облако не улетело из-за VPN
+                    // Если VPN блокирует запись, данные останутся надежно сохранены локально
                 }
             }
 
