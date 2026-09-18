@@ -9,7 +9,10 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="AM Prod">
     <link rel="apple-touch-icon" href="https://cdn-icons-png.flaticon.com/512/7325/7325295.png">
+    
+    <!-- Подключение манифеста -->
     <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#030712">
     
     <title>AM Prod Calendar</title>
     
@@ -19,114 +22,381 @@
     <script src="https://unpkg.com/lucide@latest"></script>
     
     <!-- Стили -->
-    <link rel="stylesheet" href="style.css">
+    <style>
+        .ios-header {
+            background: rgba(17, 24, 39, 0.75);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            padding-top: max(3rem, env(safe-area-inset-top));
+        }
+
+        .hidden-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .hidden-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+
+        .date-icon {
+            transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        .date-icon:active {
+            transform: scale(0.95);
+        }
+
+        .date-icon.active {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 16px -4px rgba(59, 130, 246, 0.5);
+        }
+        
+        .modal-active {
+            opacity: 1 !important;
+            pointer-events: auto !important;
+        }
+        
+        .modal-active > div {
+            transform: scale(1) !important;
+        }
+    </style>
 </head>
 <body class="bg-gray-950 text-white font-sans antialiased pb-24 selection:bg-blue-500/30">
 
     <!-- Header -->
-    <header class="ios-header fixed top-0 w-full z-40 px-4 pt-12 pb-3 border-b border-white/10 flex justify-between items-center">
-        <h1 class="text-xl font-semibold tracking-tight">Проекты</h1>
+    <header class="ios-header fixed top-0 w-full z-40 px-4 pt-12 pb-3 border-b border-white/10 flex justify-between items-center max-w-md mx-auto left-0 right-0">
+        <h1 class="text-xl font-semibold tracking-tight">Проекты AM</h1>
         <div class="flex gap-3">
-            <label class="bg-gray-800 hover:bg-gray-700 text-white p-2 rounded-full cursor-pointer transition-colors shadow-lg">
+            <label class="bg-gray-800 hover:bg-gray-700 text-white p-2 rounded-full cursor-pointer transition-colors shadow-lg active:scale-95">
                 <i data-lucide="file-spreadsheet" class="w-5 h-5"></i>
                 <input type="file" id="excel-upload" class="hidden" accept=".xlsx, .xls">
             </label>
-            <button id="add-date-btn" class="bg-blue-600 hover:bg-blue-500 text-white p-2 rounded-full transition-colors shadow-[0_0_15px_rgba(59,130,246,0.5)]">
+            <button id="add-btn" class="bg-blue-600 hover:bg-blue-500 text-white p-2 rounded-full transition-colors shadow-[0_0_15px_rgba(59,130,246,0.5)] active:scale-95">
                 <i data-lucide="plus" class="w-5 h-5"></i>
             </button>
         </div>
     </header>
 
     <!-- Main Content -->
-    <main class="pt-24 h-screen overflow-y-auto hidden-scrollbar">
-        <!-- Кружки дат -->
-        <div class="px-4 pb-4">
-            <div id="dates-timeline" class="flex gap-4 overflow-x-auto hidden-scrollbar pb-2 pt-2 snap-x">
-                <div class="text-gray-500 text-sm mt-2" id="timeline-empty">Нажмите +, чтобы добавить проект</div>
+    <main class="pt-24 h-screen overflow-y-auto hidden-scrollbar max-w-md mx-auto relative">
+        
+        <!-- Timeline -->
+        <div class="px-4 pb-2">
+            <div id="timeline" class="flex gap-4 overflow-x-auto hidden-scrollbar pb-4 pt-2 snap-x">
+                <!-- Date icons will be injected here -->
             </div>
         </div>
 
-        <!-- Контент выбранной даты -->
+        <!-- Dynamic Date Content -->
         <div id="date-content" class="px-4 mt-2 hidden">
-            
-            <!-- Заголовок и дата -->
-            <div class="mb-4">
-                <h2 id="project-title-label" class="text-2xl font-bold mb-1">Название проекта</h2>
+            <!-- Project & Date Card -->
+            <div class="bg-gray-900/60 border border-white/5 p-5 rounded-3xl mb-4 shadow-sm backdrop-blur-md">
+                <div class="flex justify-between items-start mb-3">
+                    <h2 id="project-name" class="text-lg font-bold leading-tight">Название проекта</h2>
+                    <div class="flex items-center gap-1.5 text-xs font-medium text-gray-400 bg-gray-800/80 px-2.5 py-1 rounded-lg border border-white/5 shrink-0">
+                        <i data-lucide="cloud-sun" class="w-3.5 h-3.5"></i>
+                        <span>+22°</span>
+                    </div>
+                </div>
                 <div class="flex items-center gap-2 text-gray-400 text-sm">
                     <i data-lucide="calendar" class="w-4 h-4"></i>
-                    <span id="current-date-label">Дата</span>
+                    <span id="project-date">Дата</span>
                 </div>
             </div>
 
-            <!-- Финансовый блок (Статус оплаты) -->
-            <div id="finance-block" class="bg-gray-900/50 border border-white/5 p-4 rounded-2xl mb-6 shadow-sm hidden">
-                <div class="flex justify-between items-start mb-3">
-                    <div>
-                        <div class="text-xs text-gray-500 font-medium uppercase tracking-wide mb-1">Гонорар</div>
-                        <div id="project-cost-label" class="text-xl font-bold text-white">0 ₽</div>
-                    </div>
-                    <div class="text-right">
-                        <div class="text-xs text-gray-500 font-medium uppercase tracking-wide mb-1">Способ оплаты</div>
-                        <div id="project-method-label" class="text-sm text-gray-300">Наличные</div>
-                    </div>
-                </div>
-                
-                <!-- Кнопка и статус оплаты -->
-                <div id="payment-actions" class="pt-3 border-t border-white/5 mt-1">
-                    <button id="mark-paid-btn" class="w-full bg-blue-600/20 text-blue-400 hover:bg-blue-600/30 font-medium py-2.5 rounded-xl transition-colors border border-blue-500/30 flex justify-center items-center gap-2">
-                        <i data-lucide="check-circle" class="w-4 h-4"></i> Оплатили
-                    </button>
-                    <div id="paid-status" class="hidden w-full bg-green-500/10 text-green-400 font-medium py-2.5 rounded-xl border border-green-500/20 flex justify-center items-center gap-2">
-                        <i data-lucide="check-circle-2" class="w-5 h-5"></i> Оплачено
-                    </div>
-                </div>
+            <!-- Finance Block -->
+            <div id="finance-block" class="bg-gray-900/60 border border-white/5 p-5 rounded-3xl mb-6 shadow-sm backdrop-blur-md">
+                <!-- Injected via JS -->
             </div>
 
-            <!-- Списки из Excel -->
-            <h3 class="text-lg font-semibold mb-3">Списки на площадку</h3>
-            <div id="excel-data-container" class="space-y-3 pb-8">
-                <div class="text-center text-gray-600 mt-8 text-sm border border-dashed border-gray-700 rounded-2xl p-6" id="excel-empty-state">
-                    <i data-lucide="list-x" class="w-8 h-8 mx-auto mb-2 opacity-30"></i>
-                    Таблицы не загружены
+            <!-- Excel Data Block -->
+            <div class="border-t border-white/10 pt-6">
+                <h3 class="text-sm font-semibold text-gray-400 mb-4 uppercase tracking-wider px-1">Списки на площадку</h3>
+                <div id="excel-data-container" class="space-y-3 pb-8">
+                    <div id="excel-empty-state" class="bg-gray-900/30 border border-dashed border-white/10 rounded-3xl p-8 text-center">
+                        <div class="bg-gray-800/50 w-12 h-12 rounded-full flex items-center justify-center mx-auto mb-3">
+                            <i data-lucide="list-x" class="w-6 h-6 text-gray-500"></i>
+                        </div>
+                        <p class="text-sm text-gray-500">Загрузите таблицу со списком оборудования или персонала (кнопка в правом верхнем углу).</p>
+                    </div>
                 </div>
             </div>
+        </div>
+        
+        <!-- Empty Timeline State -->
+        <div id="empty-state" class="hidden px-4 mt-12 text-center text-gray-500 text-sm">
+            Нет добавленных дат. Нажмите + чтобы создать проект.
         </div>
     </main>
 
-    <!-- Modal: Добавление проекта/даты -->
-    <div id="date-modal" class="hidden fixed inset-0 z-50 bg-black/60 backdrop-blur-md flex items-center justify-center p-4 opacity-0 transition-opacity duration-300">
-        <div class="bg-gray-900 border border-gray-800 p-6 rounded-[2rem] w-full max-w-xs shadow-2xl transform scale-95 transition-transform duration-300" id="date-modal-content">
-            <h3 class="text-lg font-semibold mb-5 text-center">Новый проект</h3>
+    <!-- Add Date Modal -->
+    <div id="modal" class="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4 opacity-0 pointer-events-none transition-opacity duration-300">
+        <div class="bg-gray-900 border border-gray-700 p-6 rounded-[2rem] w-full max-w-sm shadow-2xl transform scale-95 transition-transform duration-300">
+            <h3 class="text-xl font-bold mb-5 text-white">Новый проект</h3>
             
-            <div class="space-y-3 mb-6">
-                <!-- Дата -->
-                <input type="date" id="new-date-input" class="w-full bg-gray-800 text-white rounded-xl p-3 outline-none border border-gray-700 block focus:border-blue-500 transition-colors" style="color-scheme: dark;" required>
+            <div class="space-y-4 mb-6">
+                <div>
+                    <label class="block text-xs font-medium text-gray-400 mb-1.5 ml-1">Название проекта</label>
+                    <input type="text" id="input-name" placeholder="Например: Монтаж сцены" class="w-full bg-gray-800 text-white text-sm rounded-xl py-3 px-4 outline-none border border-gray-700 focus:border-blue-500 transition-colors">
+                </div>
                 
-                <!-- Название -->
-                <input type="text" id="new-project-title" placeholder="Название проекта (например, ВДНХ)" class="w-full bg-gray-800 text-white text-sm rounded-xl p-3 outline-none border border-gray-700 block transition-colors focus:border-blue-500">
-                
-                <!-- Стоимость -->
-                <div class="relative">
-                    <span class="absolute left-4 top-3 text-gray-500 font-medium">₽</span>
-                    <input type="number" id="new-project-cost" placeholder="Сумма гонорара" class="w-full bg-gray-800 text-white text-sm rounded-xl py-3 pl-9 pr-4 outline-none border border-gray-700 block transition-colors focus:border-blue-500">
+                <div>
+                    <label class="block text-xs font-medium text-gray-400 mb-1.5 ml-1">Дата</label>
+                    <input type="date" id="input-date" class="w-full bg-gray-800 text-white text-sm rounded-xl py-3 px-4 outline-none border border-gray-700 focus:border-blue-500 transition-colors block" style="color-scheme: dark;">
                 </div>
 
-                <!-- Способ оплаты -->
-                <input type="text" id="new-project-method" placeholder="Способ (нал, карта, ИП...)" class="w-full bg-gray-800 text-white text-sm rounded-xl p-3 outline-none border border-gray-700 block transition-colors focus:border-blue-500">
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-xs font-medium text-gray-400 mb-1.5 ml-1">Гонорар (₽)</label>
+                        <input type="number" id="input-cost" placeholder="0" class="w-full bg-gray-800 text-white text-sm rounded-xl py-3 px-4 outline-none border border-gray-700 focus:border-blue-500 transition-colors">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-gray-400 mb-1.5 ml-1">Способ оплаты</label>
+                        <select id="input-method" class="w-full bg-gray-800 text-white text-sm rounded-xl py-3 px-4 outline-none border border-gray-700 focus:border-blue-500 transition-colors appearance-none">
+                            <option value="На карту">На карту</option>
+                            <option value="Наличные">Наличные</option>
+                            <option value="Безнал (ИП)">Безнал (ИП)</option>
+                        </select>
+                    </div>
+                </div>
             </div>
 
-            <div class="flex gap-3">
-                <button id="cancel-date" class="flex-1 py-3 rounded-xl bg-gray-800 text-gray-300 font-medium active:scale-95 transition-transform">Отмена</button>
-                <button id="save-date" class="flex-1 py-3 rounded-xl bg-blue-600 text-white font-medium active:scale-95 transition-transform shadow-lg shadow-blue-500/30">Сохранить</button>
+            <div class="flex gap-3 mt-8">
+                <button id="btn-cancel" class="flex-1 py-3.5 rounded-xl bg-gray-800 text-gray-300 font-medium active:scale-95 transition-transform">Отмена</button>
+                <button id="btn-save" class="flex-1 py-3.5 rounded-xl bg-blue-600 text-white font-medium active:scale-95 transition-transform shadow-lg shadow-blue-600/20">Сохранить</button>
             </div>
         </div>
     </div>
 
-    <script src="app.js"></script>
+    <!-- Application Logic -->
     <script>
+        let projects = [];
+        let activeProjectId = null;
+
+        const DOM = {
+            timeline: document.getElementById('timeline'),
+            content: document.getElementById('date-content'),
+            emptyState: document.getElementById('empty-state'),
+            projectName: document.getElementById('project-name'),
+            projectDate: document.getElementById('project-date'),
+            financeBlock: document.getElementById('finance-block'),
+            modal: document.getElementById('modal'),
+            addBtn: document.getElementById('add-btn'),
+            cancelBtn: document.getElementById('btn-cancel'),
+            saveBtn: document.getElementById('btn-save'),
+            inpName: document.getElementById('input-name'),
+            inpDate: document.getElementById('input-date'),
+            inpCost: document.getElementById('input-cost'),
+            inpMethod: document.getElementById('input-method'),
+            excelInput: document.getElementById('excel-upload'),
+            excelContainer: document.getElementById('excel-data-container'),
+            excelEmptyState: document.getElementById('excel-empty-state')
+        };
+
+        const formatMoney = (amount) => Number(amount || 0).toLocaleString('ru-RU') + ' ₽';
+        const getShortMonth = (date) => new Intl.DateTimeFormat('ru-RU', { month: 'short' }).format(date).replace('.', '');
+        const getFullDate = (date) => new Intl.DateTimeFormat('ru-RU', { day: 'numeric', month: 'long', year: 'numeric' }).format(date);
+
+        function renderTimeline() {
+            DOM.timeline.innerHTML = '';
+            
+            if (projects.length === 0) {
+                DOM.emptyState.classList.remove('hidden');
+                DOM.content.classList.add('hidden');
+                return;
+            }
+
+            DOM.emptyState.classList.add('hidden');
+            DOM.content.classList.remove('hidden');
+
+            projects.sort((a, b) => a.rawDate - b.rawDate);
+
+            projects.forEach(proj => {
+                const isActive = proj.id === activeProjectId;
+                const btn = document.createElement('button');
+                
+                let baseClasses = 'date-icon snap-center shrink-0 w-[4.5rem] h-[4.5rem] rounded-2xl flex flex-col items-center justify-center border outline-none ';
+                
+                if (isActive) {
+                    btn.className = baseClasses + 'bg-gradient-to-b from-blue-500 to-blue-600 border-blue-400 text-white shadow-lg shadow-blue-500/20';
+                } else {
+                    btn.className = baseClasses + 'bg-gray-800/80 backdrop-blur-md border-white/10 text-gray-400';
+                }
+                
+                btn.innerHTML = `
+                    <span class="text-[11px] uppercase font-semibold ${isActive ? 'text-blue-100' : 'opacity-50'} mb-0.5 tracking-wider">
+                        ${getShortMonth(proj.rawDate)}
+                    </span>
+                    <span class="text-2xl font-bold leading-none ${isActive ? 'text-white' : 'text-gray-200'}">
+                        ${proj.rawDate.getDate()}
+                    </span>
+                `;
+
+                btn.onclick = () => {
+                    activeProjectId = proj.id;
+                    renderTimeline();
+                    renderContent();
+                };
+
+                DOM.timeline.appendChild(btn);
+            });
+        }
+
+        function renderContent() {
+            const proj = projects.find(p => p.id === activeProjectId);
+            if (!proj) return;
+
+            DOM.projectName.textContent = proj.name;
+            DOM.projectDate.textContent = getFullDate(proj.rawDate);
+
+            if(proj.cost > 0) {
+                DOM.financeBlock.classList.remove('hidden');
+                const costColorClass = proj.isPaid ? 'text-green-400' : 'text-white';
+                
+                let actionHtml = '';
+                if (proj.isPaid) {
+                    actionHtml = `
+                        <div class="mt-5 bg-green-500/10 border border-green-500/20 py-3 rounded-xl flex items-center justify-center gap-2 text-green-400 font-semibold text-sm transition-all">
+                            <i data-lucide="check-circle-2" class="w-5 h-5"></i>
+                            Оплачено
+                        </div>
+                    `;
+                } else {
+                    actionHtml = `
+                        <button onclick="markAsPaid('${proj.id}')" class="mt-5 w-full bg-blue-600 hover:bg-blue-500 py-3 rounded-xl flex items-center justify-center gap-2 text-white font-semibold text-sm transition-all active:scale-95 shadow-lg shadow-blue-600/20">
+                            <i data-lucide="wallet" class="w-5 h-5"></i>
+                            Оплатили
+                        </button>
+                    `;
+                }
+
+                DOM.financeBlock.innerHTML = `
+                    <div class="flex justify-between items-start">
+                        <div>
+                            <span class="text-xs text-gray-500 font-medium uppercase tracking-wider block mb-1">Гонорар</span>
+                            <span class="text-2xl font-bold ${costColorClass} transition-colors">${formatMoney(proj.cost)}</span>
+                        </div>
+                        <div class="text-right">
+                            <span class="text-xs text-gray-500 font-medium uppercase tracking-wider block mb-1">Способ</span>
+                            <span class="text-sm font-medium text-gray-300 bg-gray-800/50 px-2 py-1 rounded-md">${proj.method}</span>
+                        </div>
+                    </div>
+                    ${actionHtml}
+                `;
+            } else {
+                DOM.financeBlock.classList.add('hidden');
+                DOM.financeBlock.innerHTML = '';
+            }
+            
+            lucide.createIcons();
+        }
+
+        window.markAsPaid = function(id) {
+            const proj = projects.find(p => p.id === id);
+            if (proj) {
+                proj.isPaid = true;
+                renderContent(); 
+            }
+        };
+
+        const openModal = () => DOM.modal.classList.add('modal-active');
+        const closeModal = () => {
+            DOM.modal.classList.remove('modal-active');
+            DOM.inpName.value = '';
+            DOM.inpDate.value = '';
+            DOM.inpCost.value = '';
+            DOM.inpMethod.value = 'На карту';
+        };
+
+        DOM.addBtn.addEventListener('click', openModal);
+        DOM.cancelBtn.addEventListener('click', closeModal);
+        
+        DOM.modal.addEventListener('click', (e) => {
+            if (e.target === DOM.modal) closeModal();
+        });
+
+        DOM.saveBtn.addEventListener('click', () => {
+            const name = DOM.inpName.value.trim();
+            const dateStr = DOM.inpDate.value;
+            const cost = DOM.inpCost.value;
+            const method = DOM.inpMethod.value;
+
+            if (!name || !dateStr) return; // Silent validation
+
+            const newProj = {
+                id: dateStr + '-' + Date.now(), 
+                name: name,
+                rawDate: new Date(dateStr),
+                cost: Number(cost) || 0,
+                method: method,
+                isPaid: false
+            };
+
+            projects.push(newProj);
+            activeProjectId = newProj.id;
+            
+            renderTimeline();
+            renderContent();
+            closeModal();
+        });
+
+        DOM.excelInput.addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                const data = new Uint8Array(e.target.result);
+                const workbook = XLSX.read(data, { type: 'array' });
+                const worksheet = workbook.Sheets[workbook.SheetNames[0]];
+                const json = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
+                
+                DOM.excelContainer.innerHTML = ''; 
+                
+                const headers = json[0];
+                let hasData = false;
+                
+                for (let i = 1; i < json.length; i++) {
+                    const row = json[i];
+                    if (!row || row.length === 0) continue;
+
+                    let cardHtml = `<div class="bg-gray-900/60 backdrop-blur-md p-4 rounded-2xl border border-white/5 shadow-sm mb-3">`;
+                    let hasCell = false;
+                    row.forEach((cell, index) => {
+                        const headerName = headers[index] || `Колонка ${index + 1}`;
+                        if (cell !== undefined && cell !== null && cell !== '') {
+                            hasCell = true;
+                            hasData = true;
+                            cardHtml += `
+                                <div class="mb-2 last:mb-0 flex justify-between gap-4 border-b border-white/5 pb-2 last:border-0 last:pb-0">
+                                    <span class="text-xs text-gray-500 font-medium">${headerName}</span>
+                                    <span class="text-sm text-gray-200 text-right break-words max-w-[60%]">${cell}</span>
+                                </div>
+                            `;
+                        }
+                    });
+                    cardHtml += `</div>`;
+                    if(hasCell) DOM.excelContainer.innerHTML += cardHtml;
+                }
+                
+                if(!hasData) {
+                    DOM.excelContainer.innerHTML = DOM.excelEmptyState.outerHTML;
+                }
+            };
+            reader.readAsArrayBuffer(file);
+            e.target.value = '';
+        });
+
+        // Initialize Icons & UI
+        lucide.createIcons();
+        renderTimeline();
+
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
-                navigator.serviceWorker.register('/sw.js').catch(err => console.log('SW Error:', err));
+                navigator.serviceWorker.register('./sw.js')
+                    .then(registration => console.log('ServiceWorker registered with scope:', registration.scope))
+                    .catch(error => console.log('ServiceWorker registration failed:', error));
             });
         }
     </script>
