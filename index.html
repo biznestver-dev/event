@@ -114,7 +114,7 @@
         </div>
     </div>
     
-    <!-- Выпадающий список фильтра (с изолированным позиционированием) -->
+    <!-- Выпадающий список фильтра -->
     <div class="px-4 mb-6 relative z-30">
         <div id="custom-dropdown-btn" class="w-full bg-gray-800/80 text-white text-sm font-bold rounded-xl py-3 px-4 outline-none border border-white/10 shadow-sm flex items-center justify-between cursor-pointer active:scale-[0.99] transition-transform">
             <div class="flex items-center gap-2 truncate">
@@ -127,8 +127,8 @@
         <div id="custom-dropdown-menu" class="hidden absolute left-4 right-4 mt-2 bg-gray-900 border border-gray-700 rounded-2xl shadow-2xl overflow-hidden max-h-60 overflow-y-auto hidden-scrollbar z-40 p-1"></div>
     </div>
 
-    <!-- Кнопки управления (вынесены на отдельный нижний слой z-10) -->
-    <div class="px-4 flex gap-3 mb-8 relative z-10">
+    <!-- Кнопки управления -->
+    <div class="px-4 flex gap-3 mb-8 relative z-20">
         <label class="flex-1 bg-gray-800/80 hover:bg-gray-700 backdrop-blur-md text-white py-3.5 px-2 rounded-2xl cursor-pointer transition-colors border border-white/10 flex items-center justify-center gap-2 relative overflow-hidden">
             <i data-lucide="file-spreadsheet" class="w-5 h-5 text-green-400"></i>
             <span class="text-xs font-bold uppercase tracking-wider">Загрузить Excel</span>
@@ -214,7 +214,7 @@
         </div>
     </div>
 
-    <!-- Модальное окно (Новый проект) -->
+    <!-- Модальное окно (Новый проект) - СКРЫТО ПО УМОЛЧАНИЮ (hidden) -->
     <div id="date-modal" class="hidden fixed inset-0 z-50 bg-black/80 backdrop-blur-md items-center justify-center p-4">
         <div class="bg-gray-900 border border-gray-700 p-6 rounded-[2rem] w-full max-w-[360px] shadow-2xl relative max-h-[90vh] overflow-y-auto hidden-scrollbar" id="date-modal-content">
             <div class="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-blue-500 to-purple-500"></div>
@@ -316,7 +316,6 @@
 
             const syncIcon = document.getElementById('sync-icon');
 
-            // 1. Мгновенная загрузка из localStorage
             const savedData = localStorage.getItem('amProdData');
             if (savedData) {
                 try {
@@ -330,7 +329,6 @@
             if (selectedProjectId) updateContentArea();
             updateDashboard();
 
-            // 2. Фоновое обновление из облака
             async function fetchFromCloud() {
                 if (!_supabase) return;
                 try {
