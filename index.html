@@ -1,3 +1,10 @@
+Я аккуратно вставил твои ключи в код.
+
+Небольшая техническая деталь: для правильной работы библиотеки Supabase я автоматически убрал хвостик `/rest/v1/` из твоей ссылки — скрипту нужен только базовый адрес.
+
+Скопируй этот финальный код и полностью замени им содержимое файла `index.html` на GitHub. Как только сохранишь, облако заработает!
+
+```html
 <!DOCTYPE html>
 <html lang="ru">
 <head>
@@ -15,6 +22,8 @@
     
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+    <!-- Supabase CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
     
     <style>
@@ -99,8 +108,9 @@
 
     <!-- Заголовок -->
     <div class="pt-14 pb-4 px-4 text-center">
-        <h1 class="text-2xl font-extrabold tracking-tight text-transparent bg-clip-text bg-gradient-to-r from-blue-400 via-purple-400 to-blue-400 animated-title">
-            Event Production Kremlin
+        <h1 class="text-2xl font-extrabold tracking-tight text-transparent bg-clip-text bg-gradient-to-r from-blue-400 via-purple-400 to-blue-400 animated-title inline-flex items-center gap-2 justify-center w-full">
+            Event Kremlin
+            <i data-lucide="cloud" id="sync-icon" class="w-6 h-6 text-gray-700 transition-colors"></i>
         </h1>
     </div>
 
@@ -120,7 +130,7 @@
         </div>
     </div>
     
-    <!-- Фильтр Дашборда (Выпадающий список) -->
+    <!-- Фильтр Дашборда -->
     <div class="px-4 mb-6 relative">
         <div class="absolute inset-y-0 left-7 flex items-center pointer-events-none">
             <i data-lucide="users" class="w-4 h-4 text-gray-400" id="filter-icon"></i>
@@ -133,14 +143,13 @@
         </div>
     </div>
 
-    <!-- Кнопки управления -->
+    <!-- Кнопки -->
     <div class="px-4 flex gap-3 mb-8">
         <label class="flex-1 bg-gray-800/80 hover:bg-gray-700 backdrop-blur-md text-white py-3.5 px-2 rounded-2xl cursor-pointer transition-colors border border-white/10 flex items-center justify-center gap-2 relative overflow-hidden">
             <i data-lucide="file-spreadsheet" class="w-5 h-5 text-green-400"></i>
             <span class="text-xs font-bold uppercase tracking-wider">Загрузить Excel</span>
             <input type="file" id="excel-upload" class="hidden" accept=".xlsx, .xls">
         </label>
-        
         <button id="add-date-btn" class="flex-1 bg-gradient-to-r from-blue-600 to-purple-600 text-white py-3.5 px-2 rounded-2xl transition-all shadow-[0_0_20px_rgba(59,130,246,0.4)] border border-blue-400/30 flex items-center justify-center gap-2">
             <i data-lucide="plus-circle" class="w-5 h-5"></i>
             <span class="text-xs font-bold uppercase tracking-wider">Добавить</span>
@@ -149,26 +158,18 @@
 
     <!-- Сетка проектов -->
     <div class="px-4 mb-8">
-        <div id="projects-timeline" class="grid grid-cols-4 gap-3">
-            <!-- JS вставит проекты -->
-        </div>
+        <div id="projects-timeline" class="grid grid-cols-4 gap-3"></div>
     </div>
 
     <!-- Детальная карточка проекта -->
     <div id="project-content" class="px-4 hidden opacity-0 transition-opacity duration-500 scroll-mt-6">
         <div class="bg-gray-900/40 backdrop-blur-xl border border-white/10 rounded-3xl p-5 shadow-2xl relative">
-            
             <div class="mb-5 border-b border-white/5 pb-4 relative">
                 <div class="text-[10px] text-gray-500 font-bold uppercase tracking-widest mb-1 hidden" id="project-contractor-label">Контрагент</div>
                 <h2 id="project-title-label" class="text-2xl font-bold mb-3 text-white leading-tight">Название проекта</h2>
                 
-                <!-- Локация (Яндекс Карты + Метро) -->
                 <div id="project-location-container" class="mb-4"></div>
-
-                <!-- Контейнер для дат и погоды -->
-                <div id="project-dates-container" class="flex flex-col gap-2">
-                    <!-- JS вставит дни проекта -->
-                </div>
+                <div id="project-dates-container" class="flex flex-col gap-2"></div>
             </div>
 
             <!-- Управление -->
@@ -190,9 +191,7 @@
                     <div class="text-[10px] text-gray-500 font-bold uppercase tracking-widest">Команда на проекте</div>
                     <div class="text-[10px] text-blue-400 font-bold bg-blue-900/20 px-2 py-1 rounded-lg border border-blue-500/20">ФОТ: <span id="project-team-total">0 ₽</span></div>
                 </div>
-                <div id="project-team-list" class="space-y-2 pt-1">
-                    <!-- JS вставит участников -->
-                </div>
+                <div id="project-team-list" class="space-y-2 pt-1"></div>
             </div>
 
             <!-- Финансы общие -->
@@ -263,9 +262,7 @@
                 <!-- Блок Дат -->
                 <div class="bg-gray-800/30 p-3 rounded-xl border border-gray-700/50">
                     <div class="text-[10px] text-gray-400 font-bold uppercase mb-2 ml-1">График работы (Даты и Тайминг)</div>
-                    <div id="dynamic-dates-list" class="space-y-2 mb-3">
-                        <!-- Сюда добавляются строки дат -->
-                    </div>
+                    <div id="dynamic-dates-list" class="space-y-2 mb-3"></div>
                     <button type="button" id="add-dynamic-date-btn" class="w-full bg-gray-800/80 hover:bg-gray-700 text-blue-400 text-[11px] font-bold uppercase py-2.5 rounded-lg border border-gray-700 transition-colors flex justify-center items-center gap-1">
                         <i data-lucide="calendar-plus" class="w-3.5 h-3.5"></i> Добавить день
                     </button>
@@ -277,10 +274,7 @@
                         <div class="text-[10px] text-gray-400 font-bold uppercase">Команда и Гонорары (ФОТ)</div>
                         <div class="text-[10px] text-blue-400 font-bold bg-blue-900/20 px-2 py-0.5 rounded border border-blue-500/20">ФОТ: <span id="team-total-calc">0</span> ₽</div>
                     </div>
-                    
-                    <div id="team-selection-list" class="space-y-2 mb-3">
-                        <!-- JS сгенерирует чекбоксы и поля ввода -->
-                    </div>
+                    <div id="team-selection-list" class="space-y-2 mb-3"></div>
                     <button type="button" id="add-custom-member-btn" class="w-full bg-gray-800/80 hover:bg-gray-700 text-purple-400 text-[11px] font-bold uppercase py-2.5 rounded-lg border border-gray-700 transition-colors flex justify-center items-center gap-1">
                         <i data-lucide="user-plus" class="w-3.5 h-3.5"></i> Добавить человека
                     </button>
@@ -291,7 +285,6 @@
                     <span class="absolute left-4 top-3 text-gray-500 font-medium">₽</span>
                     <input type="number" id="new-project-cost" placeholder="Итоговая смета (все расходы)" class="w-full bg-gray-950 text-white text-sm rounded-xl py-3 pl-9 pr-4 outline-none border border-gray-700 block transition-colors focus:border-blue-500">
                 </div>
-                
                 <div class="relative">
                     <span class="absolute right-3 top-3 text-gray-400 pointer-events-none"><i data-lucide="chevron-down" class="w-4 h-4"></i></span>
                     <select id="new-project-method" class="w-full bg-gray-950 text-white text-sm rounded-xl p-3 pr-9 outline-none border border-gray-700 block transition-colors focus:border-blue-500">
@@ -311,6 +304,11 @@
     </div>
 
     <script>
+        // ВАЖНО: КЛЮЧИ SUPABASE
+        const SUPABASE_URL = 'https://yixpxokoinvmphgvdsee.supabase.co';
+        const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InlpeHB4b2tvaW52bXBoZ3Zkc2VlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODk3NjEyMTgsImV4cCI6MjEwNTMzNzIxOH0.vwtkVEbxr5yzd5GNF4PBZlvRZIvVrFGQoh5EfNPpojE';
+        const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
         document.addEventListener('DOMContentLoaded', () => {
             lucide.createIcons();
 
@@ -326,33 +324,77 @@
             let isEditMode = false;
             let currentDashFilter = 'Все проекты'; 
 
+            const syncIcon = document.getElementById('sync-icon');
+
+            // 1. Быстрая загрузка из локальной памяти (offline first)
             const savedData = localStorage.getItem('amProdData');
             if (savedData) {
-                const parsed = JSON.parse(savedData);
-                activeProjects = parsed.map(p => {
-                    if (!p.dates) {
-                        return {
-                            id: p.id || Date.now().toString(),
-                            title: p.title,
-                            contractor: p.contractor || '',
-                            address: p.address || '',
-                            metro: p.metro || '',
-                            dates: [{ date: p.id, start: p.timeStart || '', end: p.timeEnd || '' }],
-                            team: p.team || [],
-                            cost: p.cost,
-                            method: p.method || 'Наличные',
-                            isPaid: p.isPaid
-                        };
+                activeProjects = JSON.parse(savedData);
+                if (activeProjects.length > 0) selectedProjectId = activeProjects[0].id;
+                renderDashboardFilters();
+                renderTimeline();
+                if (selectedProjectId) updateContentArea();
+                updateDashboard();
+            }
+
+            // 2. Фоновая синхронизация с Supabase (Облако)
+            async function fetchFromCloud() {
+                try {
+                    syncIcon.classList.add('animate-pulse', 'text-blue-400');
+                    syncIcon.classList.remove('text-gray-700', 'text-green-500');
+                    
+                    const { data, error } = await _supabase.from('am_projects').select('*');
+                    if (data && !error) {
+                        activeProjects = data.map(d => d.project_data);
+                        activeProjects.sort((a, b) => new Date(a.dates[0].date) - new Date(b.dates[0].date));
+                        
+                        if(activeProjects.length > 0 && !selectedProjectId) selectedProjectId = activeProjects[0].id;
+                        
+                        localStorage.setItem('amProdData', JSON.stringify(activeProjects));
+                        renderDashboardFilters();
+                        renderTimeline();
+                        if(selectedProjectId) updateContentArea();
+                        updateDashboard();
+
+                        syncIcon.classList.remove('animate-pulse', 'text-blue-400');
+                        syncIcon.classList.add('text-green-500'); // Успех
+                        setTimeout(() => syncIcon.classList.replace('text-green-500', 'text-gray-700'), 3000);
+                    } else {
+                        throw new Error('Supabase fetch error');
                     }
-                    if (!p.team) p.team = [];
-                    if (!p.contractor) p.contractor = '';
-                    if (!p.address) p.address = '';
-                    if (!p.metro) p.metro = '';
-                    if (!p.method) p.method = 'Наличные';
-                    return p;
-                });
-                if (activeProjects.length > 0) {
-                    selectedProjectId = activeProjects[0].id;
+                } catch (e) {
+                    console.error("Нет связи с облаком, используем локальные данные", e);
+                    syncIcon.classList.remove('animate-pulse', 'text-blue-400');
+                    syncIcon.classList.add('text-gray-700');
+                }
+            }
+            fetchFromCloud();
+
+            // Функция сохранения (Локально + Облако)
+            async function syncData(projectToUpsert = null, idToDelete = null) {
+                // Локально всегда сохраняем мгновенно
+                localStorage.setItem('amProdData', JSON.stringify(activeProjects));
+                renderDashboardFilters();
+                updateDashboard();
+
+                // Облако
+                syncIcon.classList.add('animate-pulse', 'text-blue-400');
+                syncIcon.classList.remove('text-gray-700', 'text-green-500');
+
+                try {
+                    if (idToDelete) {
+                        await _supabase.from('am_projects').delete().eq('id', idToDelete);
+                    }
+                    if (projectToUpsert) {
+                        await _supabase.from('am_projects').upsert({ id: projectToUpsert.id, project_data: projectToUpsert });
+                    }
+                    syncIcon.classList.remove('animate-pulse', 'text-blue-400');
+                    syncIcon.classList.add('text-green-500');
+                    setTimeout(() => syncIcon.classList.replace('text-green-500', 'text-gray-700'), 2000);
+                } catch (e) {
+                    console.error('Ошибка записи в Supabase', e);
+                    syncIcon.classList.remove('animate-pulse', 'text-blue-400');
+                    syncIcon.classList.add('text-red-500');
                 }
             }
 
@@ -374,12 +416,6 @@
             const dashPending = document.getElementById('dash-pending');
             const filterSelect = document.getElementById('dashboard-team-filter');
 
-            function saveDataLocally() {
-                localStorage.setItem('amProdData', JSON.stringify(activeProjects));
-                renderDashboardFilters();
-                updateDashboard();
-            }
-
             // --- КНОПКА ГЕОЛОКАЦИИ ---
             document.getElementById('get-location-btn').addEventListener('click', () => {
                 const btn = document.getElementById('get-location-btn');
@@ -391,7 +427,6 @@
                     navigator.geolocation.getCurrentPosition(async (pos) => {
                         const {latitude, longitude} = pos.coords;
                         try {
-                            // Используем бесплатный API Nominatim для определения адреса
                             const res = await fetch(`https://nominatim.openstreetmap.org/reverse?lat=${latitude}&lon=${longitude}&format=json&accept-language=ru`);
                             const data = await res.json();
                             if(data && data.address) {
@@ -399,7 +434,7 @@
                                 let house = data.address.house_number || '';
                                 let city = data.address.city || data.address.town || '';
                                 let fullAddress = `${city ? city + ', ' : ''}${street} ${house}`.trim();
-                                if(!fullAddress) fullAddress = data.display_name; // Фолбэк на полное имя
+                                if(!fullAddress) fullAddress = data.display_name;
                                 addressInput.value = fullAddress;
                             }
                         } catch(e) { console.error(e); alert('Не удалось получить адрес'); }
@@ -418,7 +453,6 @@
             // --- ДАШБОРД (ФИЛЬТРЫ И РАСЧЕТЫ) ---
             function renderDashboardFilters() {
                 filterSelect.innerHTML = '';
-                
                 const filters = ['Все проекты', 'Весь ФОТ', ...PREDEFINED_TEAM];
                 activeProjects.forEach(p => {
                     (p.team || []).forEach(m => {
@@ -442,21 +476,18 @@
 
             function updateDashboard() {
                 let total = 0, paid = 0, pending = 0;
-                
                 activeProjects.forEach(p => {
                     if (currentDashFilter === 'Все проекты') {
                         total += p.cost || 0;
                         if (p.isPaid) paid += p.cost || 0;
                         else pending += p.cost || 0;
-                    } 
-                    else if (currentDashFilter === 'Весь ФОТ') {
+                    } else if (currentDashFilter === 'Весь ФОТ') {
                         let projectFot = 0;
                         p.team.forEach(m => projectFot += m.fee);
                         total += projectFot;
                         if (p.isPaid) paid += projectFot;
                         else pending += projectFot;
-                    } 
-                    else {
+                    } else {
                         const member = (p.team || []).find(m => m.name === currentDashFilter);
                         if (member) {
                             total += member.fee || 0;
@@ -486,7 +517,6 @@
                 }
             }
 
-
             // --- УПРАВЛЕНИЕ СТРОКАМИ ДАТ ---
             function addDateRow(dateVal='', startVal='', endVal='') {
                 const row = document.createElement('div');
@@ -507,7 +537,6 @@
                 });
             }
             document.getElementById('add-dynamic-date-btn').addEventListener('click', () => addDateRow());
-
 
             // --- УПРАВЛЕНИЕ КОМАНДОЙ ---
             function renderTeamSelection(existingTeam = []) {
@@ -565,7 +594,6 @@
                         calcTeamTotal();
                     });
                 }
-
                 if(feeInput) feeInput.addEventListener('input', calcTeamTotal);
                 teamSelectionList.appendChild(row);
                 lucide.createIcons({root: row});
@@ -617,9 +645,7 @@
                 const extractedDates = [];
                 dateRows.forEach(row => {
                     const dVal = row.querySelector('.row-date').value;
-                    if(dVal) {
-                        extractedDates.push({ date: dVal, start: row.querySelector('.row-start').value, end: row.querySelector('.row-end').value });
-                    }
+                    if(dVal) extractedDates.push({ date: dVal, start: row.querySelector('.row-start').value, end: row.querySelector('.row-end').value });
                 });
                 if (extractedDates.length === 0) { alert('Укажите хотя бы одну дату!'); return; }
                 extractedDates.sort((a,b) => new Date(a.date) - new Date(b.date));
@@ -634,9 +660,7 @@
                             memberName = nameInput ? nameInput.value.trim() : '';
                         }
                         const feeVal = row.querySelector('.team-fee').value;
-                        if (memberName) {
-                            extractedTeam.push({ name: memberName, fee: feeVal ? Number(feeVal) : 0 });
-                        }
+                        if (memberName) extractedTeam.push({ name: memberName, fee: feeVal ? Number(feeVal) : 0 });
                     }
                 });
 
@@ -660,7 +684,7 @@
                 activeProjects.sort((a, b) => new Date(a.dates[0].date) - new Date(b.dates[0].date));
                 selectedProjectId = projectData.id;
                 
-                saveDataLocally();
+                syncData(projectData, null); 
                 renderTimeline();
                 updateContentArea();
                 closeModal();
@@ -682,21 +706,17 @@
                     const isActive = project.id === selectedProjectId;
                     const icon = document.createElement('button');
                     const firstDate = new Date(project.dates[0].date);
-                    
                     const day = firstDate.getDate();
                     const month = new Intl.DateTimeFormat('ru-RU', { month: 'short' }).format(firstDate).replace('.', '');
                     const multiBadge = project.dates.length > 1 ? `<div class="absolute top-1 right-1 bg-red-500 text-white text-[9px] font-bold px-1 rounded-full shadow">+${project.dates.length - 1}</div>` : '';
 
                     const borderStyle = project.isPaid && !isActive ? 'border-green-500/40 text-green-400 bg-green-900/10' : 'border-white/10 text-gray-300 bg-gray-800/60';
-                    
                     icon.className = `date-icon w-full rounded-2xl flex flex-col items-center justify-center border outline-none shadow-sm backdrop-blur-md ${isActive ? 'active text-white' : borderStyle}`;
-                    
                     icon.innerHTML = `
                         ${multiBadge}
                         <span class="text-[10px] uppercase font-bold ${isActive ? 'text-white' : 'opacity-60'} mb-1 tracking-widest z-10">${month}</span>
                         <span class="text-2xl font-black leading-none ${isActive ? 'text-white' : ''} z-10">${day}</span>
                     `;
-                    
                     icon.addEventListener('click', () => { 
                         selectedProjectId = project.id; 
                         renderTimeline(); 
@@ -708,8 +728,6 @@
                 lucide.createIcons();
             }
 
-
-            // --- ПОГОДА И КАРТОЧКА ПРОЕКТА ---
             async function fetchWeatherForDate(dateStr) {
                 const targetDate = new Date(dateStr);
                 const today = new Date();
@@ -747,12 +765,10 @@
                 if(project.contractor) { contrLabel.classList.remove('hidden'); contrLabel.textContent = `Контрагент: ${project.contractor}`; }
                 else { contrLabel.classList.add('hidden'); }
 
-                // Рендер Блока Локации (Адрес, Метро, Яндекс Карта iframe)
                 const locContainer = document.getElementById('project-location-container');
                 if (project.address || project.metro) {
                     locContainer.classList.remove('hidden');
                     let locHtml = `<div class="bg-black/30 border border-white/5 rounded-2xl p-4 mb-2 shadow-inner">`;
-                    
                     if (project.address) {
                         locHtml += `
                         <div class="flex items-start gap-2 mb-2">
@@ -768,7 +784,6 @@
                         </div>`;
                     }
                     if (project.address) {
-                        // Интерактивная карта Яндекс
                         locHtml += `<iframe src="https://yandex.ru/map-widget/v1/?text=${encodeURIComponent(project.address)}&z=15" width="100%" height="180" frameborder="0" allowfullscreen="true" class="rounded-xl border border-white/10 opacity-90 shadow-lg mt-1 pointer-events-auto"></iframe>`;
                     }
                     locHtml += `</div>`;
@@ -778,7 +793,6 @@
                     locContainer.classList.add('hidden');
                 }
                 
-                // Рендер списка дат с погодой
                 const datesContainer = document.getElementById('project-dates-container');
                 datesContainer.innerHTML = '';
                 project.dates.forEach(async (d, index) => {
@@ -819,7 +833,6 @@
                     }
                 });
 
-                // Рендер команды (ФОТ)
                 const teamContainer = document.getElementById('project-team-container');
                 const teamListHtml = document.getElementById('project-team-list');
                 if (project.team && project.team.length > 0) {
@@ -841,7 +854,6 @@
                     teamContainer.classList.add('hidden');
                 }
 
-                // Финансы
                 const financeBlock = document.getElementById('finance-block');
                 const projectCostLabel = document.getElementById('project-cost-label');
                 const projectMethodLabel = document.getElementById('project-method-label');
@@ -873,7 +885,7 @@
                 const project = activeProjects.find(p => p.id === selectedProjectId);
                 if (project) {
                     project.isPaid = true;
-                    saveDataLocally();
+                    syncData(project, null);
                     updateContentArea();
                     renderTimeline();
                 }
@@ -881,9 +893,10 @@
 
             document.getElementById('delete-project-btn').addEventListener('click', () => {
                 if (confirm('Точно удалить этот проект?')) {
-                    activeProjects = activeProjects.filter(p => p.id !== selectedProjectId);
+                    const idToDelete = selectedProjectId;
+                    activeProjects = activeProjects.filter(p => p.id !== idToDelete);
                     selectedProjectId = activeProjects.length > 0 ? activeProjects[0].id : null;
-                    saveDataLocally();
+                    syncData(null, idToDelete);
                     renderTimeline();
                     if(selectedProjectId) updateContentArea();
                 }
@@ -946,7 +959,6 @@
                 }
             });
 
-            // Парсинг Excel
             const uploadInput = document.getElementById('excel-upload');
             const dataContainer = document.getElementById('excel-data-container');
             const emptyState = document.getElementById('excel-empty-state');
@@ -987,11 +999,6 @@
                     dataContainer.innerHTML += cardHtml;
                 }
             }
-
-            renderDashboardFilters();
-            renderTimeline();
-            if (selectedProjectId) updateContentArea();
-            updateDashboard();
         });
 
         if ('serviceWorker' in navigator) {
@@ -1000,3 +1007,5 @@
     </script>
 </body>
 </html>
+
+```
