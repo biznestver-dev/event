@@ -1,10 +1,9 @@
-const CACHE_NAME = 'am-prod-cache-v1';
+const CACHE_NAME = 'event-kremlin-v1';
 const urlsToCache = [
   './',
   './index.html',
-  './style.css',
-  './app.js',
-  './manifest.json'
+  './manifest.json',
+  './icon.jpg'
 ];
 
 self.addEventListener('install', event => {
@@ -14,6 +13,7 @@ self.addEventListener('install', event => {
         return cache.addAll(urlsToCache);
       })
   );
+  self.skipWaiting();
 });
 
 self.addEventListener('fetch', event => {
@@ -25,5 +25,20 @@ self.addEventListener('fetch', event => {
         }
         return fetch(event.request);
       })
+  );
+});
+
+self.addEventListener('activate', event => {
+  const cacheWhitelist = [CACHE_NAME];
+  event.waitUntil(
+    caches.keys().then(cacheNames => {
+      return Promise.all(
+        cacheNames.map(cacheName => {
+          if (cacheWhitelist.indexOf(cacheName) === -1) {
+            return caches.delete(cacheName);
+          }
+        })
+      );
+    })
   );
 });
