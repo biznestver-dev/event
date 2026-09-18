@@ -9,476 +9,450 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="AM Prod">
     <link rel="apple-touch-icon" href="https://cdn-icons-png.flaticon.com/512/7325/7325295.png">
-    
-    <!-- Подключение манифеста -->
     <link rel="manifest" href="manifest.json">
-    <meta name="theme-color" content="#030712">
     
     <title>AM Prod Calendar</title>
     
-    <!-- Библиотеки -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
     
-    <!-- Стили -->
     <style>
         .ios-header {
-            background: rgba(17, 24, 39, 0.75);
+            background: rgba(17, 24, 39, 0.85);
             backdrop-filter: blur(20px);
             -webkit-backdrop-filter: blur(20px);
             padding-top: max(3rem, env(safe-area-inset-top));
         }
-
-        .hidden-scrollbar::-webkit-scrollbar {
-            display: none;
-        }
-        .hidden-scrollbar {
-            -ms-overflow-style: none;
-            scrollbar-width: none;
-        }
-
-        .date-icon {
-            transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
-            -webkit-tap-highlight-color: transparent;
-        }
-
-        .date-icon:active {
-            transform: scale(0.95);
-        }
-
-        .date-icon.active {
-            transform: translateY(-2px);
-            box-shadow: 0 8px 16px -4px rgba(59, 130, 246, 0.5);
-        }
-        
-        .modal-active {
-            opacity: 1 !important;
-            pointer-events: auto !important;
-        }
-        
-        .modal-active > div {
-            transform: scale(1) !important;
-        }
+        .hidden-scrollbar::-webkit-scrollbar { display: none; }
+        .hidden-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+        .modal-active { opacity: 1 !important; }
+        .modal-active > #date-modal-content { transform: scale(1) !important; }
+        .date-icon { transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1); }
+        .date-icon:active { transform: scale(0.9); }
+        .date-icon.active { transform: translateY(-2px); box-shadow: 0 8px 16px -4px rgba(59, 130, 246, 0.5); }
     </style>
 </head>
 <body class="bg-gray-950 text-white font-sans antialiased pb-24 selection:bg-blue-500/30">
 
-    <!-- Header -->
-    <header class="ios-header fixed top-0 w-full z-40 px-4 pt-12 pb-3 border-b border-white/10 flex justify-between items-center max-w-md mx-auto left-0 right-0">
-        <h1 class="text-xl font-semibold tracking-tight">Проекты AM</h1>
-        <div class="flex gap-3">
-            <label class="bg-gray-800 hover:bg-gray-700 text-white p-2 rounded-full cursor-pointer transition-colors shadow-lg active:scale-95">
-                <i data-lucide="file-spreadsheet" class="w-5 h-5"></i>
-                <input type="file" id="excel-upload" class="hidden" accept=".xlsx, .xls">
-            </label>
-            <button id="add-btn" class="bg-blue-600 hover:bg-blue-500 text-white p-2 rounded-full transition-colors shadow-[0_0_15px_rgba(59,130,246,0.5)] active:scale-95">
-                <i data-lucide="plus" class="w-5 h-5"></i>
-            </button>
+    <!-- Header & Dashboard -->
+    <header class="ios-header fixed top-0 w-full z-40 border-b border-white/10 pb-3">
+        <div class="px-4 flex justify-between items-center mb-4">
+            <h1 class="text-xl font-semibold tracking-tight">Техотдел AM</h1>
+            <div class="flex gap-3">
+                <label class="bg-gray-800 hover:bg-gray-700 text-white p-2.5 rounded-full cursor-pointer transition-colors shadow-lg relative">
+                    <i data-lucide="file-spreadsheet" class="w-5 h-5"></i>
+                    <input type="file" id="excel-upload" class="hidden" accept=".xlsx, .xls">
+                </label>
+                <button id="add-date-btn" class="bg-blue-600 hover:bg-blue-500 text-white p-2.5 rounded-full transition-colors shadow-[0_0_15px_rgba(59,130,246,0.5)]">
+                    <i data-lucide="plus" class="w-5 h-5"></i>
+                </button>
+            </div>
+        </div>
+
+        <!-- Глобальный дашборд -->
+        <div class="px-4 flex justify-between gap-2">
+            <div class="bg-gray-900/60 p-2.5 rounded-xl border border-white/5 flex-1">
+                <div class="text-[10px] text-gray-500 uppercase tracking-wider mb-0.5">Всего</div>
+                <div class="text-sm font-bold text-white" id="dash-total">0 ₽</div>
+            </div>
+            <div class="bg-green-900/20 p-2.5 rounded-xl border border-green-500/20 flex-1">
+                <div class="text-[10px] text-green-500/80 uppercase tracking-wider mb-0.5">Оплачено</div>
+                <div class="text-sm font-bold text-green-400" id="dash-paid">0 ₽</div>
+            </div>
+            <div class="bg-yellow-900/20 p-2.5 rounded-xl border border-yellow-500/20 flex-1">
+                <div class="text-[10px] text-yellow-500/80 uppercase tracking-wider mb-0.5">Остаток</div>
+                <div class="text-sm font-bold text-yellow-400" id="dash-pending">0 ₽</div>
+            </div>
         </div>
     </header>
 
     <!-- Main Content -->
-    <main class="pt-24 h-screen overflow-y-auto hidden-scrollbar max-w-md mx-auto relative">
-        
-        <div class="px-4 mb-4">
-            <div class="bg-gray-900/60 border border-white/5 p-4 rounded-3xl shadow-sm backdrop-blur-md grid grid-cols-3 gap-2 text-center divide-x divide-white/10">
-                <div>
-                    <div class="text-[9px] text-gray-500 uppercase font-bold tracking-wider mb-1">Всего</div>
-                    <div class="text-sm font-bold text-white" id="global-total">0 ₽</div>
-                </div>
-                <div>
-                    <div class="text-[9px] text-gray-500 uppercase font-bold tracking-wider mb-1">Оплачено</div>
-                    <div class="text-sm font-bold text-green-400" id="global-paid">0 ₽</div>
-                </div>
-                <div>
-                    <div class="text-[9px] text-gray-500 uppercase font-bold tracking-wider mb-1">Ожидается</div>
-                    <div class="text-sm font-bold text-yellow-400" id="global-pending">0 ₽</div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Timeline -->
+    <main class="pt-40 h-screen overflow-y-auto hidden-scrollbar">
+        <!-- Кружки дат -->
         <div class="px-4 pb-2">
-            <div id="timeline" class="flex gap-4 overflow-x-auto hidden-scrollbar pb-4 pt-2 snap-x">
-                <!-- Date icons will be injected here -->
+            <div id="dates-timeline" class="flex gap-4 overflow-x-auto hidden-scrollbar pb-2 snap-x">
+                <div class="text-gray-500 text-sm mt-2 w-full text-center" id="timeline-empty">Нажмите +, чтобы добавить проект</div>
             </div>
         </div>
 
-        <!-- Dynamic Date Content -->
+        <!-- Контент выбранного проекта -->
         <div id="date-content" class="px-4 mt-2 hidden">
-            <!-- Project & Date Card -->
-            <div class="bg-gray-900/60 border border-white/5 p-5 rounded-3xl mb-4 shadow-sm backdrop-blur-md">
-                <div class="flex justify-between items-start mb-3">
-                    <h2 id="project-name" class="text-lg font-bold leading-tight">Название проекта</h2>
-                    <div class="flex items-center gap-1.5 text-xs font-medium text-gray-400 bg-gray-800/80 px-2.5 py-1 rounded-lg border border-white/5 shrink-0">
-                        <i data-lucide="cloud-sun" class="w-3.5 h-3.5"></i>
-                        <span>+22°</span>
-                    </div>
-                </div>
+            
+            <div class="mb-4">
+                <h2 id="project-title-label" class="text-2xl font-bold mb-1">Название проекта</h2>
                 <div class="flex items-center gap-2 text-gray-400 text-sm">
                     <i data-lucide="calendar" class="w-4 h-4"></i>
-                    <span id="project-date">Дата</span>
+                    <span id="current-date-label">Дата</span>
                 </div>
             </div>
 
-            <!-- Finance Block -->
-            <div id="finance-block" class="bg-gray-900/60 border border-white/5 p-5 rounded-3xl mb-6 shadow-sm backdrop-blur-md">
-                <!-- Injected via JS -->
+            <!-- Управление проектом (Редактировать / Удалить / Шеринг) -->
+            <div class="flex gap-2 mb-6">
+                <button id="edit-project-btn" class="flex-1 bg-gray-800 text-gray-300 py-2.5 rounded-xl text-sm font-medium flex justify-center items-center gap-2 border border-white/5">
+                    <i data-lucide="edit" class="w-4 h-4"></i> Изменить
+                </button>
+                <button id="share-project-btn" class="flex-1 bg-blue-900/30 text-blue-400 py-2.5 rounded-xl text-sm font-medium flex justify-center items-center gap-2 border border-blue-500/20">
+                    <i data-lucide="send" class="w-4 h-4"></i> Отправить
+                </button>
+                <button id="delete-project-btn" class="flex-1 bg-red-900/20 text-red-400 py-2.5 rounded-xl text-sm font-medium flex justify-center items-center gap-2 border border-red-500/20">
+                    <i data-lucide="trash-2" class="w-4 h-4"></i> Удалить
+                </button>
             </div>
 
-            <div class="border-t border-white/10 pt-6">
-                <h3 class="text-sm font-semibold text-gray-400 mb-4 uppercase tracking-wider px-1">Списки на площадку</h3>
-                <div id="excel-data-container" class="space-y-3 pb-8">
-                    <div id="excel-empty-state" class="bg-gray-900/30 border border-dashed border-white/10 rounded-3xl p-8 text-center">
-                        <div class="bg-gray-800/50 w-12 h-12 rounded-full flex items-center justify-center mx-auto mb-3">
-                            <i data-lucide="list-x" class="w-6 h-6 text-gray-500"></i>
-                        </div>
-                        <p class="text-sm text-gray-500">Загрузите таблицу со списком (кнопка в правом верхнем углу).</p>
+            <!-- Финансовый блок -->
+            <div id="finance-block" class="bg-gray-900/50 border border-white/5 p-4 rounded-2xl mb-6 shadow-sm hidden">
+                <div class="flex justify-between items-start mb-3">
+                    <div>
+                        <div class="text-xs text-gray-500 font-medium uppercase tracking-wide mb-1">Смета</div>
+                        <div id="project-cost-label" class="text-xl font-bold text-white">0 ₽</div>
+                    </div>
+                    <div class="text-right">
+                        <div class="text-xs text-gray-500 font-medium uppercase tracking-wide mb-1">Способ оплаты</div>
+                        <div id="project-method-label" class="text-sm text-gray-300">Наличные</div>
+                    </div>
+                </div>
+                
+                <div id="payment-actions" class="pt-3 border-t border-white/5 mt-1">
+                    <button id="mark-paid-btn" class="w-full bg-blue-600/20 text-blue-400 hover:bg-blue-600/30 font-medium py-2.5 rounded-xl transition-colors border border-blue-500/30 flex justify-center items-center gap-2">
+                        <i data-lucide="circle-dollar-sign" class="w-4 h-4"></i> Отметить как оплаченное
+                    </button>
+                    <div id="paid-status" class="hidden w-full bg-green-500/10 text-green-400 font-medium py-2.5 rounded-xl border border-green-500/20 flex justify-center items-center gap-2">
+                        <i data-lucide="check-circle-2" class="w-5 h-5"></i> Оплачено
                     </div>
                 </div>
             </div>
-        </div>
-        
-        <!-- Empty Timeline State -->
-        <div id="empty-state" class="hidden px-4 mt-6 text-center text-gray-500 text-sm">
-            Нет добавленных дат. Нажмите + чтобы создать проект.
+
+            <!-- Списки из Excel -->
+            <div class="flex justify-between items-center mb-3">
+                <h3 class="text-lg font-semibold">Списки на площадку</h3>
+            </div>
+            <div id="excel-data-container" class="space-y-3 pb-8">
+                <div class="text-center text-gray-600 mt-6 text-sm border border-dashed border-gray-800 rounded-2xl p-6" id="excel-empty-state">
+                    <i data-lucide="list-x" class="w-8 h-8 mx-auto mb-2 opacity-30"></i>
+                    Таблицы не загружены
+                </div>
+            </div>
         </div>
     </main>
 
-    <!-- Add Date Modal -->
-    <div id="modal" class="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4 opacity-0 pointer-events-none transition-opacity duration-300">
-        <div class="bg-gray-900 border border-gray-700 p-6 rounded-[2rem] w-full max-w-sm shadow-2xl transform scale-95 transition-transform duration-300">
-            <h3 class="text-xl font-bold mb-5 text-white">Новый проект</h3>
+    <!-- Modal: Добавление/Изменение проекта -->
+    <div id="date-modal" class="hidden fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4 opacity-0 transition-opacity duration-300">
+        <div class="bg-gray-900 border border-gray-800 p-6 rounded-[2rem] w-full max-w-xs shadow-2xl transform scale-95 transition-transform duration-300" id="date-modal-content">
+            <h3 id="modal-title" class="text-lg font-semibold mb-5 text-center">Новый проект</h3>
             
-            <div class="space-y-4 mb-6">
-                <div>
-                    <label class="block text-xs font-medium text-gray-400 mb-1.5 ml-1">Название проекта</label>
-                    <input type="text" id="input-name" placeholder="Например: Электротеатр" class="w-full bg-gray-800 text-white text-sm rounded-xl py-3 px-4 outline-none border border-gray-700 focus:border-blue-500 transition-colors">
-                </div>
+            <div class="space-y-3 mb-6">
+                <input type="date" id="new-date-input" class="w-full bg-gray-800 text-white rounded-xl p-3 outline-none border border-gray-700 block focus:border-blue-500 transition-colors" style="color-scheme: dark;" required>
+                <input type="text" id="new-project-title" placeholder="Название (например, ВДНХ)" class="w-full bg-gray-800 text-white text-sm rounded-xl p-3 outline-none border border-gray-700 block transition-colors focus:border-blue-500">
                 
-                <div>
-                    <label class="block text-xs font-medium text-gray-400 mb-1.5 ml-1">Дата</label>
-                    <input type="date" id="input-date" class="w-full bg-gray-800 text-white text-sm rounded-xl py-3 px-4 outline-none border border-gray-700 focus:border-blue-500 transition-colors block" style="color-scheme: dark;">
+                <!-- Калькулятор: Люди * Ставка -->
+                <div class="flex gap-2">
+                    <input type="number" id="calc-people" placeholder="Кол-во чел." class="w-1/2 bg-gray-800 text-white text-sm rounded-xl p-3 outline-none border border-gray-700 focus:border-blue-500">
+                    <input type="number" id="calc-rate" placeholder="Ставка, ₽" class="w-1/2 bg-gray-800 text-white text-sm rounded-xl p-3 outline-none border border-gray-700 focus:border-blue-500">
                 </div>
 
-                <div class="grid grid-cols-2 gap-3">
-                    <div>
-                        <label class="block text-xs font-medium text-gray-400 mb-1.5 ml-1">Кол-во человек</label>
-                        <input type="number" id="input-people" placeholder="0" class="w-full bg-gray-800 text-white text-sm rounded-xl py-3 px-4 outline-none border border-gray-700 focus:border-blue-500 transition-colors">
-                    </div>
-                    <div>
-                        <label class="block text-xs font-medium text-gray-400 mb-1.5 ml-1">Ставка (₽)</label>
-                        <input type="number" id="input-rate" placeholder="0" class="w-full bg-gray-800 text-white text-sm rounded-xl py-3 px-4 outline-none border border-gray-700 focus:border-blue-500 transition-colors">
-                    </div>
+                <div class="relative">
+                    <span class="absolute left-4 top-3 text-gray-500 font-medium">₽</span>
+                    <input type="number" id="new-project-cost" placeholder="Итоговая сумма" class="w-full bg-gray-800 text-white text-sm rounded-xl py-3 pl-9 pr-4 outline-none border border-gray-700 block transition-colors border-blue-500/30">
                 </div>
-
-                <div class="grid grid-cols-2 gap-3">
-                    <div>
-                        <label class="block text-xs font-medium text-gray-400 mb-1.5 ml-1">Общий Гонорар (₽)</label>
-                        <input type="number" id="input-cost" placeholder="0" class="w-full bg-gray-800 text-white text-sm rounded-xl py-3 px-4 outline-none border border-gray-700 focus:border-blue-500 transition-colors">
-                    </div>
-                    <div>
-                        <label class="block text-xs font-medium text-gray-400 mb-1.5 ml-1">Способ оплаты</label>
-                        <select id="input-method" class="w-full bg-gray-800 text-white text-sm rounded-xl py-3 px-4 outline-none border border-gray-700 focus:border-blue-500 transition-colors appearance-none">
-                            <option value="На карту">На карту</option>
-                            <option value="Наличные">Наличные</option>
-                            <option value="Безнал (ИП)">Безнал (ИП)</option>
-                        </select>
-                    </div>
-                </div>
+                <input type="text" id="new-project-method" placeholder="Способ (нал, карта, ИП)" class="w-full bg-gray-800 text-white text-sm rounded-xl p-3 outline-none border border-gray-700 block transition-colors focus:border-blue-500">
             </div>
 
-            <div class="flex gap-3 mt-8">
-                <button id="btn-cancel" class="flex-1 py-3.5 rounded-xl bg-gray-800 text-gray-300 font-medium active:scale-95 transition-transform">Отмена</button>
-                <button id="btn-save" class="flex-1 py-3.5 rounded-xl bg-blue-600 text-white font-medium active:scale-95 transition-transform shadow-lg shadow-blue-600/20">Сохранить</button>
+            <div class="flex gap-3">
+                <button id="cancel-date" class="flex-1 py-3 rounded-xl bg-gray-800 text-gray-300 font-medium active:scale-95 transition-transform">Отмена</button>
+                <button id="save-date" class="flex-1 py-3 rounded-xl bg-blue-600 text-white font-medium active:scale-95 transition-transform shadow-lg shadow-blue-500/30">Сохранить</button>
             </div>
         </div>
     </div>
 
-    <!-- Application Logic -->
     <script>
-        let projects = [];
-        let activeProjectId = null;
-
-        const DOM = {
-            timeline: document.getElementById('timeline'),
-            content: document.getElementById('date-content'),
-            emptyState: document.getElementById('empty-state'),
-            projectName: document.getElementById('project-name'),
-            projectDate: document.getElementById('project-date'),
-            financeBlock: document.getElementById('finance-block'),
-            modal: document.getElementById('modal'),
-            addBtn: document.getElementById('add-btn'),
-            cancelBtn: document.getElementById('btn-cancel'),
-            saveBtn: document.getElementById('btn-save'),
-            inpName: document.getElementById('input-name'),
-            inpDate: document.getElementById('input-date'),
-            inpPeople: document.getElementById('input-people'),
-            inpRate: document.getElementById('input-rate'),
-            inpCost: document.getElementById('input-cost'),
-            inpMethod: document.getElementById('input-method'),
-            excelInput: document.getElementById('excel-upload'),
-            excelContainer: document.getElementById('excel-data-container'),
-            excelEmptyState: document.getElementById('excel-empty-state'),
-            // Global finance DOM
-            gTotal: document.getElementById('global-total'),
-            gPaid: document.getElementById('global-paid'),
-            gPending: document.getElementById('global-pending')
-        };
-
-        const formatMoney = (amount) => Number(amount || 0).toLocaleString('ru-RU') + ' ₽';
-        const getShortMonth = (date) => new Intl.DateTimeFormat('ru-RU', { month: 'short' }).format(date).replace('.', '');
-        const getFullDate = (date) => new Intl.DateTimeFormat('ru-RU', { day: 'numeric', month: 'long', year: 'numeric' }).format(date);
-
-        // Auto-calculate cost when people or rate changes
-        function autoCalculateTotal() {
-            const p = parseInt(DOM.inpPeople.value) || 0;
-            const r = parseInt(DOM.inpRate.value) || 0;
-            if (p > 0 && r > 0) {
-                DOM.inpCost.value = p * r;
-            }
-        }
-        DOM.inpPeople.addEventListener('input', autoCalculateTotal);
-        DOM.inpRate.addEventListener('input', autoCalculateTotal);
-
-        // Update Global Finance Dashboard
-        function updateGlobalFinances() {
-            let total = 0, paid = 0, pending = 0;
-            projects.forEach(p => {
-                total += p.cost;
-                if (p.isPaid) {
-                    paid += p.cost;
-                } else {
-                    pending += p.cost;
-                }
-            });
-            DOM.gTotal.textContent = formatMoney(total);
-            DOM.gPaid.textContent = formatMoney(paid);
-            DOM.gPending.textContent = formatMoney(pending);
-        }
-
-        function renderTimeline() {
-            DOM.timeline.innerHTML = '';
-            
-            if (projects.length === 0) {
-                DOM.emptyState.classList.remove('hidden');
-                DOM.content.classList.add('hidden');
-                updateGlobalFinances();
-                return;
-            }
-
-            DOM.emptyState.classList.add('hidden');
-            DOM.content.classList.remove('hidden');
-
-            projects.sort((a, b) => a.rawDate - b.rawDate);
-
-            projects.forEach(proj => {
-                const isActive = proj.id === activeProjectId;
-                const btn = document.createElement('button');
-                
-                let baseClasses = 'date-icon snap-center shrink-0 w-[4.5rem] h-[4.5rem] rounded-2xl flex flex-col items-center justify-center border outline-none ';
-                
-                // Add green border indicator if paid and not active
-                const borderStyle = proj.isPaid && !isActive ? 'border-green-500/50' : 'border-white/10';
-
-                if (isActive) {
-                    btn.className = baseClasses + 'bg-gradient-to-b from-blue-500 to-blue-600 border-blue-400 text-white shadow-lg shadow-blue-500/20';
-                } else {
-                    btn.className = baseClasses + `bg-gray-800/80 backdrop-blur-md ${borderStyle} text-gray-400`;
-                }
-                
-                btn.innerHTML = `
-                    <span class="text-[11px] uppercase font-semibold ${isActive ? 'text-blue-100' : 'opacity-50'} mb-0.5 tracking-wider">
-                        ${getShortMonth(proj.rawDate)}
-                    </span>
-                    <span class="text-2xl font-bold leading-none ${isActive ? 'text-white' : 'text-gray-200'}">
-                        ${proj.rawDate.getDate()}
-                    </span>
-                `;
-
-                btn.onclick = () => {
-                    activeProjectId = proj.id;
-                    renderTimeline();
-                    renderContent();
-                };
-
-                DOM.timeline.appendChild(btn);
-            });
-            
-            updateGlobalFinances();
-        }
-
-        function renderContent() {
-            const proj = projects.find(p => p.id === activeProjectId);
-            if (!proj) return;
-
-            DOM.projectName.textContent = proj.name;
-            DOM.projectDate.textContent = getFullDate(proj.rawDate);
-
-            if(proj.cost > 0) {
-                DOM.financeBlock.classList.remove('hidden');
-                const costColorClass = proj.isPaid ? 'text-green-400' : 'text-white';
-                
-                let actionHtml = '';
-                if (proj.isPaid) {
-                    actionHtml = `
-                        <div class="mt-5 bg-green-500/10 border border-green-500/20 py-3 rounded-xl flex items-center justify-center gap-2 text-green-400 font-semibold text-sm transition-all">
-                            <i data-lucide="check-circle-2" class="w-5 h-5"></i>
-                            Оплачено
-                        </div>
-                    `;
-                } else {
-                    actionHtml = `
-                        <button onclick="markAsPaid('${proj.id}')" class="mt-5 w-full bg-blue-600 hover:bg-blue-500 py-3 rounded-xl flex items-center justify-center gap-2 text-white font-semibold text-sm transition-all active:scale-95 shadow-lg shadow-blue-600/20">
-                            <i data-lucide="wallet" class="w-5 h-5"></i>
-                            Оплатили
-                        </button>
-                    `;
-                }
-
-                // Show calculation breakdown if people/rate exist
-                let calculationSubtext = '';
-                if (proj.people > 0 && proj.rate > 0) {
-                    calculationSubtext = `<div class="text-xs text-gray-400 mt-1">${proj.people} чел. × ${formatMoney(proj.rate)}</div>`;
-                }
-
-                DOM.financeBlock.innerHTML = `
-                    <div class="flex justify-between items-start">
-                        <div>
-                            <span class="text-xs text-gray-500 font-medium uppercase tracking-wider block mb-1">Гонорар</span>
-                            <span class="text-2xl font-bold ${costColorClass} transition-colors">${formatMoney(proj.cost)}</span>
-                            ${calculationSubtext}
-                        </div>
-                        <div class="text-right">
-                            <span class="text-xs text-gray-500 font-medium uppercase tracking-wider block mb-1">Способ</span>
-                            <span class="text-sm font-medium text-gray-300 bg-gray-800/50 px-2 py-1 rounded-md">${proj.method}</span>
-                        </div>
-                    </div>
-                    ${actionHtml}
-                `;
-            } else {
-                DOM.financeBlock.classList.add('hidden');
-                DOM.financeBlock.innerHTML = '';
-            }
-            
+        document.addEventListener('DOMContentLoaded', () => {
             lucide.createIcons();
-        }
 
-        window.markAsPaid = function(id) {
-            const proj = projects.find(p => p.id === id);
-            if (proj) {
-                proj.isPaid = true;
-                renderContent(); 
-                renderTimeline(); // Re-render to update global finances and timeline borders
+            let activeDates = [];
+            let selectedDateId = null;
+            let isEditMode = false;
+
+            // Загрузка данных из Local Storage
+            const savedData = localStorage.getItem('amProdData');
+            if (savedData) {
+                activeDates = JSON.parse(savedData);
+                if (activeDates.length > 0) {
+                    selectedDateId = activeDates[0].id; // Выбираем первый проект
+                }
             }
-        };
 
-        const openModal = () => DOM.modal.classList.add('modal-active');
-        const closeModal = () => {
-            DOM.modal.classList.remove('modal-active');
-            DOM.inpName.value = '';
-            DOM.inpDate.value = '';
-            DOM.inpPeople.value = '';
-            DOM.inpRate.value = '';
-            DOM.inpCost.value = '';
-            DOM.inpMethod.value = 'На карту';
-        };
+            // Элементы
+            const timeline = document.getElementById('dates-timeline');
+            const timelineEmpty = document.getElementById('timeline-empty');
+            const modal = document.getElementById('date-modal');
+            const modalContent = document.getElementById('date-modal-content');
+            const contentArea = document.getElementById('date-content');
+            
+            // Форма
+            const dateInput = document.getElementById('new-date-input');
+            const titleInput = document.getElementById('new-project-title');
+            const costInput = document.getElementById('new-project-cost');
+            const methodInput = document.getElementById('new-project-method');
+            const calcPeople = document.getElementById('calc-people');
+            const calcRate = document.getElementById('calc-rate');
+            const modalTitle = document.getElementById('modal-title');
+            
+            // Дашборд и контент
+            const dashTotal = document.getElementById('dash-total');
+            const dashPaid = document.getElementById('dash-paid');
+            const dashPending = document.getElementById('dash-pending');
 
-        DOM.addBtn.addEventListener('click', openModal);
-        DOM.cancelBtn.addEventListener('click', closeModal);
-        
-        DOM.modal.addEventListener('click', (e) => {
-            if (e.target === DOM.modal) closeModal();
-        });
+            // Сохранение в Local Storage
+            function saveDataLocally() {
+                localStorage.setItem('amProdData', JSON.stringify(activeDates));
+                updateDashboard();
+            }
 
-        DOM.saveBtn.addEventListener('click', () => {
-            const name = DOM.inpName.value.trim();
-            const dateStr = DOM.inpDate.value;
-            const people = parseInt(DOM.inpPeople.value) || 0;
-            const rate = parseInt(DOM.inpRate.value) || 0;
-            const cost = parseInt(DOM.inpCost.value) || 0;
-            const method = DOM.inpMethod.value;
+            // Умный калькулятор
+            const calculateTotal = () => {
+                const people = parseFloat(calcPeople.value) || 0;
+                const rate = parseFloat(calcRate.value) || 0;
+                if (people > 0 && rate > 0) costInput.value = people * rate;
+            };
+            calcPeople.addEventListener('input', calculateTotal);
+            calcRate.addEventListener('input', calculateTotal);
 
-            if (!name || !dateStr) return; // Silent validation
-
-            const newProj = {
-                id: dateStr + '-' + Date.now(), 
-                name: name,
-                rawDate: new Date(dateStr),
-                people: people,
-                rate: rate,
-                cost: cost,
-                method: method,
-                isPaid: false
+            // Модальное окно
+            const openModal = (editMode = false) => {
+                isEditMode = editMode;
+                modalTitle.textContent = editMode ? 'Изменить проект' : 'Новый проект';
+                modal.classList.remove('hidden');
+                setTimeout(() => modal.classList.add('modal-active'), 10);
             };
 
-            projects.push(newProj);
-            activeProjectId = newProj.id;
-            
-            renderTimeline();
-            renderContent();
-            closeModal();
-        });
+            const closeModal = () => {
+                modal.classList.remove('modal-active');
+                setTimeout(() => modal.classList.add('hidden'), 300);
+                dateInput.value = ''; titleInput.value = ''; costInput.value = ''; methodInput.value = ''; calcPeople.value = ''; calcRate.value = '';
+            };
 
-        DOM.excelInput.addEventListener('change', (e) => {
-            const file = e.target.files[0];
-            if (!file) return;
+            document.getElementById('add-date-btn').addEventListener('click', () => {
+                closeModal(); // очищаем
+                openModal(false);
+            });
+            document.getElementById('cancel-date').addEventListener('click', closeModal);
 
-            const reader = new FileReader();
-            reader.onload = (e) => {
-                const data = new Uint8Array(e.target.result);
-                const workbook = XLSX.read(data, { type: 'array' });
-                const worksheet = workbook.Sheets[workbook.SheetNames[0]];
-                const json = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
+            // Сохранение проекта
+            document.getElementById('save-date').addEventListener('click', () => {
+                if (!dateInput.value) return;
+
+                const dateStr = dateInput.value;
+                const dateParts = dateStr.split('-');
+                const d = new Date(dateParts[0], dateParts[1] - 1, dateParts[2]);
+
+                const projectData = {
+                    id: dateStr,
+                    day: d.getDate(),
+                    month: new Intl.DateTimeFormat('ru-RU', { month: 'short' }).format(d).replace('.', ''),
+                    full: new Intl.DateTimeFormat('ru-RU', { day: 'numeric', month: 'long', year: 'numeric' }).format(d),
+                    title: titleInput.value || 'Без названия',
+                    cost: costInput.value ? Number(costInput.value) : 0,
+                    method: methodInput.value || 'Не указано',
+                    isPaid: false
+                };
+
+                const existingIndex = activeDates.findIndex(proj => proj.id === projectData.id);
                 
-                DOM.excelContainer.innerHTML = ''; 
+                if (isEditMode && existingIndex > -1) {
+                    projectData.isPaid = activeDates[existingIndex].isPaid; // сохраняем статус оплаты при редактировании
+                    activeDates[existingIndex] = projectData;
+                } else {
+                    if (existingIndex > -1) activeDates[existingIndex] = projectData;
+                    else activeDates.push(projectData);
+                }
+
+                // Сортировка по дате
+                activeDates.sort((a, b) => new Date(a.id) - new Date(b.id));
                 
-                const headers = json[0];
-                let hasData = false;
+                selectedDateId = projectData.id;
+                saveDataLocally();
+                renderTimeline();
+                updateContentArea();
+                closeModal();
+            });
+
+            // Обновление верхнего дашборда
+            function updateDashboard() {
+                let total = 0, paid = 0, pending = 0;
+                activeDates.forEach(d => {
+                    total += d.cost || 0;
+                    if (d.isPaid) paid += d.cost || 0;
+                    else pending += d.cost || 0;
+                });
+                dashTotal.textContent = `${total.toLocaleString('ru-RU')} ₽`;
+                dashPaid.textContent = `${paid.toLocaleString('ru-RU')} ₽`;
+                dashPending.textContent = `${pending.toLocaleString('ru-RU')} ₽`;
+            }
+
+            // Отрисовка ленты
+            function renderTimeline() {
+                timeline.innerHTML = '';
+                if (activeDates.length > 0) {
+                    if(timelineEmpty) timelineEmpty.style.display = 'none';
+                    contentArea.classList.remove('hidden');
+                } else {
+                    if(timelineEmpty) timelineEmpty.style.display = 'block';
+                    contentArea.classList.add('hidden');
+                }
+
+                activeDates.forEach(date => {
+                    const isActive = date.id === selectedDateId;
+                    const icon = document.createElement('button');
+                    const borderStyle = date.isPaid && !isActive ? 'border-green-500/50' : 'border-white/10';
+                    let baseClasses = 'date-icon snap-center shrink-0 w-16 h-16 rounded-2xl flex flex-col items-center justify-center border outline-none ';
+                    
+                    if (isActive) icon.className = baseClasses + 'bg-gradient-to-b from-blue-500 to-blue-600 border-blue-400 text-white';
+                    else icon.className = baseClasses + `bg-gray-800/80 backdrop-blur-md ${borderStyle} text-gray-400`;
+                    
+                    icon.innerHTML = `<span class="text-[10px] uppercase font-semibold ${isActive ? 'text-blue-100' : 'opacity-50'} mb-0.5 tracking-wider">${date.month}</span>
+                                      <span class="text-2xl font-bold leading-none ${isActive ? 'text-white' : 'text-gray-200'}">${date.day}</span>`;
+                    
+                    icon.addEventListener('click', () => { selectedDateId = date.id; renderTimeline(); updateContentArea(); });
+                    timeline.appendChild(icon);
+                });
+                lucide.createIcons();
+            }
+
+            // Обновление контента проекта
+            function updateContentArea() {
+                const date = activeDates.find(d => d.id === selectedDateId);
+                if (!date) return;
+
+                document.getElementById('current-date-label').textContent = date.full;
+                document.getElementById('project-title-label').textContent = date.title;
+
+                const financeBlock = document.getElementById('finance-block');
+                const projectCostLabel = document.getElementById('project-cost-label');
+                const projectMethodLabel = document.getElementById('project-method-label');
+                const markPaidBtn = document.getElementById('mark-paid-btn');
+                const paidStatus = document.getElementById('paid-status');
+
+                if (date.cost > 0) {
+                    financeBlock.classList.remove('hidden');
+                    projectCostLabel.textContent = `${date.cost.toLocaleString('ru-RU')} ₽`;
+                    projectMethodLabel.textContent = date.method;
+                    
+                    if (date.isPaid) {
+                        markPaidBtn.classList.add('hidden');
+                        paidStatus.classList.remove('hidden');
+                        projectCostLabel.className = 'text-xl font-bold text-green-400';
+                    } else {
+                        markPaidBtn.classList.remove('hidden');
+                        paidStatus.classList.add('hidden');
+                        projectCostLabel.className = 'text-xl font-bold text-white';
+                    }
+                } else {
+                    financeBlock.classList.add('hidden');
+                }
+            }
+
+            // Кнопка оплаты
+            document.getElementById('mark-paid-btn').addEventListener('click', () => {
+                const date = activeDates.find(d => d.id === selectedDateId);
+                if (date) {
+                    date.isPaid = true;
+                    saveDataLocally();
+                    updateContentArea();
+                    renderTimeline();
+                }
+            });
+
+            // Кнопка Удалить
+            document.getElementById('delete-project-btn').addEventListener('click', () => {
+                if (confirm('Точно удалить этот проект?')) {
+                    activeDates = activeDates.filter(d => d.id !== selectedDateId);
+                    selectedDateId = activeDates.length > 0 ? activeDates[0].id : null;
+                    saveDataLocally();
+                    renderTimeline();
+                    if(selectedDateId) updateContentArea();
+                }
+            });
+
+            // Кнопка Изменить
+            document.getElementById('edit-project-btn').addEventListener('click', () => {
+                const date = activeDates.find(d => d.id === selectedDateId);
+                if (date) {
+                    dateInput.value = date.id;
+                    titleInput.value = date.title;
+                    costInput.value = date.cost;
+                    methodInput.value = date.method;
+                    openModal(true);
+                }
+            });
+
+            // Кнопка Шеринга (Отправить)
+            document.getElementById('share-project-btn').addEventListener('click', async () => {
+                const date = activeDates.find(d => d.id === selectedDateId);
+                if (!date) return;
                 
-                for (let i = 1; i < json.length; i++) {
-                    const row = json[i];
+                const text = `📁 Проект: ${date.title}\n📅 Дата: ${date.full}\n💰 Смета: ${date.cost.toLocaleString('ru-RU')} ₽\n💵 Оплата: ${date.isPaid ? '✅ Оплачено' : '⏳ Ожидается'} (${date.method})`;
+                
+                if (navigator.share) {
+                    try { await navigator.share({ title: 'Отчет по проекту', text: text }); } 
+                    catch (err) { console.log('Ошибка шаринга', err); }
+                } else {
+                    navigator.clipboard.writeText(text);
+                    alert('Текст отчета скопирован в буфер обмена!');
+                }
+            });
+
+            // Парсинг Excel
+            const uploadInput = document.getElementById('excel-upload');
+            const dataContainer = document.getElementById('excel-data-container');
+            const emptyState = document.getElementById('excel-empty-state');
+
+            uploadInput.addEventListener('change', (e) => {
+                const file = e.target.files[0];
+                if (!file) return;
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    const data = new Uint8Array(e.target.result);
+                    const workbook = XLSX.read(data, { type: 'array' });
+                    const worksheet = workbook.Sheets[workbook.SheetNames[0]];
+                    const json = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
+                    renderExcelData(json);
+                };
+                reader.readAsArrayBuffer(file);
+                e.target.value = '';
+            });
+
+            function renderExcelData(data) {
+                dataContainer.innerHTML = '';
+                if (emptyState) emptyState.style.display = 'none';
+                const headers = data[0];
+                for (let i = 1; i < data.length; i++) {
+                    const row = data[i];
                     if (!row || row.length === 0) continue;
-
                     let cardHtml = `<div class="bg-gray-900/60 backdrop-blur-md p-4 rounded-2xl border border-white/5 shadow-sm mb-3">`;
-                    let hasCell = false;
                     row.forEach((cell, index) => {
                         const headerName = headers[index] || `Колонка ${index + 1}`;
                         if (cell !== undefined && cell !== null && cell !== '') {
-                            hasCell = true;
-                            hasData = true;
-                            cardHtml += `
-                                <div class="mb-2 last:mb-0 flex justify-between gap-4 border-b border-white/5 pb-2 last:border-0 last:pb-0">
-                                    <span class="text-xs text-gray-500 font-medium">${headerName}</span>
-                                    <span class="text-sm text-gray-200 text-right break-words max-w-[60%]">${cell}</span>
-                                </div>
-                            `;
+                            cardHtml += `<div class="mb-2 last:mb-0 flex justify-between gap-4 border-b border-white/5 pb-2 last:border-0 last:pb-0">
+                                            <span class="text-xs text-gray-500 font-medium">${headerName}</span>
+                                            <span class="text-sm text-gray-200 text-right">${cell}</span>
+                                         </div>`;
                         }
                     });
                     cardHtml += `</div>`;
-                    if(hasCell) DOM.excelContainer.innerHTML += cardHtml;
+                    dataContainer.innerHTML += cardHtml;
                 }
-                
-                if(!hasData) {
-                    DOM.excelContainer.innerHTML = DOM.excelEmptyState.outerHTML;
-                }
-            };
-            reader.readAsArrayBuffer(file);
-            e.target.value = '';
+            }
+
+            // Инициализация при старте
+            renderTimeline();
+            if (selectedDateId) updateContentArea();
+            updateDashboard();
         });
 
-        // Initialize Icons & UI
-        lucide.createIcons();
-        renderTimeline();
-
-        // PWA Service Worker Registration
+        // PWA Service Worker
         if ('serviceWorker' in navigator) {
-            window.addEventListener('load', () => {
-                navigator.serviceWorker.register('./sw.js')
-                    .then(registration => console.log('ServiceWorker registered:', registration.scope))
-                    .catch(error => console.log('ServiceWorker error:', error));
-            });
+            window.addEventListener('load', () => navigator.serviceWorker.register('./sw.js').catch(err => console.log('SW', err)));
         }
     </script>
 </body>
