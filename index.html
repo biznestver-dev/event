@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    
+    <!-- PWA Meta Tags для iOS -->
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="AM Prod">
+    <link rel="apple-touch-icon" href="https://cdn-icons-png.flaticon.com/512/7325/7325295.png">
+    <link rel="manifest" href="manifest.json">
+    
+    <title>AM Prod Calendar</title>
+    
+    <!-- Библиотеки -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    
+    <!-- Стили -->
+    <link rel="stylesheet" href="style.css">
+</head>
+<body class="bg-gray-950 text-white font-sans antialiased pb-24 selection:bg-blue-500/30">
+
+    <!-- Header -->
+    <header class="ios-header fixed top-0 w-full z-40 px-4 pt-12 pb-3 border-b border-white/10 flex justify-between items-center">
+        <h1 class="text-xl font-semibold tracking-tight">Проекты</h1>
+        <div class="flex gap-3">
+            <label class="bg-gray-800 hover:bg-gray-700 text-white p-2 rounded-full cursor-pointer transition-colors shadow-lg">
+                <i data-lucide="file-spreadsheet" class="w-5 h-5"></i>
+                <input type="file" id="excel-upload" class="hidden" accept=".xlsx, .xls">
+            </label>
+            <button id="add-date-btn" class="bg-blue-600 hover:bg-blue-500 text-white p-2 rounded-full transition-colors shadow-[0_0_15px_rgba(59,130,246,0.5)]">
+                <i data-lucide="plus" class="w-5 h-5"></i>
+            </button>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="pt-24 h-screen overflow-y-auto hidden-scrollbar">
+        <!-- Кружки дат -->
+        <div class="px-4 pb-4">
+            <div id="dates-timeline" class="flex gap-4 overflow-x-auto hidden-scrollbar pb-2 pt-2 snap-x">
+                <div class="text-gray-500 text-sm mt-2" id="timeline-empty">Нажмите +, чтобы добавить проект</div>
+            </div>
+        </div>
+
+        <!-- Контент выбранной даты -->
+        <div id="date-content" class="px-4 mt-2 hidden">
+            
+            <!-- Заголовок и дата -->
+            <div class="mb-4">
+                <h2 id="project-title-label" class="text-2xl font-bold mb-1">Название проекта</h2>
+                <div class="flex items-center gap-2 text-gray-400 text-sm">
+                    <i data-lucide="calendar" class="w-4 h-4"></i>
+                    <span id="current-date-label">Дата</span>
+                </div>
+            </div>
+
+            <!-- Финансовый блок (Статус оплаты) -->
+            <div id="finance-block" class="bg-gray-900/50 border border-white/5 p-4 rounded-2xl mb-6 shadow-sm hidden">
+                <div class="flex justify-between items-start mb-3">
+                    <div>
+                        <div class="text-xs text-gray-500 font-medium uppercase tracking-wide mb-1">Гонорар</div>
+                        <div id="project-cost-label" class="text-xl font-bold text-white">0 ₽</div>
+                    </div>
+                    <div class="text-right">
+                        <div class="text-xs text-gray-500 font-medium uppercase tracking-wide mb-1">Способ оплаты</div>
+                        <div id="project-method-label" class="text-sm text-gray-300">Наличные</div>
+                    </div>
+                </div>
+                
+                <!-- Кнопка и статус оплаты -->
+                <div id="payment-actions" class="pt-3 border-t border-white/5 mt-1">
+                    <button id="mark-paid-btn" class="w-full bg-blue-600/20 text-blue-400 hover:bg-blue-600/30 font-medium py-2.5 rounded-xl transition-colors border border-blue-500/30 flex justify-center items-center gap-2">
+                        <i data-lucide="check-circle" class="w-4 h-4"></i> Оплатили
+                    </button>
+                    <div id="paid-status" class="hidden w-full bg-green-500/10 text-green-400 font-medium py-2.5 rounded-xl border border-green-500/20 flex justify-center items-center gap-2">
+                        <i data-lucide="check-circle-2" class="w-5 h-5"></i> Оплачено
+                    </div>
+                </div>
+            </div>
+
+            <!-- Списки из Excel -->
+            <h3 class="text-lg font-semibold mb-3">Списки на площадку</h3>
+            <div id="excel-data-container" class="space-y-3 pb-8">
+                <div class="text-center text-gray-600 mt-8 text-sm border border-dashed border-gray-700 rounded-2xl p-6" id="excel-empty-state">
+                    <i data-lucide="list-x" class="w-8 h-8 mx-auto mb-2 opacity-30"></i>
+                    Таблицы не загружены
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Modal: Добавление проекта/даты -->
+    <div id="date-modal" class="hidden fixed inset-0 z-50 bg-black/60 backdrop-blur-md flex items-center justify-center p-4 opacity-0 transition-opacity duration-300">
+        <div class="bg-gray-900 border border-gray-800 p-6 rounded-[2rem] w-full max-w-xs shadow-2xl transform scale-95 transition-transform duration-300" id="date-modal-content">
+            <h3 class="text-lg font-semibold mb-5 text-center">Новый проект</h3>
+            
+            <div class="space-y-3 mb-6">
+                <!-- Дата -->
+                <input type="date" id="new-date-input" class="w-full bg-gray-800 text-white rounded-xl p-3 outline-none border border-gray-700 block focus:border-blue-500 transition-colors" style="color-scheme: dark;" required>
+                
+                <!-- Название -->
+                <input type="text" id="new-project-title" placeholder="Название проекта (например, ВДНХ)" class="w-full bg-gray-800 text-white text-sm rounded-xl p-3 outline-none border border-gray-700 block transition-colors focus:border-blue-500">
+                
+                <!-- Стоимость -->
+                <div class="relative">
+                    <span class="absolute left-4 top-3 text-gray-500 font-medium">₽</span>
+                    <input type="number" id="new-project-cost" placeholder="Сумма гонорара" class="w-full bg-gray-800 text-white text-sm rounded-xl py-3 pl-9 pr-4 outline-none border border-gray-700 block transition-colors focus:border-blue-500">
+                </div>
+
+                <!-- Способ оплаты -->
+                <input type="text" id="new-project-method" placeholder="Способ (нал, карта, ИП...)" class="w-full bg-gray-800 text-white text-sm rounded-xl p-3 outline-none border border-gray-700 block transition-colors focus:border-blue-500">
+            </div>
+
+            <div class="flex gap-3">
+                <button id="cancel-date" class="flex-1 py-3 rounded-xl bg-gray-800 text-gray-300 font-medium active:scale-95 transition-transform">Отмена</button>
+                <button id="save-date" class="flex-1 py-3 rounded-xl bg-blue-600 text-white font-medium active:scale-95 transition-transform shadow-lg shadow-blue-500/30">Сохранить</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+    <script>
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('/sw.js').catch(err => console.log('SW Error:', err));
+            });
+        }
+    </script>
+</body>
+</html>
