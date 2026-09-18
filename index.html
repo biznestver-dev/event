@@ -15,6 +15,8 @@
     
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+    <!-- Supabase CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
     
     <style>
@@ -112,8 +114,8 @@
         </div>
     </div>
     
-    <!-- Выпадающий список фильтра -->
-    <div class="px-4 mb-6 relative">
+    <!-- Выпадающий список фильтра (с изолированным позиционированием) -->
+    <div class="px-4 mb-6 relative z-30">
         <div id="custom-dropdown-btn" class="w-full bg-gray-800/80 text-white text-sm font-bold rounded-xl py-3 px-4 outline-none border border-white/10 shadow-sm flex items-center justify-between cursor-pointer active:scale-[0.99] transition-transform">
             <div class="flex items-center gap-2 truncate">
                 <i data-lucide="users" class="w-4 h-4 text-blue-400 shrink-0" id="filter-icon"></i>
@@ -122,11 +124,11 @@
             <i data-lucide="chevron-down" class="w-4 h-4 text-gray-400 shrink-0 transition-transform duration-200" id="dropdown-arrow"></i>
         </div>
         
-        <div id="custom-dropdown-menu" class="hidden absolute top-full left-4 right-4 mt-1 bg-gray-900 border border-gray-700 rounded-2xl shadow-2xl overflow-hidden max-h-60 overflow-y-auto hidden-scrollbar z-40 p-1"></div>
+        <div id="custom-dropdown-menu" class="hidden absolute left-4 right-4 mt-2 bg-gray-900 border border-gray-700 rounded-2xl shadow-2xl overflow-hidden max-h-60 overflow-y-auto hidden-scrollbar z-40 p-1"></div>
     </div>
 
-    <!-- Кнопки управления -->
-    <div class="px-4 flex gap-3 mb-8">
+    <!-- Кнопки управления (вынесены на отдельный нижний слой z-10) -->
+    <div class="px-4 flex gap-3 mb-8 relative z-10">
         <label class="flex-1 bg-gray-800/80 hover:bg-gray-700 backdrop-blur-md text-white py-3.5 px-2 rounded-2xl cursor-pointer transition-colors border border-white/10 flex items-center justify-center gap-2 relative overflow-hidden">
             <i data-lucide="file-spreadsheet" class="w-5 h-5 text-green-400"></i>
             <span class="text-xs font-bold uppercase tracking-wider">Загрузить Excel</span>
@@ -314,7 +316,7 @@
 
             const syncIcon = document.getElementById('sync-icon');
 
-            // 1. Мгновенная загрузка из localStorage (гарантирует отсутствие зависаний)
+            // 1. Мгновенная загрузка из localStorage
             const savedData = localStorage.getItem('amProdData');
             if (savedData) {
                 try {
@@ -328,7 +330,7 @@
             if (selectedProjectId) updateContentArea();
             updateDashboard();
 
-            // 2. Фоновое обновление из облака (асинхронно, не блокирует интерфейс)
+            // 2. Фоновое обновление из облака
             async function fetchFromCloud() {
                 if (!_supabase) return;
                 try {
@@ -344,11 +346,9 @@
                         if(selectedProjectId) updateContentArea();
                         updateDashboard();
                     }
-                } catch (e) {
-                    // Ошибки сети / VPN игнорируются, приложение работает локально
-                }
+                } catch (e) {}
             }
-            setTimeout(fetchFromCloud, 1000); // Запуск через секунду после старта
+            setTimeout(fetchFromCloud, 1000);
 
             async function syncData(projectToUpsert = null, idToDelete = null) {
                 localStorage.setItem('amProdData', JSON.stringify(activeProjects));
@@ -359,9 +359,7 @@
                 try {
                     if (idToDelete) await _supabase.from('am_projects').delete().eq('id', idToDelete);
                     if (projectToUpsert) await _supabase.from('am_projects').upsert({ id: projectToUpsert.id, project_data: projectToUpsert });
-                } catch (e) {
-                    // Если VPN блокирует запись, данные останутся надежно сохранены локально
-                }
+                } catch (e) {}
             }
 
             const modal = document.getElementById('date-modal');
