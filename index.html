@@ -7,11 +7,11 @@
     <!-- PWA Meta Tags для iOS -->
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <meta name="apple-mobile-web-app-title" content="AM Prod">
-    <link rel="apple-touch-icon" href="https://cdn-icons-png.flaticon.com/512/7325/7325295.png">
+    <meta name="apple-mobile-web-app-title" content="Event Kremlin">
+    <link rel="apple-touch-icon" href="./icon.jpg">
     <link rel="manifest" href="manifest.json">
     
-    <title>AM Prod Calendar</title>
+    <title>Event Production Kremlin</title>
     
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
@@ -38,7 +38,7 @@
     <!-- Header & Dashboard -->
     <header class="ios-header fixed top-0 w-full z-40 border-b border-white/10 pb-3">
         <div class="px-4 flex justify-between items-center mb-4">
-            <h1 class="text-xl font-semibold tracking-tight">Техотдел AM</h1>
+            <h1 class="text-lg font-semibold tracking-tight truncate pr-2">Event Production Kremlin</h1>
             <div class="flex gap-3">
                 <label class="bg-gray-800 hover:bg-gray-700 text-white p-2.5 rounded-full cursor-pointer transition-colors shadow-lg relative">
                     <i data-lucide="file-spreadsheet" class="w-5 h-5"></i>
@@ -231,7 +231,7 @@
                 setTimeout(() => modal.classList.add('hidden'), 300);
             };
 
-            // Исправленная кнопка "Добавить" (без вызова closeModal)
+            // Кнопка "Добавить"
             document.getElementById('add-date-btn').addEventListener('click', () => {
                 dateInput.value = ''; 
                 titleInput.value = ''; 
@@ -389,8 +389,6 @@
                     costInput.value = date.cost;
                     methodInput.value = date.method;
                     
-                    // Поля калькулятора можно очистить при редактировании, 
-                    // так как мы меняем финальную сумму
                     calcPeople.value = '';
                     calcRate.value = '';
                     
