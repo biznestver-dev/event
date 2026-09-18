@@ -23,9 +23,6 @@
         .hidden-scrollbar::-webkit-scrollbar { display: none; }
         .hidden-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
         
-        .modal-active { opacity: 1 !important; pointer-events: auto !important; }
-        .modal-active > #date-modal-content { transform: scale(1) !important; }
-        
         @keyframes shimmer-bg {
             0% { background-position: 0% 50%; }
             50% { background-position: 100% 50%; }
@@ -144,7 +141,7 @@
             <span class="text-xs font-bold uppercase tracking-wider">Загрузить Excel</span>
             <input type="file" id="excel-upload" class="hidden" accept=".xlsx, .xls">
         </label>
-        <button id="add-date-btn" class="flex-1 bg-gradient-to-r from-blue-600 to-purple-600 text-white py-3.5 px-2 rounded-2xl transition-all shadow-[0_0_20px_rgba(59,130,246,0.4)] border border-blue-400/30 flex items-center justify-center gap-2 cursor-pointer active:scale-95">
+        <button id="add-date-btn" type="button" class="flex-1 bg-gradient-to-r from-blue-600 to-purple-600 text-white py-3.5 px-2 rounded-2xl transition-all shadow-[0_0_20px_rgba(59,130,246,0.4)] border border-blue-400/30 flex items-center justify-center gap-2 cursor-pointer active:scale-95">
             <i data-lucide="plus-circle" class="w-5 h-5"></i>
             <span class="text-xs font-bold uppercase tracking-wider">Добавить</span>
         </button>
@@ -225,16 +222,18 @@
     </div>
 
     <!-- Модальное окно (Новый проект) -->
-    <div id="date-modal" class="hidden fixed inset-0 z-50 bg-black/80 backdrop-blur-md flex items-center justify-center p-4 opacity-0 pointer-events-none transition-opacity duration-300">
-        <div class="bg-gray-900 border border-gray-700 p-6 rounded-[2rem] w-full max-w-[360px] shadow-2xl transform scale-95 transition-transform duration-300 relative max-h-[90vh] overflow-y-auto hidden-scrollbar" id="date-modal-content">
+    <div id="date-modal" class="hidden fixed inset-0 z-50 bg-black/80 backdrop-blur-md items-center justify-center p-4">
+        <div class="bg-gray-900 border border-gray-700 p-6 rounded-[2rem] w-full max-w-[360px] shadow-2xl relative max-h-[90vh] overflow-y-auto hidden-scrollbar" id="date-modal-content">
             <div class="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-blue-500 to-purple-500"></div>
             
             <h3 id="modal-title" class="text-lg font-bold mb-4 text-center mt-2">Новый проект</h3>
             
             <div class="space-y-4 mb-6">
+                <!-- Основное -->
                 <input type="text" id="new-project-title" placeholder="Название проекта" class="w-full bg-gray-950 text-white text-sm rounded-xl p-3 outline-none border border-gray-700 block transition-colors focus:border-blue-500">
                 <input type="text" id="new-project-contractor" placeholder="Контрагент (Агентство/Клиент)" class="w-full bg-gray-950 text-white text-sm rounded-xl p-3 outline-none border border-gray-700 block transition-colors focus:border-blue-500">
                 
+                <!-- Локация и Метро -->
                 <div class="flex flex-col gap-2 bg-gray-800/30 p-2 rounded-xl border border-gray-700/50">
                     <div class="flex gap-2">
                         <div class="relative flex-1">
@@ -251,6 +250,7 @@
                     </div>
                 </div>
                 
+                <!-- Блок Дат -->
                 <div class="bg-gray-800/30 p-3 rounded-xl border border-gray-700/50">
                     <div class="text-[10px] text-gray-400 font-bold uppercase mb-2 ml-1">График работы (Даты и Тайминг)</div>
                     <div id="dynamic-dates-list" class="space-y-2 mb-3"></div>
@@ -259,6 +259,7 @@
                     </button>
                 </div>
 
+                <!-- Блок Выбора команды -->
                 <div class="bg-gray-800/30 p-3 rounded-xl border border-gray-700/50">
                     <div class="flex justify-between items-center mb-3 ml-1">
                         <div class="text-[10px] text-gray-400 font-bold uppercase">Команда и Гонорары (ФОТ)</div>
@@ -270,6 +271,7 @@
                     </button>
                 </div>
 
+                <!-- Сумма и Оплата общие -->
                 <div class="relative mt-2">
                     <span class="absolute left-4 top-3 text-gray-500 font-medium">₽</span>
                     <input type="number" id="new-project-cost" placeholder="Итоговая смета (все расходы)" class="w-full bg-gray-950 text-white text-sm rounded-xl py-3 pl-9 pr-4 outline-none border border-gray-700 block transition-colors focus:border-blue-500">
@@ -286,15 +288,15 @@
             </div>
 
             <div class="flex gap-3">
-                <button id="cancel-date" class="flex-1 py-3 rounded-xl bg-gray-800 text-gray-300 font-bold uppercase tracking-wide text-xs active:scale-95 transition-transform">Отмена</button>
-                <button id="save-date" class="flex-1 py-3 rounded-xl bg-gradient-to-r from-blue-600 to-purple-600 text-white font-bold uppercase tracking-wide text-xs active:scale-95 transition-transform shadow-lg shadow-blue-500/30">Сохранить</button>
+                <button id="cancel-date" type="button" class="flex-1 py-3 rounded-xl bg-gray-800 text-gray-300 font-bold uppercase tracking-wide text-xs active:scale-95 transition-transform">Отмена</button>
+                <button id="save-date" type="button" class="flex-1 py-3 rounded-xl bg-gradient-to-r from-blue-600 to-purple-600 text-white font-bold uppercase tracking-wide text-xs active:scale-95 transition-transform shadow-lg shadow-blue-500/30">Сохранить</button>
             </div>
         </div>
     </div>
 
     <script>
         const SUPABASE_URL = 'https://yixpxokoinvmphgvdsee.supabase.co';
-        const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InlpeHB4b2tvaW52bXBoZ3Zkc2VlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODk3NjEyMTgsImV4cCI6MjEwNTMzNzIxOH0.vwtkVEbxr5yzd5GNF4PBZlvRZIvVrFGQoh5EfNPpojE';
+        const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InlpeHB4b2tvaW52bXBoZ3Zkc2VlIiwicm9sZSI6InlpeHB4b2tvaW52bXBoZ3Zkc2VlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODk3NjEyMTgsImV4cCI6MjEwNTMzNzIxOH0.vwtkVEbxr5yzd5GNF4PBZlvRZIvVrFGQoh5EfNPpojE';
         const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
         document.addEventListener('DOMContentLoaded', () => {
@@ -314,25 +316,6 @@
 
             const syncIcon = document.getElementById('sync-icon');
 
-            // Инициализация элементов модалки
-            const modal = document.getElementById('date-modal');
-            const dynamicDatesList = document.getElementById('dynamic-dates-list');
-            const teamSelectionList = document.getElementById('team-selection-list');
-            
-            const titleInput = document.getElementById('new-project-title');
-            const contractorInput = document.getElementById('new-project-contractor');
-            const addressInput = document.getElementById('new-project-address');
-            const metroInput = document.getElementById('new-project-metro');
-            const costInput = document.getElementById('new-project-cost');
-            const methodInput = document.getElementById('new-project-method');
-            const modalTitle = document.getElementById('modal-title');
-            
-            const dashTotal = document.getElementById('dash-total');
-            const dashPaid = document.getElementById('dash-paid');
-            const dashPending = document.getElementById('dash-pending');
-            const filterSelect = document.getElementById('dashboard-team-filter');
-
-            // 1. Загрузка локальных данных
             const savedData = localStorage.getItem('amProdData');
             if (savedData) {
                 activeProjects = JSON.parse(savedData);
@@ -343,7 +326,6 @@
                 updateDashboard();
             }
 
-            // 2. Загрузка из облака
             async function fetchFromCloud() {
                 try {
                     syncIcon.classList.add('animate-pulse', 'text-blue-400');
@@ -387,17 +369,34 @@
                 }
             }
 
+            const modal = document.getElementById('date-modal');
+            const dynamicDatesList = document.getElementById('dynamic-dates-list');
+            const teamSelectionList = document.getElementById('team-selection-list');
+            
+            const titleInput = document.getElementById('new-project-title');
+            const contractorInput = document.getElementById('new-project-contractor');
+            const addressInput = document.getElementById('new-project-address');
+            const metroInput = document.getElementById('new-project-metro');
+            const costInput = document.getElementById('new-project-cost');
+            const methodInput = document.getElementById('new-project-method');
+            const modalTitle = document.getElementById('modal-title');
+            
+            const dashTotal = document.getElementById('dash-total');
+            const dashPaid = document.getElementById('dash-paid');
+            const dashPending = document.getElementById('dash-pending');
+            const filterSelect = document.getElementById('dashboard-team-filter');
+
             // --- УПРАВЛЕНИЕ МОДАЛЬНЫМ ОКНОМ ---
             const openModal = (editMode = false) => {
                 isEditMode = editMode;
                 modalTitle.textContent = editMode ? 'Изменить проект' : 'Новый проект';
                 modal.classList.remove('hidden');
-                setTimeout(() => modal.classList.add('modal-active'), 10);
+                modal.classList.add('flex');
             };
 
             const closeModal = () => {
-                modal.classList.remove('modal-active');
-                setTimeout(() => modal.classList.add('hidden'), 300);
+                modal.classList.remove('flex');
+                modal.classList.add('hidden');
             };
 
             document.getElementById('add-date-btn').addEventListener('click', () => {
@@ -644,6 +643,7 @@
             });
 
             // --- РЕНДЕР ПРОЕКТОВ ---
+            const timeline = document.getElementById('projects-timeline');
             function renderTimeline() {
                 timeline.innerHTML = '';
                 if (activeProjects.length > 0) {
@@ -910,7 +910,6 @@
                 }
             });
 
-            // Парсинг Excel
             const uploadInput = document.getElementById('excel-upload');
             const dataContainer = document.getElementById('excel-data-container');
             const emptyState = document.getElementById('excel-empty-state');
