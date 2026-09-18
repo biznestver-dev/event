@@ -81,6 +81,23 @@
     <!-- Main Content -->
     <main class="pt-24 h-screen overflow-y-auto hidden-scrollbar max-w-md mx-auto relative">
         
+        <div class="px-4 mb-4">
+            <div class="bg-gray-900/60 border border-white/5 p-4 rounded-3xl shadow-sm backdrop-blur-md grid grid-cols-3 gap-2 text-center divide-x divide-white/10">
+                <div>
+                    <div class="text-[9px] text-gray-500 uppercase font-bold tracking-wider mb-1">Всего</div>
+                    <div class="text-sm font-bold text-white" id="global-total">0 ₽</div>
+                </div>
+                <div>
+                    <div class="text-[9px] text-gray-500 uppercase font-bold tracking-wider mb-1">Оплачено</div>
+                    <div class="text-sm font-bold text-green-400" id="global-paid">0 ₽</div>
+                </div>
+                <div>
+                    <div class="text-[9px] text-gray-500 uppercase font-bold tracking-wider mb-1">Ожидается</div>
+                    <div class="text-sm font-bold text-yellow-400" id="global-pending">0 ₽</div>
+                </div>
+            </div>
+        </div>
+
         <!-- Timeline -->
         <div class="px-4 pb-2">
             <div id="timeline" class="flex gap-4 overflow-x-auto hidden-scrollbar pb-4 pt-2 snap-x">
@@ -110,7 +127,6 @@
                 <!-- Injected via JS -->
             </div>
 
-            <!-- Excel Data Block -->
             <div class="border-t border-white/10 pt-6">
                 <h3 class="text-sm font-semibold text-gray-400 mb-4 uppercase tracking-wider px-1">Списки на площадку</h3>
                 <div id="excel-data-container" class="space-y-3 pb-8">
@@ -118,14 +134,14 @@
                         <div class="bg-gray-800/50 w-12 h-12 rounded-full flex items-center justify-center mx-auto mb-3">
                             <i data-lucide="list-x" class="w-6 h-6 text-gray-500"></i>
                         </div>
-                        <p class="text-sm text-gray-500">Загрузите таблицу со списком оборудования или персонала (кнопка в правом верхнем углу).</p>
+                        <p class="text-sm text-gray-500">Загрузите таблицу со списком (кнопка в правом верхнем углу).</p>
                     </div>
                 </div>
             </div>
         </div>
         
         <!-- Empty Timeline State -->
-        <div id="empty-state" class="hidden px-4 mt-12 text-center text-gray-500 text-sm">
+        <div id="empty-state" class="hidden px-4 mt-6 text-center text-gray-500 text-sm">
             Нет добавленных дат. Нажмите + чтобы создать проект.
         </div>
     </main>
@@ -138,7 +154,7 @@
             <div class="space-y-4 mb-6">
                 <div>
                     <label class="block text-xs font-medium text-gray-400 mb-1.5 ml-1">Название проекта</label>
-                    <input type="text" id="input-name" placeholder="Например: Монтаж сцены" class="w-full bg-gray-800 text-white text-sm rounded-xl py-3 px-4 outline-none border border-gray-700 focus:border-blue-500 transition-colors">
+                    <input type="text" id="input-name" placeholder="Например: Электротеатр" class="w-full bg-gray-800 text-white text-sm rounded-xl py-3 px-4 outline-none border border-gray-700 focus:border-blue-500 transition-colors">
                 </div>
                 
                 <div>
@@ -148,7 +164,18 @@
 
                 <div class="grid grid-cols-2 gap-3">
                     <div>
-                        <label class="block text-xs font-medium text-gray-400 mb-1.5 ml-1">Гонорар (₽)</label>
+                        <label class="block text-xs font-medium text-gray-400 mb-1.5 ml-1">Кол-во человек</label>
+                        <input type="number" id="input-people" placeholder="0" class="w-full bg-gray-800 text-white text-sm rounded-xl py-3 px-4 outline-none border border-gray-700 focus:border-blue-500 transition-colors">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-gray-400 mb-1.5 ml-1">Ставка (₽)</label>
+                        <input type="number" id="input-rate" placeholder="0" class="w-full bg-gray-800 text-white text-sm rounded-xl py-3 px-4 outline-none border border-gray-700 focus:border-blue-500 transition-colors">
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-xs font-medium text-gray-400 mb-1.5 ml-1">Общий Гонорар (₽)</label>
                         <input type="number" id="input-cost" placeholder="0" class="w-full bg-gray-800 text-white text-sm rounded-xl py-3 px-4 outline-none border border-gray-700 focus:border-blue-500 transition-colors">
                     </div>
                     <div>
@@ -187,16 +214,49 @@
             saveBtn: document.getElementById('btn-save'),
             inpName: document.getElementById('input-name'),
             inpDate: document.getElementById('input-date'),
+            inpPeople: document.getElementById('input-people'),
+            inpRate: document.getElementById('input-rate'),
             inpCost: document.getElementById('input-cost'),
             inpMethod: document.getElementById('input-method'),
             excelInput: document.getElementById('excel-upload'),
             excelContainer: document.getElementById('excel-data-container'),
-            excelEmptyState: document.getElementById('excel-empty-state')
+            excelEmptyState: document.getElementById('excel-empty-state'),
+            // Global finance DOM
+            gTotal: document.getElementById('global-total'),
+            gPaid: document.getElementById('global-paid'),
+            gPending: document.getElementById('global-pending')
         };
 
         const formatMoney = (amount) => Number(amount || 0).toLocaleString('ru-RU') + ' ₽';
         const getShortMonth = (date) => new Intl.DateTimeFormat('ru-RU', { month: 'short' }).format(date).replace('.', '');
         const getFullDate = (date) => new Intl.DateTimeFormat('ru-RU', { day: 'numeric', month: 'long', year: 'numeric' }).format(date);
+
+        // Auto-calculate cost when people or rate changes
+        function autoCalculateTotal() {
+            const p = parseInt(DOM.inpPeople.value) || 0;
+            const r = parseInt(DOM.inpRate.value) || 0;
+            if (p > 0 && r > 0) {
+                DOM.inpCost.value = p * r;
+            }
+        }
+        DOM.inpPeople.addEventListener('input', autoCalculateTotal);
+        DOM.inpRate.addEventListener('input', autoCalculateTotal);
+
+        // Update Global Finance Dashboard
+        function updateGlobalFinances() {
+            let total = 0, paid = 0, pending = 0;
+            projects.forEach(p => {
+                total += p.cost;
+                if (p.isPaid) {
+                    paid += p.cost;
+                } else {
+                    pending += p.cost;
+                }
+            });
+            DOM.gTotal.textContent = formatMoney(total);
+            DOM.gPaid.textContent = formatMoney(paid);
+            DOM.gPending.textContent = formatMoney(pending);
+        }
 
         function renderTimeline() {
             DOM.timeline.innerHTML = '';
@@ -204,6 +264,7 @@
             if (projects.length === 0) {
                 DOM.emptyState.classList.remove('hidden');
                 DOM.content.classList.add('hidden');
+                updateGlobalFinances();
                 return;
             }
 
@@ -218,10 +279,13 @@
                 
                 let baseClasses = 'date-icon snap-center shrink-0 w-[4.5rem] h-[4.5rem] rounded-2xl flex flex-col items-center justify-center border outline-none ';
                 
+                // Add green border indicator if paid and not active
+                const borderStyle = proj.isPaid && !isActive ? 'border-green-500/50' : 'border-white/10';
+
                 if (isActive) {
                     btn.className = baseClasses + 'bg-gradient-to-b from-blue-500 to-blue-600 border-blue-400 text-white shadow-lg shadow-blue-500/20';
                 } else {
-                    btn.className = baseClasses + 'bg-gray-800/80 backdrop-blur-md border-white/10 text-gray-400';
+                    btn.className = baseClasses + `bg-gray-800/80 backdrop-blur-md ${borderStyle} text-gray-400`;
                 }
                 
                 btn.innerHTML = `
@@ -241,6 +305,8 @@
 
                 DOM.timeline.appendChild(btn);
             });
+            
+            updateGlobalFinances();
         }
 
         function renderContent() {
@@ -271,11 +337,18 @@
                     `;
                 }
 
+                // Show calculation breakdown if people/rate exist
+                let calculationSubtext = '';
+                if (proj.people > 0 && proj.rate > 0) {
+                    calculationSubtext = `<div class="text-xs text-gray-400 mt-1">${proj.people} чел. × ${formatMoney(proj.rate)}</div>`;
+                }
+
                 DOM.financeBlock.innerHTML = `
                     <div class="flex justify-between items-start">
                         <div>
                             <span class="text-xs text-gray-500 font-medium uppercase tracking-wider block mb-1">Гонорар</span>
                             <span class="text-2xl font-bold ${costColorClass} transition-colors">${formatMoney(proj.cost)}</span>
+                            ${calculationSubtext}
                         </div>
                         <div class="text-right">
                             <span class="text-xs text-gray-500 font-medium uppercase tracking-wider block mb-1">Способ</span>
@@ -297,6 +370,7 @@
             if (proj) {
                 proj.isPaid = true;
                 renderContent(); 
+                renderTimeline(); // Re-render to update global finances and timeline borders
             }
         };
 
@@ -305,6 +379,8 @@
             DOM.modal.classList.remove('modal-active');
             DOM.inpName.value = '';
             DOM.inpDate.value = '';
+            DOM.inpPeople.value = '';
+            DOM.inpRate.value = '';
             DOM.inpCost.value = '';
             DOM.inpMethod.value = 'На карту';
         };
@@ -319,7 +395,9 @@
         DOM.saveBtn.addEventListener('click', () => {
             const name = DOM.inpName.value.trim();
             const dateStr = DOM.inpDate.value;
-            const cost = DOM.inpCost.value;
+            const people = parseInt(DOM.inpPeople.value) || 0;
+            const rate = parseInt(DOM.inpRate.value) || 0;
+            const cost = parseInt(DOM.inpCost.value) || 0;
             const method = DOM.inpMethod.value;
 
             if (!name || !dateStr) return; // Silent validation
@@ -328,7 +406,9 @@
                 id: dateStr + '-' + Date.now(), 
                 name: name,
                 rawDate: new Date(dateStr),
-                cost: Number(cost) || 0,
+                people: people,
+                rate: rate,
+                cost: cost,
                 method: method,
                 isPaid: false
             };
@@ -392,11 +472,12 @@
         lucide.createIcons();
         renderTimeline();
 
+        // PWA Service Worker Registration
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
                 navigator.serviceWorker.register('./sw.js')
-                    .then(registration => console.log('ServiceWorker registered with scope:', registration.scope))
-                    .catch(error => console.log('ServiceWorker registration failed:', error));
+                    .then(registration => console.log('ServiceWorker registered:', registration.scope))
+                    .catch(error => console.log('ServiceWorker error:', error));
             });
         }
     </script>
