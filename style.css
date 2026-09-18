@@ -1,0 +1,40 @@
+/* iOS Safe Area & Glassmorphism */
+.ios-header {
+    background: rgba(17, 24, 39, 0.75);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    padding-top: max(3rem, env(safe-area-inset-top));
+}
+
+/* Убираем видимый скроллбар */
+.hidden-scrollbar::-webkit-scrollbar {
+    display: none;
+}
+.hidden-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+}
+
+/* Анимации для модального окна */
+.modal-active {
+    opacity: 1 !important;
+}
+.modal-active > #date-modal-content {
+    transform: scale(1) !important;
+}
+
+/* Эффект иконки приложения (Squircle) */
+.date-icon {
+    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Эффект физического продавливания при тапе */
+.date-icon:active {
+    transform: scale(0.9);
+}
+
+/* Активное состояние иконки */
+.date-icon.active {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 16px -4px rgba(59, 130, 246, 0.5);
+}
