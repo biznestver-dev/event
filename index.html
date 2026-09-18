@@ -214,7 +214,7 @@
         </div>
     </div>
 
-    <!-- Модальное окно (Новый проект) - СКРЫТО ПО УМОЛЧАНИЮ (hidden) -->
+    <!-- Модальное окно (Новый проект) -->
     <div id="date-modal" class="hidden fixed inset-0 z-50 bg-black/80 backdrop-blur-md items-center justify-center p-4">
         <div class="bg-gray-900 border border-gray-700 p-6 rounded-[2rem] w-full max-w-[360px] shadow-2xl relative max-h-[90vh] overflow-y-auto hidden-scrollbar" id="date-modal-content">
             <div class="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-blue-500 to-purple-500"></div>
@@ -316,6 +316,7 @@
 
             const syncIcon = document.getElementById('sync-icon');
 
+            // 1. Загрузка из localStorage
             const savedData = localStorage.getItem('amProdData');
             if (savedData) {
                 try {
@@ -329,6 +330,7 @@
             if (selectedProjectId) updateContentArea();
             updateDashboard();
 
+            // 2. Фоновое обновление из облака
             async function fetchFromCloud() {
                 if (!_supabase) return;
                 try {
