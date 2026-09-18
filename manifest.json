@@ -1,6 +1,6 @@
 {
-  "name": "AM Prod",
-  "short_name": "AM Prod",
+  "name": "Event Production Kremlin",
+  "short_name": "Event Kremlin",
   "description": "Календарь проектов",
   "start_url": "./index.html",
   "display": "standalone",
@@ -8,9 +8,9 @@
   "theme_color": "#030712",
   "icons": [
     {
-      "src": "https://cdn-icons-png.flaticon.com/512/7325/7325295.png",
+      "src": "./icon.jpg",
       "sizes": "512x512",
-      "type": "image/png",
+      "type": "image/jpeg",
       "purpose": "any maskable"
     }
   ]
