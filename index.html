@@ -23,7 +23,7 @@
         .hidden-scrollbar::-webkit-scrollbar { display: none; }
         .hidden-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
         
-        .modal-active { opacity: 1 !important; }
+        .modal-active { opacity: 1 !important; pointer-events: auto !important; }
         .modal-active > #date-modal-content { transform: scale(1) !important; }
         
         @keyframes shimmer-bg {
@@ -129,7 +129,8 @@
             <i data-lucide="users" class="w-4 h-4 text-gray-400" id="filter-icon"></i>
         </div>
         <select id="dashboard-team-filter" class="w-full bg-gray-800/80 text-white text-[16px] font-bold rounded-xl py-3 pl-10 pr-10 outline-none border border-white/10 appearance-none shadow-sm transition-colors focus:border-blue-500 cursor-pointer">
-            <!-- JS вставит <option> -->
+            <option value="Все проекты">Все проекты</option>
+            <option value="Весь ФОТ">Весь ФОТ</option>
         </select>
         <div class="absolute inset-y-0 right-7 flex items-center pointer-events-none">
             <i data-lucide="chevron-down" class="w-4 h-4 text-gray-400"></i>
@@ -143,7 +144,7 @@
             <span class="text-xs font-bold uppercase tracking-wider">Загрузить Excel</span>
             <input type="file" id="excel-upload" class="hidden" accept=".xlsx, .xls">
         </label>
-        <button id="add-date-btn" class="flex-1 bg-gradient-to-r from-blue-600 to-purple-600 text-white py-3.5 px-2 rounded-2xl transition-all shadow-[0_0_20px_rgba(59,130,246,0.4)] border border-blue-400/30 flex items-center justify-center gap-2">
+        <button id="add-date-btn" class="flex-1 bg-gradient-to-r from-blue-600 to-purple-600 text-white py-3.5 px-2 rounded-2xl transition-all shadow-[0_0_20px_rgba(59,130,246,0.4)] border border-blue-400/30 flex items-center justify-center gap-2 cursor-pointer active:scale-95">
             <i data-lucide="plus-circle" class="w-5 h-5"></i>
             <span class="text-xs font-bold uppercase tracking-wider">Добавить</span>
         </button>
@@ -224,18 +225,16 @@
     </div>
 
     <!-- Модальное окно (Новый проект) -->
-    <div id="date-modal" class="hidden fixed inset-0 z-50 bg-black/80 backdrop-blur-md flex items-center justify-center p-4 opacity-0 transition-opacity duration-300">
+    <div id="date-modal" class="hidden fixed inset-0 z-50 bg-black/80 backdrop-blur-md flex items-center justify-center p-4 opacity-0 pointer-events-none transition-opacity duration-300">
         <div class="bg-gray-900 border border-gray-700 p-6 rounded-[2rem] w-full max-w-[360px] shadow-2xl transform scale-95 transition-transform duration-300 relative max-h-[90vh] overflow-y-auto hidden-scrollbar" id="date-modal-content">
             <div class="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-blue-500 to-purple-500"></div>
             
             <h3 id="modal-title" class="text-lg font-bold mb-4 text-center mt-2">Новый проект</h3>
             
             <div class="space-y-4 mb-6">
-                <!-- Основное -->
                 <input type="text" id="new-project-title" placeholder="Название проекта" class="w-full bg-gray-950 text-white text-sm rounded-xl p-3 outline-none border border-gray-700 block transition-colors focus:border-blue-500">
                 <input type="text" id="new-project-contractor" placeholder="Контрагент (Агентство/Клиент)" class="w-full bg-gray-950 text-white text-sm rounded-xl p-3 outline-none border border-gray-700 block transition-colors focus:border-blue-500">
                 
-                <!-- Локация и Метро -->
                 <div class="flex flex-col gap-2 bg-gray-800/30 p-2 rounded-xl border border-gray-700/50">
                     <div class="flex gap-2">
                         <div class="relative flex-1">
@@ -252,7 +251,6 @@
                     </div>
                 </div>
                 
-                <!-- Блок Дат -->
                 <div class="bg-gray-800/30 p-3 rounded-xl border border-gray-700/50">
                     <div class="text-[10px] text-gray-400 font-bold uppercase mb-2 ml-1">График работы (Даты и Тайминг)</div>
                     <div id="dynamic-dates-list" class="space-y-2 mb-3"></div>
@@ -261,7 +259,6 @@
                     </button>
                 </div>
 
-                <!-- Блок Выбора команды -->
                 <div class="bg-gray-800/30 p-3 rounded-xl border border-gray-700/50">
                     <div class="flex justify-between items-center mb-3 ml-1">
                         <div class="text-[10px] text-gray-400 font-bold uppercase">Команда и Гонорары (ФОТ)</div>
@@ -273,7 +270,6 @@
                     </button>
                 </div>
 
-                <!-- Сумма и Оплата общие -->
                 <div class="relative mt-2">
                     <span class="absolute left-4 top-3 text-gray-500 font-medium">₽</span>
                     <input type="number" id="new-project-cost" placeholder="Итоговая смета (все расходы)" class="w-full bg-gray-950 text-white text-sm rounded-xl py-3 pl-9 pr-4 outline-none border border-gray-700 block transition-colors focus:border-blue-500">
@@ -297,7 +293,6 @@
     </div>
 
     <script>
-        // ВАЖНО: КЛЮЧИ SUPABASE
         const SUPABASE_URL = 'https://yixpxokoinvmphgvdsee.supabase.co';
         const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InlpeHB4b2tvaW52bXBoZ3Zkc2VlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODk3NjEyMTgsImV4cCI6MjEwNTMzNzIxOH0.vwtkVEbxr5yzd5GNF4PBZlvRZIvVrFGQoh5EfNPpojE';
         const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
@@ -319,79 +314,7 @@
 
             const syncIcon = document.getElementById('sync-icon');
 
-            // 1. Быстрая загрузка из локальной памяти (offline first)
-            const savedData = localStorage.getItem('amProdData');
-            if (savedData) {
-                activeProjects = JSON.parse(savedData);
-                if (activeProjects.length > 0) selectedProjectId = activeProjects[0].id;
-                renderDashboardFilters();
-                renderTimeline();
-                if (selectedProjectId) updateContentArea();
-                updateDashboard();
-            }
-
-            // 2. Фоновая синхронизация с Supabase (Облако)
-            async function fetchFromCloud() {
-                try {
-                    syncIcon.classList.add('animate-pulse', 'text-blue-400');
-                    syncIcon.classList.remove('text-gray-700', 'text-green-500');
-                    
-                    const { data, error } = await _supabase.from('am_projects').select('*');
-                    if (data && !error) {
-                        activeProjects = data.map(d => d.project_data);
-                        activeProjects.sort((a, b) => new Date(a.dates[0].date) - new Date(b.dates[0].date));
-                        
-                        if(activeProjects.length > 0 && !selectedProjectId) selectedProjectId = activeProjects[0].id;
-                        
-                        localStorage.setItem('amProdData', JSON.stringify(activeProjects));
-                        renderDashboardFilters();
-                        renderTimeline();
-                        if(selectedProjectId) updateContentArea();
-                        updateDashboard();
-
-                        syncIcon.classList.remove('animate-pulse', 'text-blue-400');
-                        syncIcon.classList.add('text-green-500'); // Успех
-                        setTimeout(() => syncIcon.classList.replace('text-green-500', 'text-gray-700'), 3000);
-                    } else {
-                        throw new Error('Supabase fetch error');
-                    }
-                } catch (e) {
-                    console.error("Нет связи с облаком, используем локальные данные", e);
-                    syncIcon.classList.remove('animate-pulse', 'text-blue-400');
-                    syncIcon.classList.add('text-gray-700');
-                }
-            }
-            fetchFromCloud();
-
-            // Функция сохранения (Локально + Облако)
-            async function syncData(projectToUpsert = null, idToDelete = null) {
-                // Локально всегда сохраняем мгновенно
-                localStorage.setItem('amProdData', JSON.stringify(activeProjects));
-                renderDashboardFilters();
-                updateDashboard();
-
-                // Облако
-                syncIcon.classList.add('animate-pulse', 'text-blue-400');
-                syncIcon.classList.remove('text-gray-700', 'text-green-500');
-
-                try {
-                    if (idToDelete) {
-                        await _supabase.from('am_projects').delete().eq('id', idToDelete);
-                    }
-                    if (projectToUpsert) {
-                        await _supabase.from('am_projects').upsert({ id: projectToUpsert.id, project_data: projectToUpsert });
-                    }
-                    syncIcon.classList.remove('animate-pulse', 'text-blue-400');
-                    syncIcon.classList.add('text-green-500');
-                    setTimeout(() => syncIcon.classList.replace('text-green-500', 'text-gray-700'), 2000);
-                } catch (e) {
-                    console.error('Ошибка записи в Supabase', e);
-                    syncIcon.classList.remove('animate-pulse', 'text-blue-400');
-                    syncIcon.classList.add('text-red-500');
-                }
-            }
-
-            const timeline = document.getElementById('projects-timeline');
+            // Инициализация элементов модалки
             const modal = document.getElementById('date-modal');
             const dynamicDatesList = document.getElementById('dynamic-dates-list');
             const teamSelectionList = document.getElementById('team-selection-list');
@@ -408,6 +331,85 @@
             const dashPaid = document.getElementById('dash-paid');
             const dashPending = document.getElementById('dash-pending');
             const filterSelect = document.getElementById('dashboard-team-filter');
+
+            // 1. Загрузка локальных данных
+            const savedData = localStorage.getItem('amProdData');
+            if (savedData) {
+                activeProjects = JSON.parse(savedData);
+                if (activeProjects.length > 0) selectedProjectId = activeProjects[0].id;
+                renderDashboardFilters();
+                renderTimeline();
+                if (selectedProjectId) updateContentArea();
+                updateDashboard();
+            }
+
+            // 2. Загрузка из облака
+            async function fetchFromCloud() {
+                try {
+                    syncIcon.classList.add('animate-pulse', 'text-blue-400');
+                    const { data, error } = await _supabase.from('am_projects').select('*');
+                    if (data && !error && data.length > 0) {
+                        activeProjects = data.map(d => d.project_data);
+                        activeProjects.sort((a, b) => new Date(a.dates[0].date) - new Date(b.dates[0].date));
+                        if(activeProjects.length > 0 && !selectedProjectId) selectedProjectId = activeProjects[0].id;
+                        
+                        localStorage.setItem('amProdData', JSON.stringify(activeProjects));
+                        renderDashboardFilters();
+                        renderTimeline();
+                        if(selectedProjectId) updateContentArea();
+                        updateDashboard();
+                    }
+                    syncIcon.classList.remove('animate-pulse', 'text-blue-400');
+                    syncIcon.classList.add('text-green-500');
+                    setTimeout(() => syncIcon.classList.replace('text-green-500', 'text-gray-700'), 3000);
+                } catch (e) {
+                    syncIcon.classList.remove('animate-pulse', 'text-blue-400');
+                    syncIcon.classList.add('text-gray-700');
+                }
+            }
+            fetchFromCloud();
+
+            async function syncData(projectToUpsert = null, idToDelete = null) {
+                localStorage.setItem('amProdData', JSON.stringify(activeProjects));
+                renderDashboardFilters();
+                updateDashboard();
+
+                syncIcon.classList.add('animate-pulse', 'text-blue-400');
+                try {
+                    if (idToDelete) await _supabase.from('am_projects').delete().eq('id', idToDelete);
+                    if (projectToUpsert) await _supabase.from('am_projects').upsert({ id: projectToUpsert.id, project_data: projectToUpsert });
+                    syncIcon.classList.remove('animate-pulse', 'text-blue-400');
+                    syncIcon.classList.add('text-green-500');
+                    setTimeout(() => syncIcon.classList.replace('text-green-500', 'text-gray-700'), 2000);
+                } catch (e) {
+                    syncIcon.classList.remove('animate-pulse', 'text-blue-400');
+                    syncIcon.classList.add('text-red-500');
+                }
+            }
+
+            // --- УПРАВЛЕНИЕ МОДАЛЬНЫМ ОКНОМ ---
+            const openModal = (editMode = false) => {
+                isEditMode = editMode;
+                modalTitle.textContent = editMode ? 'Изменить проект' : 'Новый проект';
+                modal.classList.remove('hidden');
+                setTimeout(() => modal.classList.add('modal-active'), 10);
+            };
+
+            const closeModal = () => {
+                modal.classList.remove('modal-active');
+                setTimeout(() => modal.classList.add('hidden'), 300);
+            };
+
+            document.getElementById('add-date-btn').addEventListener('click', () => {
+                titleInput.value = ''; contractorInput.value = ''; addressInput.value = ''; metroInput.value = '';
+                costInput.value = ''; methodInput.value = 'Наличные';
+                dynamicDatesList.innerHTML = '';
+                addDateRow();
+                renderTeamSelection([]);
+                openModal(false);
+            });
+            
+            document.getElementById('cancel-date').addEventListener('click', closeModal);
 
             // --- КНОПКА ГЕОЛОКАЦИИ ---
             document.getElementById('get-location-btn').addEventListener('click', () => {
@@ -442,8 +444,7 @@
                 }
             });
 
-
-            // --- ДАШБОРД (ФИЛЬТРЫ И РАСЧЕТЫ) ---
+            // --- ДАШБОРД (ФИЛЬТРЫ) ---
             function renderDashboardFilters() {
                 filterSelect.innerHTML = '';
                 const filters = ['Все проекты', 'Весь ФОТ', ...PREDEFINED_TEAM];
@@ -493,24 +494,9 @@
                 dashTotal.textContent = `${total.toLocaleString('ru-RU')} ₽`;
                 dashPaid.textContent = `${paid.toLocaleString('ru-RU')} ₽`;
                 dashPending.textContent = `${pending.toLocaleString('ru-RU')} ₽`;
-                
-                const cards = [document.getElementById('dash-card-paid'), document.getElementById('dash-card-pending'), document.getElementById('dash-card-total')];
-                cards.forEach(c => c.classList.add('scale-[1.03]'));
-                setTimeout(() => cards.forEach(c => c.classList.remove('scale-[1.03]')), 200);
-
-                const icon = document.getElementById('filter-icon');
-                if (currentDashFilter !== 'Все проекты' && currentDashFilter !== 'Весь ФОТ') {
-                    filterSelect.classList.remove('bg-gray-800/80', 'text-white');
-                    filterSelect.classList.add('bg-blue-900/40', 'text-blue-300', 'border-blue-500/50');
-                    if(icon) icon.classList.replace('text-gray-400', 'text-blue-400');
-                } else {
-                    filterSelect.classList.add('bg-gray-800/80', 'text-white');
-                    filterSelect.classList.remove('bg-blue-900/40', 'text-blue-300', 'border-blue-500/50');
-                    if(icon) icon.classList.replace('text-blue-400', 'text-gray-400');
-                }
             }
 
-            // --- УПРАВЛЕНИЕ СТРОКАМИ ДАТ ---
+            // --- ДАТЫ В МОДАЛКЕ ---
             function addDateRow(dateVal='', startVal='', endVal='') {
                 const row = document.createElement('div');
                 row.className = "date-row flex gap-1 items-center";
@@ -531,16 +517,14 @@
             }
             document.getElementById('add-dynamic-date-btn').addEventListener('click', () => addDateRow());
 
-            // --- УПРАВЛЕНИЕ КОМАНДОЙ ---
+            // --- КОМАНДА В МОДАЛКЕ ---
             function renderTeamSelection(existingTeam = []) {
                 teamSelectionList.innerHTML = '';
-                
                 PREDEFINED_TEAM.forEach(name => {
                     const memberData = existingTeam.find(m => m.name === name) || { fee: '' };
                     const isChecked = !!existingTeam.find(m => m.name === name);
                     addTeamMemberRow(name, memberData.fee, isChecked, true);
                 });
-
                 existingTeam.forEach(member => {
                     if (!PREDEFINED_TEAM.includes(member.name)) {
                         addTeamMemberRow(member.name, member.fee, true, false);
@@ -608,31 +592,7 @@
                 document.getElementById('team-total-calc').textContent = total.toLocaleString('ru-RU');
             }
 
-
-            // --- СОХРАНЕНИЕ ---
-            const openModal = (editMode = false) => {
-                isEditMode = editMode;
-                modalTitle.textContent = editMode ? 'Изменить проект' : 'Новый проект';
-                modal.classList.remove('hidden');
-                setTimeout(() => modal.classList.add('modal-active'), 10);
-            };
-
-            const closeModal = () => {
-                modal.classList.remove('modal-active');
-                setTimeout(() => modal.classList.add('hidden'), 300);
-            };
-
-            document.getElementById('add-date-btn').addEventListener('click', () => {
-                titleInput.value = ''; contractorInput.value = ''; addressInput.value = ''; metroInput.value = '';
-                costInput.value = ''; methodInput.value = 'Наличные';
-                dynamicDatesList.innerHTML = '';
-                addDateRow();
-                renderTeamSelection([]);
-                openModal(false);
-            });
-            
-            document.getElementById('cancel-date').addEventListener('click', closeModal);
-
+            // --- СОХРАНЕНИЕ ПРОЕКТА ---
             document.getElementById('save-date').addEventListener('click', () => {
                 const dateRows = document.querySelectorAll('.date-row');
                 const extractedDates = [];
@@ -682,7 +642,6 @@
                 updateContentArea();
                 closeModal();
             });
-
 
             // --- РЕНДЕР ПРОЕКТОВ ---
             function renderTimeline() {
@@ -872,7 +831,6 @@
                 }
             }
 
-
             // --- ДЕЙСТВИЯ ---
             document.getElementById('mark-paid-btn').addEventListener('click', () => {
                 const project = activeProjects.find(p => p.id === selectedProjectId);
@@ -952,6 +910,7 @@
                 }
             });
 
+            // Парсинг Excel
             const uploadInput = document.getElementById('excel-upload');
             const dataContainer = document.getElementById('excel-data-container');
             const emptyState = document.getElementById('excel-empty-state');
