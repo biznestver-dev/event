@@ -84,6 +84,13 @@
         .weather-spin { display: inline-block; animation: spin-slow 10s linear infinite; }
         .weather-float { display: inline-block; animation: float 3s ease-in-out infinite; }
         .weather-rain { display: inline-block; animation: rain-drop 1.5s linear infinite; }
+        
+        /* Чекбоксы команды */
+        input[type="checkbox"].team-checkbox {
+            accent-color: #3b82f6;
+            width: 18px;
+            height: 18px;
+        }
     </style>
 </head>
 <body class="bg-gray-950 text-white font-sans antialiased pb-24 overflow-x-hidden selection:bg-blue-500/30">
@@ -158,11 +165,22 @@
                 </button>
             </div>
 
-            <!-- Финансы -->
+            <!-- Блок Команды (ФОТ) -->
+            <div id="project-team-container" class="bg-black/20 border border-white/5 p-4 rounded-2xl mb-6 hidden">
+                <div class="flex justify-between items-center mb-3 border-b border-white/5 pb-2">
+                    <div class="text-[10px] text-gray-500 font-bold uppercase tracking-widest">Команда на проекте</div>
+                    <div class="text-[10px] text-blue-400 font-bold bg-blue-900/20 px-2 py-1 rounded-lg border border-blue-500/20">ФОТ: <span id="project-team-total">0 ₽</span></div>
+                </div>
+                <div id="project-team-list" class="space-y-2 pt-1">
+                    <!-- JS вставит участников -->
+                </div>
+            </div>
+
+            <!-- Финансы общие -->
             <div id="finance-block" class="bg-black/20 border border-white/5 p-4 rounded-2xl mb-6 hidden">
                 <div class="flex justify-between items-start mb-4">
                     <div>
-                        <div class="text-[10px] text-gray-500 font-bold uppercase tracking-widest mb-1">Смета</div>
+                        <div class="text-[10px] text-gray-500 font-bold uppercase tracking-widest mb-1">Итоговая смета</div>
                         <div id="project-cost-label" class="text-2xl font-bold text-white">0 ₽</div>
                     </div>
                     <div class="text-right">
@@ -216,16 +234,22 @@
                     </button>
                 </div>
 
-                <!-- Калькулятор: Люди * Ставка -->
-                <div class="flex gap-2">
-                    <input type="number" id="calc-people" placeholder="Кол-во чел." class="w-1/2 bg-gray-950 text-white text-sm rounded-xl p-3 outline-none border border-gray-700 focus:border-blue-500">
-                    <input type="number" id="calc-rate" placeholder="Ставка, ₽" class="w-1/2 bg-gray-950 text-white text-sm rounded-xl p-3 outline-none border border-gray-700 focus:border-blue-500">
+                <!-- Блок Выбора команды -->
+                <div class="bg-gray-800/30 p-3 rounded-xl border border-gray-700/50">
+                    <div class="flex justify-between items-center mb-3 ml-1">
+                        <div class="text-[10px] text-gray-400 font-bold uppercase">Команда и Гонорары</div>
+                        <div class="text-[10px] text-blue-400 font-bold bg-blue-900/20 px-2 py-0.5 rounded border border-blue-500/20">ФОТ: <span id="team-total-calc">0</span> ₽</div>
+                    </div>
+                    
+                    <div id="team-selection-list" class="space-y-2">
+                        <!-- JS сгенерирует чекбоксы и поля ввода -->
+                    </div>
                 </div>
 
-                <!-- Сумма и Оплата -->
-                <div class="relative">
+                <!-- Сумма и Оплата общие -->
+                <div class="relative mt-2">
                     <span class="absolute left-4 top-3 text-gray-500 font-medium">₽</span>
-                    <input type="number" id="new-project-cost" placeholder="Итоговая смета" class="w-full bg-gray-950 text-white text-sm rounded-xl py-3 pl-9 pr-4 outline-none border border-gray-700 block transition-colors focus:border-blue-500">
+                    <input type="number" id="new-project-cost" placeholder="Итоговая смета (все расходы)" class="w-full bg-gray-950 text-white text-sm rounded-xl py-3 pl-9 pr-4 outline-none border border-gray-700 block transition-colors focus:border-blue-500">
                 </div>
                 <input type="text" id="new-project-method" placeholder="Способ оплаты (нал, карта, ИП)" class="w-full bg-gray-950 text-white text-sm rounded-xl p-3 outline-none border border-gray-700 block transition-colors focus:border-blue-500">
             </div>
@@ -241,6 +265,14 @@
         document.addEventListener('DOMContentLoaded', () => {
             lucide.createIcons();
 
+            // База сотрудников
+            const PREDEFINED_TEAM = [
+                "Зломанов Олег Викторович",
+                "Дубовой Андрей Николаевич",
+                "Дубовой Алексей Николаевич",
+                "Смутный Богдан Сергеевич"
+            ];
+
             let activeProjects = [];
             let selectedProjectId = null;
             let isEditMode = false;
@@ -255,11 +287,13 @@
                             id: p.id || Date.now().toString(),
                             title: p.title,
                             dates: [{ date: p.id, start: p.timeStart || '', end: p.timeEnd || '' }],
+                            team: p.team || [],
                             cost: p.cost,
                             method: p.method,
                             isPaid: p.isPaid
                         };
                     }
+                    if (!p.team) p.team = []; // Миграция для старых данных без команды
                     return p;
                 });
                 if (activeProjects.length > 0) {
@@ -269,15 +303,12 @@
 
             const timeline = document.getElementById('projects-timeline');
             const modal = document.getElementById('date-modal');
-            const modalContent = document.getElementById('date-modal-content');
-            const contentArea = document.getElementById('project-content');
             const dynamicDatesList = document.getElementById('dynamic-dates-list');
+            const teamSelectionList = document.getElementById('team-selection-list');
             
             const titleInput = document.getElementById('new-project-title');
             const costInput = document.getElementById('new-project-cost');
             const methodInput = document.getElementById('new-project-method');
-            const calcPeople = document.getElementById('calc-people');
-            const calcRate = document.getElementById('calc-rate');
             const modalTitle = document.getElementById('modal-title');
             
             const dashTotal = document.getElementById('dash-total');
@@ -289,15 +320,7 @@
                 updateDashboard();
             }
 
-            const calculateTotal = () => {
-                const people = parseFloat(calcPeople.value) || 0;
-                const rate = parseFloat(calcRate.value) || 0;
-                if (people > 0 && rate > 0) costInput.value = people * rate;
-            };
-            calcPeople.addEventListener('input', calculateTotal);
-            calcRate.addEventListener('input', calculateTotal);
-
-            // Управление строками дат в модалке
+            // Управление строками дат
             function addDateRow(dateVal='', startVal='', endVal='') {
                 const row = document.createElement('div');
                 row.className = "date-row flex gap-1 items-center";
@@ -319,6 +342,56 @@
 
             document.getElementById('add-dynamic-date-btn').addEventListener('click', () => addDateRow());
 
+            // Управление командой в модалке
+            function renderTeamSelection(existingTeam = []) {
+                teamSelectionList.innerHTML = '';
+                
+                PREDEFINED_TEAM.forEach(name => {
+                    const memberData = existingTeam.find(m => m.name === name) || { fee: '' };
+                    const isChecked = !!existingTeam.find(m => m.name === name);
+
+                    const row = document.createElement('div');
+                    row.className = "flex justify-between items-center bg-gray-950 p-2 rounded-lg border border-gray-700/80";
+                    row.innerHTML = `
+                        <label class="flex items-center gap-2 flex-1 cursor-pointer min-w-0 pr-2">
+                            <input type="checkbox" class="team-checkbox shrink-0" value="${name}" ${isChecked ? 'checked' : ''}>
+                            <span class="text-[11px] text-gray-300 font-medium truncate">${name}</span>
+                        </label>
+                        <input type="number" class="team-fee w-20 shrink-0 bg-gray-900 text-white text-xs rounded p-1.5 outline-none border border-gray-600 focus:border-blue-500 transition-colors text-right ${isChecked ? '' : 'opacity-30'}" placeholder="0 ₽" value="${memberData.fee}" ${isChecked ? '' : 'disabled'}>
+                    `;
+                    
+                    const checkbox = row.querySelector('.team-checkbox');
+                    const feeInput = row.querySelector('.team-fee');
+                    
+                    checkbox.addEventListener('change', (e) => {
+                        if (e.target.checked) {
+                            feeInput.disabled = false;
+                            feeInput.classList.remove('opacity-30');
+                            feeInput.focus();
+                        } else {
+                            feeInput.disabled = true;
+                            feeInput.classList.add('opacity-30');
+                            feeInput.value = '';
+                        }
+                        calcTeamTotal();
+                    });
+
+                    feeInput.addEventListener('input', calcTeamTotal);
+                    teamSelectionList.appendChild(row);
+                });
+                calcTeamTotal();
+            }
+
+            function calcTeamTotal() {
+                let total = 0;
+                document.querySelectorAll('.team-fee').forEach(input => {
+                    if (!input.disabled && input.value) {
+                        total += Number(input.value);
+                    }
+                });
+                document.getElementById('team-total-calc').textContent = total.toLocaleString('ru-RU');
+            }
+
             const openModal = (editMode = false) => {
                 isEditMode = editMode;
                 modalTitle.textContent = editMode ? 'Изменить проект' : 'Новый проект';
@@ -332,9 +405,10 @@
             };
 
             document.getElementById('add-date-btn').addEventListener('click', () => {
-                titleInput.value = ''; costInput.value = ''; methodInput.value = ''; calcPeople.value = ''; calcRate.value = '';
+                titleInput.value = ''; costInput.value = ''; methodInput.value = '';
                 dynamicDatesList.innerHTML = '';
-                addDateRow(); // Одна пустая строка по умолчанию
+                addDateRow();
+                renderTeamSelection([]);
                 openModal(false);
             });
             
@@ -342,28 +416,36 @@
 
             // Сохранение проекта
             document.getElementById('save-date').addEventListener('click', () => {
+                // Собираем даты
                 const dateRows = document.querySelectorAll('.date-row');
                 const extractedDates = [];
                 dateRows.forEach(row => {
                     const dVal = row.querySelector('.row-date').value;
                     if(dVal) {
-                        extractedDates.push({
-                            date: dVal,
-                            start: row.querySelector('.row-start').value,
-                            end: row.querySelector('.row-end').value
+                        extractedDates.push({ date: dVal, start: row.querySelector('.row-start').value, end: row.querySelector('.row-end').value });
+                    }
+                });
+                if (extractedDates.length === 0) { alert('Укажите хотя бы одну дату!'); return; }
+                extractedDates.sort((a,b) => new Date(a.date) - new Date(b.date));
+
+                // Собираем команду
+                const extractedTeam = [];
+                document.querySelectorAll('#team-selection-list > div').forEach(row => {
+                    const checkbox = row.querySelector('.team-checkbox');
+                    if (checkbox.checked) {
+                        const feeVal = row.querySelector('.team-fee').value;
+                        extractedTeam.push({
+                            name: checkbox.value,
+                            fee: feeVal ? Number(feeVal) : 0
                         });
                     }
                 });
-
-                if (extractedDates.length === 0) { alert('Укажите хотя бы одну дату!'); return; }
-                
-                // Сортируем даты внутри проекта
-                extractedDates.sort((a,b) => new Date(a.date) - new Date(b.date));
 
                 const projectData = {
                     id: isEditMode ? selectedProjectId : Date.now().toString(),
                     title: titleInput.value || 'Без названия',
                     dates: extractedDates,
+                    team: extractedTeam,
                     cost: costInput.value ? Number(costInput.value) : 0,
                     method: methodInput.value || 'Не указано',
                     isPaid: false
@@ -377,7 +459,6 @@
                     activeProjects.push(projectData);
                 }
 
-                // Сортируем все проекты по первой дате
                 activeProjects.sort((a, b) => new Date(a.dates[0].date) - new Date(b.dates[0].date));
                 selectedProjectId = projectData.id;
                 
@@ -402,10 +483,10 @@
             function renderTimeline() {
                 timeline.innerHTML = '';
                 if (activeProjects.length > 0) {
-                    contentArea.classList.remove('hidden');
-                    setTimeout(() => contentArea.classList.remove('opacity-0'), 50);
+                    document.getElementById('project-content').classList.remove('hidden');
+                    setTimeout(() => document.getElementById('project-content').classList.remove('opacity-0'), 50);
                 } else {
-                    contentArea.classList.add('hidden', 'opacity-0');
+                    document.getElementById('project-content').classList.add('hidden', 'opacity-0');
                     timeline.innerHTML = `<div class="col-span-4 text-center text-gray-500 text-sm py-4 border border-dashed border-gray-800 rounded-2xl">Нажмите +, чтобы добавить проект</div>`;
                 }
 
@@ -440,7 +521,6 @@
                 lucide.createIcons();
             }
 
-            // Получение погоды для виджета
             async function fetchWeatherForDate(dateStr) {
                 const targetDate = new Date(dateStr);
                 const today = new Date();
@@ -510,7 +590,6 @@
                     datesContainer.appendChild(row);
                     lucide.createIcons({root: row});
 
-                    // Грузим погоду для этой даты
                     const weather = await fetchWeatherForDate(d.date);
                     if(weather) {
                         const wBox = document.getElementById(`weather-${project.id}-${index}`);
@@ -520,6 +599,29 @@
                         wBox.querySelector('.weather-temp').textContent = weather.temp;
                     }
                 });
+
+                // Рендер команды (ФОТ)
+                const teamContainer = document.getElementById('project-team-container');
+                const teamListHtml = document.getElementById('project-team-list');
+                if (project.team && project.team.length > 0) {
+                    teamContainer.classList.remove('hidden');
+                    teamListHtml.innerHTML = '';
+                    
+                    let teamTotal = 0;
+                    project.team.forEach(member => {
+                        teamTotal += member.fee;
+                        teamListHtml.innerHTML += `
+                            <div class="flex justify-between items-center py-1.5 border-b border-white/5 last:border-0">
+                                <span class="text-xs text-gray-300 flex items-center gap-2 font-medium truncate pr-2"><i data-lucide="user" class="w-3.5 h-3.5 text-blue-400"></i> ${member.name}</span>
+                                <span class="text-xs font-bold text-white shrink-0">${member.fee.toLocaleString('ru-RU')} ₽</span>
+                            </div>
+                        `;
+                    });
+                    document.getElementById('project-team-total').textContent = `${teamTotal.toLocaleString('ru-RU')} ₽`;
+                    lucide.createIcons({root: teamContainer});
+                } else {
+                    teamContainer.classList.add('hidden');
+                }
 
                 // Финансы
                 const financeBlock = document.getElementById('finance-block');
@@ -573,11 +675,11 @@
                     titleInput.value = project.title;
                     costInput.value = project.cost;
                     methodInput.value = project.method;
-                    calcPeople.value = ''; calcRate.value = '';
                     
                     dynamicDatesList.innerHTML = '';
                     project.dates.forEach(d => addDateRow(d.date, d.start, d.end));
                     
+                    renderTeamSelection(project.team);
                     openModal(true);
                 }
             });
@@ -593,8 +695,18 @@
                     if(d.start || d.end) text += `  ⏰ ${d.start ? d.start : ''}${d.start&&d.end?'-':''}${d.end ? d.end : ''}`;
                     text += '\n';
                 });
+
+                if (project.team && project.team.length > 0) {
+                    text += `\n👥 Команда на площадке:\n`;
+                    let teamSum = 0;
+                    project.team.forEach(m => {
+                        text += `• ${m.name} — ${m.fee.toLocaleString('ru-RU')} ₽\n`;
+                        teamSum += m.fee;
+                    });
+                    text += `ФОТ Итого: ${teamSum.toLocaleString('ru-RU')} ₽\n`;
+                }
                 
-                text += `\n💰 Смета: ${project.cost.toLocaleString('ru-RU')} ₽\n💵 Оплата: ${project.isPaid ? '✅ Оплачено' : '⏳ Ожидается'} (${project.method})`;
+                text += `\n💰 Общая смета: ${project.cost.toLocaleString('ru-RU')} ₽\n💵 Оплата: ${project.isPaid ? '✅ Оплачено' : '⏳ Ожидается'} (${project.method})`;
                 
                 if (navigator.share) {
                     try { await navigator.share({ title: 'Отчет по проекту', text: text }); } 
@@ -652,7 +764,6 @@
             updateDashboard();
         });
 
-        // PWA Service Worker
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => navigator.serviceWorker.register('./sw.js').catch(err => console.log('SW', err)));
         }
