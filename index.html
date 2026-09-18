@@ -86,12 +86,6 @@
             width: 18px;
             height: 18px;
         }
-        
-        select {
-            -webkit-appearance: none;
-            -moz-appearance: none;
-            appearance: none;
-        }
     </style>
 </head>
 <body class="bg-gray-950 text-white font-sans antialiased pb-24 overflow-x-hidden selection:bg-blue-500/30">
@@ -120,22 +114,24 @@
         </div>
     </div>
     
-    <!-- Фильтр Дашборда -->
-    <div class="px-4 mb-6 relative">
-        <div class="absolute inset-y-0 left-7 flex items-center pointer-events-none">
-            <i data-lucide="users" class="w-4 h-4 text-gray-400" id="filter-icon"></i>
+    <!-- Кастомный фильтр команды (без багов на iOS) -->
+    <div class="px-4 mb-6 relative z-20">
+        <div id="custom-dropdown-btn" class="w-full bg-gray-800/80 text-white text-sm font-bold rounded-xl py-3 px-4 outline-none border border-white/10 shadow-sm flex items-center justify-between cursor-pointer active:scale-[0.99] transition-transform">
+            <div class="flex items-center gap-2 truncate">
+                <i data-lucide="users" class="w-4 h-4 text-blue-400 shrink-0" id="filter-icon"></i>
+                <span id="current-filter-text" class="truncate">Все проекты</span>
+            </div>
+            <i data-lucide="chevron-down" class="w-4 h-4 text-gray-400 shrink-0 transition-transform duration-200" id="dropdown-arrow"></i>
         </div>
-        <select id="dashboard-team-filter" class="w-full bg-gray-800/80 text-white text-[16px] font-bold rounded-xl py-3 pl-10 pr-10 outline-none border border-white/10 appearance-none shadow-sm transition-colors focus:border-blue-500 cursor-pointer">
-            <option value="Все проекты">Все проекты</option>
-            <option value="Весь ФОТ">Весь ФОТ</option>
-        </select>
-        <div class="absolute inset-y-0 right-7 flex items-center pointer-events-none">
-            <i data-lucide="chevron-down" class="w-4 h-4 text-gray-400"></i>
+        
+        <!-- Выпадающий список -->
+        <div id="custom-dropdown-menu" class="hidden absolute left-4 right-4 mt-2 bg-gray-900 border border-gray-700 rounded-2xl shadow-2xl overflow-hidden max-h-60 overflow-y-auto hidden-scrollbar z-30 p-1">
+            <!-- JS вставит опции -->
         </div>
     </div>
 
     <!-- Кнопки -->
-    <div class="px-4 flex gap-3 mb-8">
+    <div class="px-4 flex gap-3 mb-8 relative z-10">
         <label class="flex-1 bg-gray-800/80 hover:bg-gray-700 backdrop-blur-md text-white py-3.5 px-2 rounded-2xl cursor-pointer transition-colors border border-white/10 flex items-center justify-center gap-2 relative overflow-hidden">
             <i data-lucide="file-spreadsheet" class="w-5 h-5 text-green-400"></i>
             <span class="text-xs font-bold uppercase tracking-wider">Загрузить Excel</span>
@@ -296,7 +292,7 @@
 
     <script>
         const SUPABASE_URL = 'https://yixpxokoinvmphgvdsee.supabase.co';
-        const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InlpeHB4b2tvaW52bXBoZ3Zkc2VlIiwicm9sZSI6InlpeHB4b2tvaW52bXBoZ3Zkc2VlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODk3NjEyMTgsImV4cCI6MjEwNTMzNzIxOH0.vwtkVEbxr5yzd5GNF4PBZlvRZIvVrFGQoh5EfNPpojE';
+        const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InlpeHB4b2tvaW52bXBoZ3Zkc2VlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODk3NjEyMTgsImV4cCI6MjEwNTMzNzIxOH0.vwtkVEbxr5yzd5GNF4PBZlvRZIvVrFGQoh5EfNPpojE';
         const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
         document.addEventListener('DOMContentLoaded', () => {
@@ -384,7 +380,89 @@
             const dashTotal = document.getElementById('dash-total');
             const dashPaid = document.getElementById('dash-paid');
             const dashPending = document.getElementById('dash-pending');
-            const filterSelect = document.getElementById('dashboard-team-filter');
+
+            // --- КАСТОМНЫЙ ВЫПАДАЮЩИЙ СПИСОК ---
+            const dropdownBtn = document.getElementById('custom-dropdown-btn');
+            const dropdownMenu = document.getElementById('custom-dropdown-menu');
+            const currentFilterText = document.getElementById('current-filter-text');
+            const dropdownArrow = document.getElementById('dropdown-arrow');
+            const filterIcon = document.getElementById('filter-icon');
+
+            dropdownBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                dropdownMenu.classList.toggle('hidden');
+                dropdownArrow.classList.toggle('rotate-180');
+            });
+
+            document.addEventListener('click', () => {
+                dropdownMenu.classList.add('hidden');
+                dropdownArrow.classList.remove('rotate-180');
+            });
+
+            function renderDashboardFilters() {
+                dropdownMenu.innerHTML = '';
+                const filters = ['Все проекты', 'Весь ФОТ', ...PREDEFINED_TEAM];
+                activeProjects.forEach(p => {
+                    (p.team || []).forEach(m => {
+                        if (!filters.includes(m.name)) filters.push(m.name);
+                    });
+                });
+
+                filters.forEach(f => {
+                    const item = document.createElement('div');
+                    const isSelected = currentDashFilter === f;
+                    item.className = `px-4 py-3 rounded-xl text-xs font-bold cursor-pointer transition-colors flex items-center justify-between ${isSelected ? 'bg-blue-600/30 text-blue-400' : 'text-gray-300 hover:bg-gray-800'}`;
+                    item.innerHTML = `<span>${f}</span> ${isSelected ? '<i data-lucide="check" class="w-4 h-4"></i>' : ''}`;
+                    
+                    item.addEventListener('click', () => {
+                        currentDashFilter = f;
+                        currentFilterText.textContent = f;
+                        dropdownMenu.classList.add('hidden');
+                        dropdownArrow.classList.remove('rotate-180');
+                        updateDashboard();
+                        renderDashboardFilters();
+                    });
+                    dropdownMenu.appendChild(item);
+                });
+                lucide.createIcons({root: dropdownMenu});
+
+                currentFilterText.textContent = currentDashFilter;
+                if (currentDashFilter !== 'Все проекты' && currentDashFilter !== 'Весь ФОТ') {
+                    dropdownBtn.classList.add('bg-blue-900/40', 'border-blue-500/50', 'text-blue-300');
+                    filterIcon.classList.replace('text-blue-400', 'text-blue-300');
+                } else {
+                    dropdownBtn.classList.remove('bg-blue-900/40', 'border-blue-500/50', 'text-blue-300');
+                    filterIcon.classList.replace('text-blue-300', 'text-blue-400');
+                }
+            }
+
+            function updateDashboard() {
+                let total = 0, paid = 0, pending = 0;
+                activeProjects.forEach(p => {
+                    if (currentDashFilter === 'Все проекты') {
+                        total += p.cost || 0;
+                        if (p.isPaid) paid += p.cost || 0;
+                        else pending += p.cost || 0;
+                    } else if (currentDashFilter === 'Весь ФОТ') {
+                        let projectFot = 0;
+                        p.team.forEach(m => projectFot += m.fee);
+                        total += projectFot;
+                        if (p.isPaid) paid += projectFot;
+                        else pending += projectFot;
+                    } else {
+                        const member = (p.team || []).find(m => m.name === currentDashFilter);
+                        if (member) {
+                            total += member.fee || 0;
+                            if (p.isPaid) paid += member.fee || 0;
+                            else pending += member.fee || 0;
+                        }
+                    }
+                });
+
+                dashTotal.textContent = `${total.toLocaleString('ru-RU')} ₽`;
+                dashPaid.textContent = `${paid.toLocaleString('ru-RU')} ₽`;
+                dashPending.textContent = `${pending.toLocaleString('ru-RU')} ₽`;
+            }
 
             // --- УПРАВЛЕНИЕ МОДАЛЬНЫМ ОКНОМ ---
             const openModal = (editMode = false) => {
@@ -442,58 +520,6 @@
                     btn.innerHTML = originalHtml;
                 }
             });
-
-            // --- ДАШБОРД (ФИЛЬТРЫ) ---
-            function renderDashboardFilters() {
-                filterSelect.innerHTML = '';
-                const filters = ['Все проекты', 'Весь ФОТ', ...PREDEFINED_TEAM];
-                activeProjects.forEach(p => {
-                    (p.team || []).forEach(m => {
-                        if (!filters.includes(m.name)) filters.push(m.name);
-                    });
-                });
-
-                filters.forEach(f => {
-                    const opt = document.createElement('option');
-                    opt.value = f;
-                    opt.textContent = f;
-                    if (currentDashFilter === f) opt.selected = true;
-                    filterSelect.appendChild(opt);
-                });
-            }
-
-            filterSelect.addEventListener('change', (e) => {
-                currentDashFilter = e.target.value;
-                updateDashboard();
-            });
-
-            function updateDashboard() {
-                let total = 0, paid = 0, pending = 0;
-                activeProjects.forEach(p => {
-                    if (currentDashFilter === 'Все проекты') {
-                        total += p.cost || 0;
-                        if (p.isPaid) paid += p.cost || 0;
-                        else pending += p.cost || 0;
-                    } else if (currentDashFilter === 'Весь ФОТ') {
-                        let projectFot = 0;
-                        p.team.forEach(m => projectFot += m.fee);
-                        total += projectFot;
-                        if (p.isPaid) paid += projectFot;
-                        else pending += projectFot;
-                    } else {
-                        const member = (p.team || []).find(m => m.name === currentDashFilter);
-                        if (member) {
-                            total += member.fee || 0;
-                            if (p.isPaid) paid += member.fee || 0;
-                            else pending += member.fee || 0;
-                        }
-                    }
-                });
-
-                dashTotal.textContent = `${total.toLocaleString('ru-RU')} ₽`;
-                dashPaid.textContent = `${paid.toLocaleString('ru-RU')} ₽`;
-                dashPending.textContent = `${pending.toLocaleString('ru-RU')} ₽`;
-            }
 
             // --- ДАТЫ В МОДАЛКЕ ---
             function addDateRow(dateVal='', startVal='', endVal='') {
@@ -910,6 +936,7 @@
                 }
             });
 
+            // Парсинг Excel
             const uploadInput = document.getElementById('excel-upload');
             const dataContainer = document.getElementById('excel-data-container');
             const emptyState = document.getElementById('excel-empty-state');
