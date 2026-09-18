@@ -18,149 +18,200 @@
     <script src="https://unpkg.com/lucide@latest"></script>
     
     <style>
-        .ios-header {
-            background: rgba(17, 24, 39, 0.85);
-            backdrop-filter: blur(20px);
-            -webkit-backdrop-filter: blur(20px);
-            padding-top: max(3rem, env(safe-area-inset-top));
-        }
         .hidden-scrollbar::-webkit-scrollbar { display: none; }
         .hidden-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+        
         .modal-active { opacity: 1 !important; }
         .modal-active > #date-modal-content { transform: scale(1) !important; }
-        .date-icon { transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1); }
+        
+        /* Анимация заголовка */
+        @keyframes shimmer-bg {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+        .animated-title {
+            background-size: 200% 200%;
+            animation: shimmer-bg 4s ease infinite;
+        }
+
+        /* Анимации иконок дат */
+        .date-icon {
+            aspect-ratio: 1 / 1;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        /* Эффект проезжающего блика по кнопкам */
+        .date-icon::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 50%;
+            height: 100%;
+            background: linear-gradient(to right, transparent, rgba(255,255,255,0.15), transparent);
+            transform: skewX(-20deg);
+            animation: shine 4s infinite;
+        }
+        @keyframes shine {
+            0% { left: -100%; }
+            20% { left: 200%; }
+            100% { left: 200%; }
+        }
+
+        /* Активная иконка: переливающийся градиент и пульсирующая тень */
+        @keyframes pulse-border {
+            0% { box-shadow: 0 0 0 0 rgba(59,130,246, 0.6); }
+            70% { box-shadow: 0 0 0 10px rgba(59,130,246, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(59,130,246, 0); }
+        }
+        .date-icon.active {
+            background: linear-gradient(135deg, #3b82f6, #8b5cf6, #3b82f6);
+            background-size: 200% 200%;
+            animation: shimmer-bg 3s ease infinite, pulse-border 2s infinite;
+            border: none;
+            transform: scale(1.05);
+            z-index: 10;
+        }
+        
         .date-icon:active { transform: scale(0.9); }
-        .date-icon.active { transform: translateY(-2px); box-shadow: 0 8px 16px -4px rgba(59, 130, 246, 0.5); }
     </style>
 </head>
-<body class="bg-gray-950 text-white font-sans antialiased pb-24 selection:bg-blue-500/30">
+<body class="bg-gray-950 text-white font-sans antialiased pb-24 overflow-x-hidden selection:bg-blue-500/30">
 
-    <!-- Header & Dashboard -->
-    <header class="ios-header fixed top-0 w-full z-40 border-b border-white/10 pb-3">
-        <div class="px-4 flex justify-between items-center mb-4">
-            <h1 class="text-lg font-semibold tracking-tight truncate pr-2">Event Production Kremlin</h1>
-            <div class="flex gap-3">
-                <label class="bg-gray-800 hover:bg-gray-700 text-white p-2.5 rounded-full cursor-pointer transition-colors shadow-lg relative">
-                    <i data-lucide="file-spreadsheet" class="w-5 h-5"></i>
-                    <input type="file" id="excel-upload" class="hidden" accept=".xlsx, .xls">
-                </label>
-                <button id="add-date-btn" class="bg-blue-600 hover:bg-blue-500 text-white p-2.5 rounded-full transition-colors shadow-[0_0_15px_rgba(59,130,246,0.5)]">
-                    <i data-lucide="plus" class="w-5 h-5"></i>
-                </button>
-            </div>
+    <!-- 1. Заголовок -->
+    <div class="pt-14 pb-6 px-4 text-center">
+        <h1 class="text-2xl font-extrabold tracking-tight text-transparent bg-clip-text bg-gradient-to-r from-blue-400 via-purple-400 to-blue-400 animated-title">
+            Event Production Kremlin
+        </h1>
+    </div>
+
+    <!-- 2. Дашборд (Оплачено, Остаток, Всего) -->
+    <div class="px-4 grid grid-cols-3 gap-3 mb-6">
+        <div class="bg-green-900/20 p-3 rounded-2xl border border-green-500/30 flex flex-col items-center justify-center shadow-[0_0_15px_rgba(34,197,94,0.1)]">
+            <div class="text-[10px] text-green-500/90 uppercase tracking-wider mb-1 font-semibold">Оплачено</div>
+            <div class="text-sm font-bold text-green-400" id="dash-paid">0 ₽</div>
         </div>
-
-        <!-- Глобальный дашборд -->
-        <div class="px-4 flex justify-between gap-2">
-            <div class="bg-gray-900/60 p-2.5 rounded-xl border border-white/5 flex-1">
-                <div class="text-[10px] text-gray-500 uppercase tracking-wider mb-0.5">Всего</div>
-                <div class="text-sm font-bold text-white" id="dash-total">0 ₽</div>
-            </div>
-            <div class="bg-green-900/20 p-2.5 rounded-xl border border-green-500/20 flex-1">
-                <div class="text-[10px] text-green-500/80 uppercase tracking-wider mb-0.5">Оплачено</div>
-                <div class="text-sm font-bold text-green-400" id="dash-paid">0 ₽</div>
-            </div>
-            <div class="bg-yellow-900/20 p-2.5 rounded-xl border border-yellow-500/20 flex-1">
-                <div class="text-[10px] text-yellow-500/80 uppercase tracking-wider mb-0.5">Остаток</div>
-                <div class="text-sm font-bold text-yellow-400" id="dash-pending">0 ₽</div>
-            </div>
+        <div class="bg-yellow-900/20 p-3 rounded-2xl border border-yellow-500/30 flex flex-col items-center justify-center shadow-[0_0_15px_rgba(234,179,8,0.1)]">
+            <div class="text-[10px] text-yellow-500/90 uppercase tracking-wider mb-1 font-semibold">Остаток</div>
+            <div class="text-sm font-bold text-yellow-400" id="dash-pending">0 ₽</div>
         </div>
-    </header>
-
-    <!-- Main Content -->
-    <main class="pt-40 h-screen overflow-y-auto hidden-scrollbar">
-        <!-- Кружки дат -->
-        <div class="px-4 pb-2">
-            <div id="dates-timeline" class="flex gap-4 overflow-x-auto hidden-scrollbar pb-2 snap-x">
-                <div class="text-gray-500 text-sm mt-2 w-full text-center" id="timeline-empty">Нажмите +, чтобы добавить проект</div>
-            </div>
+        <div class="bg-blue-900/20 p-3 rounded-2xl border border-blue-500/30 flex flex-col items-center justify-center shadow-[0_0_15px_rgba(59,130,246,0.1)]">
+            <div class="text-[10px] text-blue-400/90 uppercase tracking-wider mb-1 font-semibold">Всего</div>
+            <div class="text-sm font-bold text-blue-400" id="dash-total">0 ₽</div>
         </div>
+    </div>
 
-        <!-- Контент выбранного проекта -->
-        <div id="date-content" class="px-4 mt-2 hidden">
-            
-            <div class="mb-4">
-                <h2 id="project-title-label" class="text-2xl font-bold mb-1">Название проекта</h2>
-                <div class="flex items-center gap-2 text-gray-400 text-sm">
+    <!-- 3. Кнопки (Загрузка Excel и Добавить) -->
+    <div class="px-4 flex gap-3 mb-8">
+        <label class="flex-1 bg-gray-800/80 hover:bg-gray-700 backdrop-blur-md text-white py-3.5 px-2 rounded-2xl cursor-pointer transition-colors border border-white/10 flex items-center justify-center gap-2 relative overflow-hidden">
+            <i data-lucide="file-spreadsheet" class="w-5 h-5 text-green-400"></i>
+            <span class="text-xs font-bold uppercase tracking-wider">Загрузить Excel</span>
+            <input type="file" id="excel-upload" class="hidden" accept=".xlsx, .xls">
+        </label>
+        
+        <button id="add-date-btn" class="flex-1 bg-gradient-to-r from-blue-600 to-purple-600 text-white py-3.5 px-2 rounded-2xl transition-all shadow-[0_0_20px_rgba(59,130,246,0.4)] border border-blue-400/30 flex items-center justify-center gap-2">
+            <i data-lucide="plus-circle" class="w-5 h-5"></i>
+            <span class="text-xs font-bold uppercase tracking-wider">Добавить</span>
+        </button>
+    </div>
+
+    <!-- 4. Сетка дат (по 4 в ряд) -->
+    <div class="px-4 mb-8">
+        <div id="dates-timeline" class="grid grid-cols-4 gap-3">
+            <!-- Сюда JS вставит кнопки дат -->
+        </div>
+    </div>
+
+    <!-- 5. Детальная информация по выбранной дате -->
+    <div id="date-content" class="px-4 hidden opacity-0 transition-opacity duration-500 scroll-mt-6">
+        <div class="bg-gray-900/40 backdrop-blur-xl border border-white/10 rounded-3xl p-5 shadow-2xl">
+            <div class="mb-5 border-b border-white/5 pb-4">
+                <h2 id="project-title-label" class="text-2xl font-bold mb-1 text-white">Название проекта</h2>
+                <div class="flex items-center gap-2 text-blue-400 text-sm font-medium">
                     <i data-lucide="calendar" class="w-4 h-4"></i>
                     <span id="current-date-label">Дата</span>
                 </div>
             </div>
 
-            <!-- Управление проектом (Редактировать / Удалить / Шеринг) -->
+            <!-- Управление проектом -->
             <div class="flex gap-2 mb-6">
-                <button id="edit-project-btn" class="flex-1 bg-gray-800 text-gray-300 py-2.5 rounded-xl text-sm font-medium flex justify-center items-center gap-2 border border-white/5">
+                <button id="edit-project-btn" class="flex-1 bg-gray-800/80 text-gray-300 py-3 rounded-xl text-xs font-bold uppercase tracking-wide flex justify-center items-center gap-2 border border-white/5 active:scale-95 transition-transform">
                     <i data-lucide="edit" class="w-4 h-4"></i> Изменить
                 </button>
-                <button id="share-project-btn" class="flex-1 bg-blue-900/30 text-blue-400 py-2.5 rounded-xl text-sm font-medium flex justify-center items-center gap-2 border border-blue-500/20">
+                <button id="share-project-btn" class="flex-1 bg-blue-900/30 text-blue-400 py-3 rounded-xl text-xs font-bold uppercase tracking-wide flex justify-center items-center gap-2 border border-blue-500/20 active:scale-95 transition-transform">
                     <i data-lucide="send" class="w-4 h-4"></i> Отправить
                 </button>
-                <button id="delete-project-btn" class="flex-1 bg-red-900/20 text-red-400 py-2.5 rounded-xl text-sm font-medium flex justify-center items-center gap-2 border border-red-500/20">
+                <button id="delete-project-btn" class="flex-1 bg-red-900/20 text-red-400 py-3 rounded-xl text-xs font-bold uppercase tracking-wide flex justify-center items-center gap-2 border border-red-500/20 active:scale-95 transition-transform">
                     <i data-lucide="trash-2" class="w-4 h-4"></i> Удалить
                 </button>
             </div>
 
             <!-- Финансовый блок -->
-            <div id="finance-block" class="bg-gray-900/50 border border-white/5 p-4 rounded-2xl mb-6 shadow-sm hidden">
-                <div class="flex justify-between items-start mb-3">
+            <div id="finance-block" class="bg-black/20 border border-white/5 p-4 rounded-2xl mb-6 hidden">
+                <div class="flex justify-between items-start mb-4">
                     <div>
-                        <div class="text-xs text-gray-500 font-medium uppercase tracking-wide mb-1">Смета</div>
-                        <div id="project-cost-label" class="text-xl font-bold text-white">0 ₽</div>
+                        <div class="text-[10px] text-gray-500 font-bold uppercase tracking-widest mb-1">Смета</div>
+                        <div id="project-cost-label" class="text-2xl font-bold text-white">0 ₽</div>
                     </div>
                     <div class="text-right">
-                        <div class="text-xs text-gray-500 font-medium uppercase tracking-wide mb-1">Способ оплаты</div>
-                        <div id="project-method-label" class="text-sm text-gray-300">Наличные</div>
+                        <div class="text-[10px] text-gray-500 font-bold uppercase tracking-widest mb-1">Способ оплаты</div>
+                        <div id="project-method-label" class="text-sm text-gray-300 font-medium">Наличные</div>
                     </div>
                 </div>
                 
-                <div id="payment-actions" class="pt-3 border-t border-white/5 mt-1">
-                    <button id="mark-paid-btn" class="w-full bg-blue-600/20 text-blue-400 hover:bg-blue-600/30 font-medium py-2.5 rounded-xl transition-colors border border-blue-500/30 flex justify-center items-center gap-2">
-                        <i data-lucide="circle-dollar-sign" class="w-4 h-4"></i> Отметить как оплаченное
+                <div id="payment-actions">
+                    <button id="mark-paid-btn" class="w-full bg-gradient-to-r from-blue-600/20 to-purple-600/20 text-blue-400 hover:from-blue-600/30 hover:to-purple-600/30 font-bold py-3 rounded-xl transition-colors border border-blue-500/30 flex justify-center items-center gap-2">
+                        <i data-lucide="circle-dollar-sign" class="w-5 h-5"></i> Отметить как оплаченное
                     </button>
-                    <div id="paid-status" class="hidden w-full bg-green-500/10 text-green-400 font-medium py-2.5 rounded-xl border border-green-500/20 flex justify-center items-center gap-2">
+                    <div id="paid-status" class="hidden w-full bg-green-500/10 text-green-400 font-bold py-3 rounded-xl border border-green-500/20 flex justify-center items-center gap-2 shadow-[0_0_15px_rgba(34,197,94,0.1)]">
                         <i data-lucide="check-circle-2" class="w-5 h-5"></i> Оплачено
                     </div>
                 </div>
             </div>
 
             <!-- Списки из Excel -->
-            <div class="flex justify-between items-center mb-3">
-                <h3 class="text-lg font-semibold">Списки на площадку</h3>
+            <div class="flex justify-between items-center mb-4 mt-2">
+                <h3 class="text-lg font-bold">Списки на площадку</h3>
             </div>
-            <div id="excel-data-container" class="space-y-3 pb-8">
-                <div class="text-center text-gray-600 mt-6 text-sm border border-dashed border-gray-800 rounded-2xl p-6" id="excel-empty-state">
+            <div id="excel-data-container" class="space-y-3 pb-2">
+                <div class="text-center text-gray-600 mt-4 text-sm border border-dashed border-gray-700/50 rounded-2xl p-6 bg-gray-900/20" id="excel-empty-state">
                     <i data-lucide="list-x" class="w-8 h-8 mx-auto mb-2 opacity-30"></i>
                     Таблицы не загружены
                 </div>
             </div>
         </div>
-    </main>
+    </div>
 
     <!-- Modal: Добавление/Изменение проекта -->
-    <div id="date-modal" class="hidden fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4 opacity-0 transition-opacity duration-300">
-        <div class="bg-gray-900 border border-gray-800 p-6 rounded-[2rem] w-full max-w-xs shadow-2xl transform scale-95 transition-transform duration-300" id="date-modal-content">
-            <h3 id="modal-title" class="text-lg font-semibold mb-5 text-center">Новый проект</h3>
+    <div id="date-modal" class="hidden fixed inset-0 z-50 bg-black/80 backdrop-blur-md flex items-center justify-center p-4 opacity-0 transition-opacity duration-300">
+        <div class="bg-gray-900 border border-gray-700 p-6 rounded-[2rem] w-full max-w-xs shadow-2xl transform scale-95 transition-transform duration-300 relative overflow-hidden" id="date-modal-content">
+            <!-- Декор модалки -->
+            <div class="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-blue-500 to-purple-500"></div>
+            
+            <h3 id="modal-title" class="text-lg font-bold mb-5 text-center mt-2">Новый проект</h3>
             
             <div class="space-y-3 mb-6">
-                <input type="date" id="new-date-input" class="w-full bg-gray-800 text-white rounded-xl p-3 outline-none border border-gray-700 block focus:border-blue-500 transition-colors" style="color-scheme: dark;" required>
-                <input type="text" id="new-project-title" placeholder="Название (например, ВДНХ)" class="w-full bg-gray-800 text-white text-sm rounded-xl p-3 outline-none border border-gray-700 block transition-colors focus:border-blue-500">
+                <input type="date" id="new-date-input" class="w-full bg-gray-950 text-white rounded-xl p-3 outline-none border border-gray-700 block focus:border-blue-500 transition-colors" style="color-scheme: dark;" required>
+                <input type="text" id="new-project-title" placeholder="Название (например, ВДНХ)" class="w-full bg-gray-950 text-white text-sm rounded-xl p-3 outline-none border border-gray-700 block transition-colors focus:border-blue-500">
                 
-                <!-- Калькулятор: Люди * Ставка -->
                 <div class="flex gap-2">
-                    <input type="number" id="calc-people" placeholder="Кол-во чел." class="w-1/2 bg-gray-800 text-white text-sm rounded-xl p-3 outline-none border border-gray-700 focus:border-blue-500">
-                    <input type="number" id="calc-rate" placeholder="Ставка, ₽" class="w-1/2 bg-gray-800 text-white text-sm rounded-xl p-3 outline-none border border-gray-700 focus:border-blue-500">
+                    <input type="number" id="calc-people" placeholder="Кол-во чел." class="w-1/2 bg-gray-950 text-white text-sm rounded-xl p-3 outline-none border border-gray-700 focus:border-blue-500">
+                    <input type="number" id="calc-rate" placeholder="Ставка, ₽" class="w-1/2 bg-gray-950 text-white text-sm rounded-xl p-3 outline-none border border-gray-700 focus:border-blue-500">
                 </div>
 
                 <div class="relative">
                     <span class="absolute left-4 top-3 text-gray-500 font-medium">₽</span>
-                    <input type="number" id="new-project-cost" placeholder="Итоговая сумма" class="w-full bg-gray-800 text-white text-sm rounded-xl py-3 pl-9 pr-4 outline-none border border-gray-700 block transition-colors border-blue-500/30">
+                    <input type="number" id="new-project-cost" placeholder="Итоговая сумма" class="w-full bg-gray-950 text-white text-sm rounded-xl py-3 pl-9 pr-4 outline-none border border-gray-700 block transition-colors focus:border-blue-500">
                 </div>
-                <input type="text" id="new-project-method" placeholder="Способ (нал, карта, ИП)" class="w-full bg-gray-800 text-white text-sm rounded-xl p-3 outline-none border border-gray-700 block transition-colors focus:border-blue-500">
+                <input type="text" id="new-project-method" placeholder="Способ (нал, карта, ИП)" class="w-full bg-gray-950 text-white text-sm rounded-xl p-3 outline-none border border-gray-700 block transition-colors focus:border-blue-500">
             </div>
 
             <div class="flex gap-3">
-                <button id="cancel-date" class="flex-1 py-3 rounded-xl bg-gray-800 text-gray-300 font-medium active:scale-95 transition-transform">Отмена</button>
-                <button id="save-date" class="flex-1 py-3 rounded-xl bg-blue-600 text-white font-medium active:scale-95 transition-transform shadow-lg shadow-blue-500/30">Сохранить</button>
+                <button id="cancel-date" class="flex-1 py-3 rounded-xl bg-gray-800 text-gray-300 font-bold uppercase tracking-wide text-xs active:scale-95 transition-transform">Отмена</button>
+                <button id="save-date" class="flex-1 py-3 rounded-xl bg-gradient-to-r from-blue-600 to-purple-600 text-white font-bold uppercase tracking-wide text-xs active:scale-95 transition-transform shadow-lg shadow-blue-500/30">Сохранить</button>
             </div>
         </div>
     </div>
@@ -173,7 +224,7 @@
             let selectedDateId = null;
             let isEditMode = false;
 
-            // Загрузка данных из Local Storage
+            // Загрузка данных
             const savedData = localStorage.getItem('amProdData');
             if (savedData) {
                 activeDates = JSON.parse(savedData);
@@ -182,14 +233,11 @@
                 }
             }
 
-            // Элементы
             const timeline = document.getElementById('dates-timeline');
-            const timelineEmpty = document.getElementById('timeline-empty');
             const modal = document.getElementById('date-modal');
             const modalContent = document.getElementById('date-modal-content');
             const contentArea = document.getElementById('date-content');
             
-            // Форма
             const dateInput = document.getElementById('new-date-input');
             const titleInput = document.getElementById('new-project-title');
             const costInput = document.getElementById('new-project-cost');
@@ -198,18 +246,15 @@
             const calcRate = document.getElementById('calc-rate');
             const modalTitle = document.getElementById('modal-title');
             
-            // Дашборд и контент
             const dashTotal = document.getElementById('dash-total');
             const dashPaid = document.getElementById('dash-paid');
             const dashPending = document.getElementById('dash-pending');
 
-            // Сохранение в Local Storage
             function saveDataLocally() {
                 localStorage.setItem('amProdData', JSON.stringify(activeDates));
                 updateDashboard();
             }
 
-            // Умный калькулятор
             const calculateTotal = () => {
                 const people = parseFloat(calcPeople.value) || 0;
                 const rate = parseFloat(calcRate.value) || 0;
@@ -218,7 +263,6 @@
             calcPeople.addEventListener('input', calculateTotal);
             calcRate.addEventListener('input', calculateTotal);
 
-            // Модальное окно
             const openModal = (editMode = false) => {
                 isEditMode = editMode;
                 modalTitle.textContent = editMode ? 'Изменить проект' : 'Новый проект';
@@ -231,20 +275,13 @@
                 setTimeout(() => modal.classList.add('hidden'), 300);
             };
 
-            // Кнопка "Добавить"
             document.getElementById('add-date-btn').addEventListener('click', () => {
-                dateInput.value = ''; 
-                titleInput.value = ''; 
-                costInput.value = ''; 
-                methodInput.value = ''; 
-                calcPeople.value = ''; 
-                calcRate.value = '';
+                dateInput.value = ''; titleInput.value = ''; costInput.value = ''; methodInput.value = ''; calcPeople.value = ''; calcRate.value = '';
                 openModal(false);
             });
             
             document.getElementById('cancel-date').addEventListener('click', closeModal);
 
-            // Сохранение проекта
             document.getElementById('save-date').addEventListener('click', () => {
                 if (!dateInput.value) return;
 
@@ -273,17 +310,15 @@
                     else activeDates.push(projectData);
                 }
 
-                // Сортировка по дате
                 activeDates.sort((a, b) => new Date(a.id) - new Date(b.id));
-                
                 selectedDateId = projectData.id;
+                
                 saveDataLocally();
                 renderTimeline();
                 updateContentArea();
                 closeModal();
             });
 
-            // Обновление верхнего дашборда
             function updateDashboard() {
                 let total = 0, paid = 0, pending = 0;
                 activeDates.forEach(d => {
@@ -296,36 +331,41 @@
                 dashPending.textContent = `${pending.toLocaleString('ru-RU')} ₽`;
             }
 
-            // Отрисовка ленты
             function renderTimeline() {
                 timeline.innerHTML = '';
                 if (activeDates.length > 0) {
-                    if(timelineEmpty) timelineEmpty.style.display = 'none';
                     contentArea.classList.remove('hidden');
+                    setTimeout(() => contentArea.classList.remove('opacity-0'), 50);
                 } else {
-                    if(timelineEmpty) timelineEmpty.style.display = 'block';
-                    contentArea.classList.add('hidden');
+                    contentArea.classList.add('hidden', 'opacity-0');
+                    timeline.innerHTML = `<div class="col-span-4 text-center text-gray-500 text-sm py-4 border border-dashed border-gray-800 rounded-2xl">Нажмите +, чтобы добавить проект</div>`;
                 }
 
                 activeDates.forEach(date => {
                     const isActive = date.id === selectedDateId;
                     const icon = document.createElement('button');
-                    const borderStyle = date.isPaid && !isActive ? 'border-green-500/50' : 'border-white/10';
-                    let baseClasses = 'date-icon snap-center shrink-0 w-16 h-16 rounded-2xl flex flex-col items-center justify-center border outline-none ';
                     
-                    if (isActive) icon.className = baseClasses + 'bg-gradient-to-b from-blue-500 to-blue-600 border-blue-400 text-white';
-                    else icon.className = baseClasses + `bg-gray-800/80 backdrop-blur-md ${borderStyle} text-gray-400`;
+                    // Цветовая логика для неактивных иконок
+                    const borderStyle = date.isPaid && !isActive ? 'border-green-500/40 text-green-400 bg-green-900/10' : 'border-white/10 text-gray-300 bg-gray-800/60';
                     
-                    icon.innerHTML = `<span class="text-[10px] uppercase font-semibold ${isActive ? 'text-blue-100' : 'opacity-50'} mb-0.5 tracking-wider">${date.month}</span>
-                                      <span class="text-2xl font-bold leading-none ${isActive ? 'text-white' : 'text-gray-200'}">${date.day}</span>`;
+                    icon.className = `date-icon w-full rounded-2xl flex flex-col items-center justify-center border outline-none shadow-sm backdrop-blur-md ${isActive ? 'active text-white' : borderStyle}`;
                     
-                    icon.addEventListener('click', () => { selectedDateId = date.id; renderTimeline(); updateContentArea(); });
+                    icon.innerHTML = `<span class="text-[10px] uppercase font-bold ${isActive ? 'text-white' : 'opacity-60'} mb-1 tracking-widest z-10">${date.month}</span>
+                                      <span class="text-2xl font-black leading-none ${isActive ? 'text-white' : ''} z-10">${date.day}</span>`;
+                    
+                    icon.addEventListener('click', () => { 
+                        selectedDateId = date.id; 
+                        renderTimeline(); 
+                        updateContentArea(); 
+                        // Плавный скролл к контенту
+                        document.getElementById('date-content').scrollIntoView({ behavior: 'smooth', block: 'start' });
+                    });
+                    
                     timeline.appendChild(icon);
                 });
                 lucide.createIcons();
             }
 
-            // Обновление контента проекта
             function updateContentArea() {
                 const date = activeDates.find(d => d.id === selectedDateId);
                 if (!date) return;
@@ -347,18 +387,17 @@
                     if (date.isPaid) {
                         markPaidBtn.classList.add('hidden');
                         paidStatus.classList.remove('hidden');
-                        projectCostLabel.className = 'text-xl font-bold text-green-400';
+                        projectCostLabel.className = 'text-2xl font-bold text-green-400';
                     } else {
                         markPaidBtn.classList.remove('hidden');
                         paidStatus.classList.add('hidden');
-                        projectCostLabel.className = 'text-xl font-bold text-white';
+                        projectCostLabel.className = 'text-2xl font-bold text-white';
                     }
                 } else {
                     financeBlock.classList.add('hidden');
                 }
             }
 
-            // Кнопка оплаты
             document.getElementById('mark-paid-btn').addEventListener('click', () => {
                 const date = activeDates.find(d => d.id === selectedDateId);
                 if (date) {
@@ -369,7 +408,6 @@
                 }
             });
 
-            // Кнопка Удалить
             document.getElementById('delete-project-btn').addEventListener('click', () => {
                 if (confirm('Точно удалить этот проект?')) {
                     activeDates = activeDates.filter(d => d.id !== selectedDateId);
@@ -380,7 +418,6 @@
                 }
             });
 
-            // Кнопка Изменить
             document.getElementById('edit-project-btn').addEventListener('click', () => {
                 const date = activeDates.find(d => d.id === selectedDateId);
                 if (date) {
@@ -388,15 +425,12 @@
                     titleInput.value = date.title;
                     costInput.value = date.cost;
                     methodInput.value = date.method;
-                    
                     calcPeople.value = '';
                     calcRate.value = '';
-                    
                     openModal(true);
                 }
             });
 
-            // Кнопка Шеринга (Отправить)
             document.getElementById('share-project-btn').addEventListener('click', async () => {
                 const date = activeDates.find(d => d.id === selectedDateId);
                 if (!date) return;
@@ -439,13 +473,13 @@
                 for (let i = 1; i < data.length; i++) {
                     const row = data[i];
                     if (!row || row.length === 0) continue;
-                    let cardHtml = `<div class="bg-gray-900/60 backdrop-blur-md p-4 rounded-2xl border border-white/5 shadow-sm mb-3">`;
+                    let cardHtml = `<div class="bg-black/30 p-4 rounded-2xl border border-white/5 shadow-sm mb-3">`;
                     row.forEach((cell, index) => {
                         const headerName = headers[index] || `Колонка ${index + 1}`;
                         if (cell !== undefined && cell !== null && cell !== '') {
                             cardHtml += `<div class="mb-2 last:mb-0 flex justify-between gap-4 border-b border-white/5 pb-2 last:border-0 last:pb-0">
-                                            <span class="text-xs text-gray-500 font-medium">${headerName}</span>
-                                            <span class="text-sm text-gray-200 text-right">${cell}</span>
+                                            <span class="text-xs text-gray-500 font-bold uppercase tracking-wider">${headerName}</span>
+                                            <span class="text-sm text-gray-200 text-right font-medium">${cell}</span>
                                          </div>`;
                         }
                     });
@@ -454,7 +488,6 @@
                 }
             }
 
-            // Инициализация при старте
             renderTimeline();
             if (selectedDateId) updateContentArea();
             updateDashboard();
