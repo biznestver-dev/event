@@ -77,6 +77,15 @@
         }
         
         .date-icon:active { transform: scale(0.9); }
+
+        /* Анимации погоды */
+        @keyframes spin-slow { 100% { transform: rotate(360deg); } }
+        @keyframes float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-5px); } }
+        @keyframes rain-drop { 0% { transform: translateY(-2px); opacity: 0.8; } 100% { transform: translateY(5px); opacity: 0; } }
+        
+        .weather-spin { display: inline-block; animation: spin-slow 10s linear infinite; }
+        .weather-float { display: inline-block; animation: float 3s ease-in-out infinite; }
+        .weather-rain { display: inline-block; animation: rain-drop 1.5s linear infinite; }
     </style>
 </head>
 <body class="bg-gray-950 text-white font-sans antialiased pb-24 overflow-x-hidden selection:bg-blue-500/30">
@@ -127,12 +136,26 @@
 
     <!-- 5. Детальная информация по выбранной дате -->
     <div id="date-content" class="px-4 hidden opacity-0 transition-opacity duration-500 scroll-mt-6">
-        <div class="bg-gray-900/40 backdrop-blur-xl border border-white/10 rounded-3xl p-5 shadow-2xl">
-            <div class="mb-5 border-b border-white/5 pb-4">
-                <h2 id="project-title-label" class="text-2xl font-bold mb-1 text-white">Название проекта</h2>
-                <div class="flex items-center gap-2 text-blue-400 text-sm font-medium">
-                    <i data-lucide="calendar" class="w-4 h-4"></i>
-                    <span id="current-date-label">Дата</span>
+        <div class="bg-gray-900/40 backdrop-blur-xl border border-white/10 rounded-3xl p-5 shadow-2xl relative">
+            
+            <div class="mb-5 border-b border-white/5 pb-4 relative">
+                <h2 id="project-title-label" class="text-2xl font-bold mb-2 text-white pr-14 leading-tight">Название проекта</h2>
+                
+                <div class="flex flex-wrap items-center gap-2 mt-2">
+                    <div class="flex items-center gap-1.5 text-blue-400 text-xs font-bold bg-blue-900/20 px-2.5 py-1.5 rounded-lg border border-blue-500/20 uppercase tracking-wide">
+                        <i data-lucide="calendar" class="w-3.5 h-3.5"></i>
+                        <span id="current-date-label">Дата</span>
+                    </div>
+                    <div id="time-badge" class="hidden flex items-center gap-1.5 text-purple-400 text-xs font-bold bg-purple-900/20 px-2.5 py-1.5 rounded-lg border border-purple-500/20 uppercase tracking-wide">
+                        <i data-lucide="clock" class="w-3.5 h-3.5"></i>
+                        <span id="current-time-label">10:00 - 22:00</span>
+                    </div>
+                </div>
+
+                <!-- Виджет Погоды -->
+                <div id="weather-widget" class="absolute right-0 top-0 text-center hidden">
+                    <div id="weather-icon" class="text-3xl mb-0.5" style="text-shadow: 0 4px 10px rgba(0,0,0,0.5);">☀️</div>
+                    <div id="weather-temp" class="text-[11px] font-black text-gray-300 bg-black/40 rounded-full px-2 py-0.5 backdrop-blur-sm border border-white/10">+25°</div>
                 </div>
             </div>
 
@@ -193,20 +216,37 @@
             
             <h3 id="modal-title" class="text-lg font-bold mb-5 text-center mt-2">Новый проект</h3>
             
-            <div class="space-y-3 mb-6">
+            <div class="space-y-4 mb-6">
+                <!-- Дата -->
                 <input type="date" id="new-date-input" class="w-full bg-gray-950 text-white rounded-xl p-3 outline-none border border-gray-700 block focus:border-blue-500 transition-colors" style="color-scheme: dark;" required>
+                
+                <!-- Название -->
                 <input type="text" id="new-project-title" placeholder="Название (например, ВДНХ)" class="w-full bg-gray-950 text-white text-sm rounded-xl p-3 outline-none border border-gray-700 block transition-colors focus:border-blue-500">
                 
+                <!-- Время Начала и Конца -->
+                <div class="flex gap-2">
+                    <div class="w-1/2 relative">
+                        <span class="absolute left-3 top-[-8px] bg-gray-900 px-1 text-[10px] text-gray-400 font-bold uppercase">Начало</span>
+                        <input type="time" id="new-time-start" class="w-full bg-gray-950 text-white text-sm rounded-xl p-3 outline-none border border-gray-700 focus:border-blue-500 transition-colors" style="color-scheme: dark;">
+                    </div>
+                    <div class="w-1/2 relative">
+                        <span class="absolute left-3 top-[-8px] bg-gray-900 px-1 text-[10px] text-gray-400 font-bold uppercase">Конец</span>
+                        <input type="time" id="new-time-end" class="w-full bg-gray-950 text-white text-sm rounded-xl p-3 outline-none border border-gray-700 focus:border-blue-500 transition-colors" style="color-scheme: dark;">
+                    </div>
+                </div>
+
+                <!-- Калькулятор: Люди * Ставка -->
                 <div class="flex gap-2">
                     <input type="number" id="calc-people" placeholder="Кол-во чел." class="w-1/2 bg-gray-950 text-white text-sm rounded-xl p-3 outline-none border border-gray-700 focus:border-blue-500">
                     <input type="number" id="calc-rate" placeholder="Ставка, ₽" class="w-1/2 bg-gray-950 text-white text-sm rounded-xl p-3 outline-none border border-gray-700 focus:border-blue-500">
                 </div>
 
+                <!-- Сумма и Оплата -->
                 <div class="relative">
                     <span class="absolute left-4 top-3 text-gray-500 font-medium">₽</span>
                     <input type="number" id="new-project-cost" placeholder="Итоговая сумма" class="w-full bg-gray-950 text-white text-sm rounded-xl py-3 pl-9 pr-4 outline-none border border-gray-700 block transition-colors focus:border-blue-500">
                 </div>
-                <input type="text" id="new-project-method" placeholder="Способ (нал, карта, ИП)" class="w-full bg-gray-950 text-white text-sm rounded-xl p-3 outline-none border border-gray-700 block transition-colors focus:border-blue-500">
+                <input type="text" id="new-project-method" placeholder="Способ оплаты (нал, карта, ИП)" class="w-full bg-gray-950 text-white text-sm rounded-xl p-3 outline-none border border-gray-700 block transition-colors focus:border-blue-500">
             </div>
 
             <div class="flex gap-3">
@@ -240,6 +280,8 @@
             
             const dateInput = document.getElementById('new-date-input');
             const titleInput = document.getElementById('new-project-title');
+            const timeStartInput = document.getElementById('new-time-start');
+            const timeEndInput = document.getElementById('new-time-end');
             const costInput = document.getElementById('new-project-cost');
             const methodInput = document.getElementById('new-project-method');
             const calcPeople = document.getElementById('calc-people');
@@ -276,7 +318,14 @@
             };
 
             document.getElementById('add-date-btn').addEventListener('click', () => {
-                dateInput.value = ''; titleInput.value = ''; costInput.value = ''; methodInput.value = ''; calcPeople.value = ''; calcRate.value = '';
+                dateInput.value = ''; 
+                titleInput.value = ''; 
+                timeStartInput.value = '';
+                timeEndInput.value = '';
+                costInput.value = ''; 
+                methodInput.value = ''; 
+                calcPeople.value = ''; 
+                calcRate.value = '';
                 openModal(false);
             });
             
@@ -295,6 +344,8 @@
                     month: new Intl.DateTimeFormat('ru-RU', { month: 'short' }).format(d).replace('.', ''),
                     full: new Intl.DateTimeFormat('ru-RU', { day: 'numeric', month: 'long', year: 'numeric' }).format(d),
                     title: titleInput.value || 'Без названия',
+                    timeStart: timeStartInput.value || '',
+                    timeEnd: timeEndInput.value || '',
                     cost: costInput.value ? Number(costInput.value) : 0,
                     method: methodInput.value || 'Не указано',
                     isPaid: false
@@ -345,7 +396,6 @@
                     const isActive = date.id === selectedDateId;
                     const icon = document.createElement('button');
                     
-                    // Цветовая логика для неактивных иконок
                     const borderStyle = date.isPaid && !isActive ? 'border-green-500/40 text-green-400 bg-green-900/10' : 'border-white/10 text-gray-300 bg-gray-800/60';
                     
                     icon.className = `date-icon w-full rounded-2xl flex flex-col items-center justify-center border outline-none shadow-sm backdrop-blur-md ${isActive ? 'active text-white' : borderStyle}`;
@@ -357,7 +407,6 @@
                         selectedDateId = date.id; 
                         renderTimeline(); 
                         updateContentArea(); 
-                        // Плавный скролл к контенту
                         document.getElementById('date-content').scrollIntoView({ behavior: 'smooth', block: 'start' });
                     });
                     
@@ -366,12 +415,73 @@
                 lucide.createIcons();
             }
 
+            // Получение погоды через Open-Meteo API
+            async function fetchWeather(dateStr) {
+                const weatherWidget = document.getElementById('weather-widget');
+                weatherWidget.classList.add('hidden');
+                
+                const targetDate = new Date(dateStr);
+                const today = new Date();
+                today.setHours(0,0,0,0);
+                const diffTime = targetDate - today;
+                const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+                
+                // API отдает прогноз максимум на 14 дней вперед. Прошлое не запрашиваем.
+                if (diffDays < 0 || diffDays > 14) return; 
+                
+                try {
+                    // Координаты Москвы: 55.7522, 37.6156
+                    const res = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=55.7522&longitude=37.6156&daily=weathercode,temperature_2m_max&timezone=Europe%2FMoscow&start_date=${dateStr}&end_date=${dateStr}`);
+                    const data = await res.json();
+                    
+                    if (data.daily && data.daily.weathercode && data.daily.weathercode.length > 0) {
+                        const code = data.daily.weathercode[0];
+                        const temp = Math.round(data.daily.temperature_2m_max[0]);
+                        
+                        let icon = '☀️';
+                        let animClass = 'weather-spin';
+                        
+                        // WMO Weather interpretation codes
+                        if (code >= 1 && code <= 3) { icon = '⛅'; animClass = 'weather-float'; }
+                        else if (code >= 45 && code <= 48) { icon = '🌫️'; animClass = 'weather-float'; }
+                        else if (code >= 51 && code <= 67) { icon = '🌧️'; animClass = 'weather-rain'; }
+                        else if (code >= 71 && code <= 77) { icon = '❄️'; animClass = 'weather-float'; }
+                        else if (code >= 80 && code <= 82) { icon = '🌦️'; animClass = 'weather-rain'; }
+                        else if (code >= 95) { icon = '⛈️'; animClass = 'weather-rain'; }
+                        
+                        document.getElementById('weather-icon').textContent = icon;
+                        document.getElementById('weather-icon').className = `text-3xl mb-0.5 ${animClass}`;
+                        document.getElementById('weather-temp').textContent = (temp > 0 ? '+' : '') + temp + '°';
+                        
+                        weatherWidget.classList.remove('hidden');
+                    }
+                } catch (e) {
+                    console.log('Ошибка загрузки погоды', e);
+                }
+            }
+
             function updateContentArea() {
                 const date = activeDates.find(d => d.id === selectedDateId);
                 if (!date) return;
 
                 document.getElementById('current-date-label').textContent = date.full;
                 document.getElementById('project-title-label').textContent = date.title;
+                
+                // Обновляем блок времени
+                const timeBadge = document.getElementById('time-badge');
+                if (date.timeStart || date.timeEnd) {
+                    timeBadge.classList.remove('hidden');
+                    let timeText = '';
+                    if (date.timeStart) timeText += date.timeStart;
+                    if (date.timeStart && date.timeEnd) timeText += ' - ';
+                    if (date.timeEnd) timeText += date.timeEnd;
+                    document.getElementById('current-time-label').textContent = timeText;
+                } else {
+                    timeBadge.classList.add('hidden');
+                }
+
+                // Запрашиваем погоду
+                fetchWeather(date.id);
 
                 const financeBlock = document.getElementById('finance-block');
                 const projectCostLabel = document.getElementById('project-cost-label');
@@ -423,6 +533,8 @@
                 if (date) {
                     dateInput.value = date.id;
                     titleInput.value = date.title;
+                    timeStartInput.value = date.timeStart || '';
+                    timeEndInput.value = date.timeEnd || '';
                     costInput.value = date.cost;
                     methodInput.value = date.method;
                     calcPeople.value = '';
@@ -435,7 +547,11 @@
                 const date = activeDates.find(d => d.id === selectedDateId);
                 if (!date) return;
                 
-                const text = `📁 Проект: ${date.title}\n📅 Дата: ${date.full}\n💰 Смета: ${date.cost.toLocaleString('ru-RU')} ₽\n💵 Оплата: ${date.isPaid ? '✅ Оплачено' : '⏳ Ожидается'} (${date.method})`;
+                let text = `📁 Проект: ${date.title}\n📅 Дата: ${date.full}`;
+                if (date.timeStart || date.timeEnd) {
+                    text += `\n⏰ Тайминг: ${date.timeStart ? date.timeStart : ''}${date.timeStart && date.timeEnd ? ' - ' : ''}${date.timeEnd ? date.timeEnd : ''}`;
+                }
+                text += `\n💰 Смета: ${date.cost.toLocaleString('ru-RU')} ₽\n💵 Оплата: ${date.isPaid ? '✅ Оплачено' : '⏳ Ожидается'} (${date.method})`;
                 
                 if (navigator.share) {
                     try { await navigator.share({ title: 'Отчет по проекту', text: text }); } 
