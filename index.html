@@ -302,7 +302,6 @@
         document.addEventListener('DOMContentLoaded', () => {
             lucide.createIcons();
 
-            // Объявляем timeline в самом начале DOMContentLoaded
             const timeline = document.getElementById('projects-timeline');
 
             const PREDEFINED_TEAM = [
@@ -376,6 +375,16 @@
                 } catch (e) {}
             }
             setTimeout(fetchFromCloud, 1000);
+
+            // Автоматическая синхронизация (Realtime) без подписок
+            if (_supabase) {
+                _supabase
+                    .channel('public:am_projects')
+                    .on('postgres_changes', { event: '*', schema: 'public', table: 'am_projects' }, payload => {
+                        fetchFromCloud();
+                    })
+                    .subscribe();
+            }
 
             async function syncData(projectToUpsert = null, idToDelete = null) {
                 localStorage.setItem('amProdData', JSON.stringify(activeProjects));
