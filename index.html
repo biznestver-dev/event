@@ -157,7 +157,7 @@
             </div>
 
             <!-- Управление -->
-            <div class="flex gap-2 mb-6">
+            <div class="flex gap-2 mb-4">
                 <button id="edit-project-btn" class="flex-1 bg-gray-800/80 text-gray-300 py-3 rounded-xl text-xs font-bold uppercase tracking-wide flex justify-center items-center gap-2 border border-white/5 active:scale-95 transition-transform">
                     <i data-lucide="edit" class="w-4 h-4"></i> Изменить
                 </button>
@@ -166,6 +166,13 @@
                 </button>
                 <button id="delete-project-btn" class="flex-1 bg-red-900/20 text-red-400 py-3 rounded-xl text-xs font-bold uppercase tracking-wide flex justify-center items-center gap-2 border border-red-500/20 active:scale-95 transition-transform">
                     <i data-lucide="trash-2" class="w-4 h-4"></i> Удалить
+                </button>
+            </div>
+
+            <!-- Кнопка "Подробно" (открывает модалку со списками, транспортом и контролем прибытия) -->
+            <div class="mb-6">
+                <button id="open-details-modal-btn" class="w-full bg-gradient-to-r from-purple-600/30 to-blue-600/30 hover:from-purple-600/40 hover:to-blue-600/40 text-white font-bold py-3.5 rounded-2xl border border-purple-500/30 flex justify-center items-center gap-2 shadow-lg active:scale-[0.99] transition-transform">
+                    <i data-lucide="list-checks" class="w-5 h-5 text-purple-400"></i> Подробно (Транспорт, Участники, Списки)
                 </button>
             </div>
 
@@ -195,7 +202,7 @@
                     <button id="mark-paid-btn" class="w-full bg-gradient-to-r from-blue-600/20 to-purple-600/20 text-blue-400 hover:from-blue-600/30 hover:to-purple-600/30 font-bold py-3 rounded-xl transition-colors border border-blue-500/30 flex justify-center items-center gap-2">
                         <i data-lucide="circle-dollar-sign" class="w-5 h-5"></i> Отметить как оплаченное
                     </button>
-                    <!-- Кликабельный статус Оплачено (позволяет отменить оплату обратно) -->
+                    <!-- Кликабельный статус Оплачено -->
                     <button id="paid-status" class="hidden w-full bg-green-500/10 text-green-400 hover:bg-green-500/20 font-bold py-3 rounded-xl border border-green-500/20 flex justify-center items-center gap-2 shadow-[0_0_15px_rgba(34,197,94,0.1)] transition-colors cursor-pointer" title="Нажмите, чтобы отменить оплату">
                         <i data-lucide="check-circle-2" class="w-5 h-5"></i> Оплачено (нажмите для отмены)
                     </button>
@@ -205,38 +212,50 @@
                     </button>
                 </div>
             </div>
+        </div>
+    </div>
+
+    <!-- МОДАЛЬНОЕ ОКНО "ПОДРОБНО" (Транспорт, Участники, Списки) -->
+    <div id="details-modal" class="hidden fixed inset-0 z-50 bg-black/85 backdrop-blur-md items-center justify-center p-4">
+        <div class="bg-gray-900 border border-gray-700 p-6 rounded-[2rem] w-full max-w-[420px] shadow-2xl relative max-h-[90vh] overflow-y-auto hidden-scrollbar">
+            <div class="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-purple-500 to-blue-500"></div>
+            
+            <div class="flex justify-between items-center mb-4 mt-2">
+                <h3 class="text-lg font-bold" id="details-modal-title">Детали проекта</h3>
+                <button type="button" id="close-details-modal" class="text-gray-400 hover:text-white p-1"><i data-lucide="x" class="w-5 h-5"></i></button>
+            </div>
 
             <!-- Контроль прибытия участников -->
-            <div class="bg-black/20 border border-white/5 p-4 rounded-2xl mb-6">
+            <div class="bg-black/30 border border-white/5 p-4 rounded-2xl mb-5">
                 <div class="flex justify-between items-center mb-3 border-b border-white/5 pb-2">
-                    <h3 class="text-xs text-gray-400 font-bold uppercase tracking-widest">Контроль прибытия</h3>
+                    <h4 class="text-xs text-gray-400 font-bold uppercase tracking-widest">Контроль прибытия</h4>
                     <div class="text-[10px] text-blue-400 font-bold bg-blue-900/20 px-2 py-1 rounded-lg border border-blue-500/20" id="attendance-counter">0 / 0 на площадке</div>
                 </div>
                 <div class="mb-3">
                     <input type="text" id="checkin-search" placeholder="Поиск по фамилии или роли..." class="w-full bg-gray-950 text-white text-xs rounded-xl py-2.5 px-3 outline-none border border-gray-700 block focus:border-blue-500">
                 </div>
-                <div id="checkin-list" class="space-y-2 max-h-72 overflow-y-auto hidden-scrollbar pr-1"></div>
+                <div id="checkin-list" class="space-y-2 max-h-60 overflow-y-auto hidden-scrollbar pr-1"></div>
             </div>
 
             <!-- Пересадочный транспорт и парковка -->
-            <div class="bg-black/20 border border-white/5 p-4 rounded-2xl mb-6">
+            <div class="bg-black/30 border border-white/5 p-4 rounded-2xl mb-5">
                 <div class="flex justify-between items-center mb-3 border-b border-white/5 pb-2">
-                    <h3 class="text-xs text-gray-400 font-bold uppercase tracking-widest">Пересадочный транспорт</h3>
+                    <h4 class="text-xs text-gray-400 font-bold uppercase tracking-widest">Пересадочный транспорт</h4>
                     <button type="button" id="add-transport-btn" class="text-[10px] text-purple-400 font-bold bg-purple-900/20 px-2 py-1 rounded-lg border border-purple-500/20 flex items-center gap-1 active:scale-95">
                         <i data-lucide="car" class="w-3.5 h-3.5"></i> Добавить машину
                     </button>
                 </div>
-                <div id="transport-list" class="space-y-3"></div>
+                <div id="transport-list" class="space-y-3 max-h-60 overflow-y-auto hidden-scrollbar pr-1"></div>
             </div>
 
-            <!-- Excel списки -->
-            <div class="flex justify-between items-center mb-4 mt-2">
-                <h3 class="text-lg font-bold">Списки из файлов</h3>
-            </div>
-            <div id="excel-data-container" class="space-y-3 pb-2">
-                <div class="text-center text-gray-600 mt-4 text-sm border border-dashed border-gray-700/50 rounded-2xl p-6 bg-gray-900/20" id="excel-empty-state">
-                    <i data-lucide="list-x" class="w-8 h-8 mx-auto mb-2 opacity-30"></i>
-                    Таблицы не загружены
+            <!-- Списки из файлов Excel -->
+            <div class="bg-black/30 border border-white/5 p-4 rounded-2xl">
+                <h4 class="text-xs text-gray-400 font-bold uppercase tracking-widest mb-3 border-b border-white/5 pb-2">Списки из файлов</h4>
+                <div id="excel-data-container" class="space-y-3 pb-2 max-h-60 overflow-y-auto hidden-scrollbar">
+                    <div class="text-center text-gray-600 mt-2 text-sm border border-dashed border-gray-700/50 rounded-2xl p-4 bg-gray-900/20" id="excel-empty-state">
+                        <i data-lucide="list-x" class="w-6 h-6 mx-auto mb-1 opacity-30"></i>
+                        Таблицы не загружены
+                    </div>
                 </div>
             </div>
         </div>
@@ -250,11 +269,9 @@
             <h3 id="modal-title" class="text-lg font-bold mb-4 text-center mt-2">Новый проект</h3>
             
             <div class="space-y-4 mb-6">
-                <!-- Основное -->
                 <input type="text" id="new-project-title" placeholder="Название проекта" class="w-full bg-gray-950 text-white text-sm rounded-xl p-3 outline-none border border-gray-700 block transition-colors focus:border-blue-500">
                 <input type="text" id="new-project-contractor" placeholder="Контрагент (Агентство/Клиент)" class="w-full bg-gray-950 text-white text-sm rounded-xl p-3 outline-none border border-gray-700 block transition-colors focus:border-blue-500">
                 
-                <!-- Локация и Метро -->
                 <div class="flex flex-col gap-2 bg-gray-800/30 p-2 rounded-xl border border-gray-700/50">
                     <div class="flex gap-2">
                         <div class="relative flex-1">
@@ -271,7 +288,6 @@
                     </div>
                 </div>
                 
-                <!-- Блок Дат -->
                 <div class="bg-gray-800/30 p-3 rounded-xl border border-gray-700/50">
                     <div class="text-[10px] text-gray-400 font-bold uppercase mb-2 ml-1">График работы (Даты и Тайминг)</div>
                     <div id="dynamic-dates-list" class="space-y-2 mb-3"></div>
@@ -280,7 +296,6 @@
                     </button>
                 </div>
 
-                <!-- Блок Выбора команды -->
                 <div class="bg-gray-800/30 p-3 rounded-xl border border-gray-700/50">
                     <div class="flex justify-between items-center mb-3 ml-1">
                         <div class="text-[10px] text-gray-400 font-bold uppercase">Команда и Гонорары (ФОТ)</div>
@@ -292,7 +307,6 @@
                     </button>
                 </div>
 
-                <!-- Сумма и Оплата общие -->
                 <div class="relative mt-2">
                     <span class="absolute left-4 top-3 text-gray-500 font-medium">₽</span>
                     <input type="number" id="new-project-cost" placeholder="Итоговая смета (все расходы)" class="w-full bg-gray-950 text-white text-sm rounded-xl py-3 pl-9 pr-4 outline-none border border-gray-700 block transition-colors focus:border-blue-500">
@@ -547,6 +561,24 @@
             });
             
             document.getElementById('cancel-date').addEventListener('click', closeModal);
+
+            // --- МОДАЛЬНОЕ ОКНО "ПОДРОБНО" ---
+            const detailsModal = document.getElementById('details-modal');
+            document.getElementById('open-details-modal-btn').addEventListener('click', () => {
+                const project = activeProjects.find(p => p.id === selectedProjectId);
+                if (project) {
+                    document.getElementById('details-modal-title').textContent = project.title;
+                    renderCheckinSection(project);
+                    renderTransportSection(project);
+                }
+                detailsModal.classList.remove('hidden');
+                detailsModal.classList.add('flex');
+            });
+
+            document.getElementById('close-details-modal').addEventListener('click', () => {
+                detailsModal.classList.remove('flex');
+                detailsModal.classList.add('hidden');
+            });
 
             // --- КНОПКА ГЕОЛОКАЦИИ ---
             document.getElementById('get-location-btn').addEventListener('click', () => {
@@ -923,9 +955,6 @@
                 } else {
                     financeBlock.classList.add('hidden');
                 }
-
-                renderCheckinSection(project);
-                renderTransportSection(project);
             }
 
             // --- МОДУЛЬ КОНТРОЛЯ ПРИБЫТИЯ ---
@@ -1087,13 +1116,13 @@
                     if (!project.transportList) project.transportList = [];
                     project.transportList.push({ model: model || 'Автомобиль', number: number || 'Без номера', driver, phone });
                     syncData(project, null);
-                    updateContentArea();
+                    renderTransportSection(project);
                 }
                 transportModal.classList.remove('flex');
                 transportModal.classList.add('hidden');
             });
 
-            // Выбор из телефонной книги (Contacts Picker API)
+            // Выбор из телефонной книги
             document.getElementById('pick-contact-btn').addEventListener('click', async () => {
                 if ('contacts' in navigator && 'Picker' in window) {
                     try {
@@ -1107,7 +1136,6 @@
                         }
                     } catch (ex) { console.error(ex); }
                 } else {
-                    // Запасной вариант через стандартный ввод, если API контактов недоступно на десктопе или в Safari
                     const name = prompt('Введите ФИО водителя:');
                     if(name) document.getElementById('tr-driver').value = name;
                     const tel = prompt('Введите номер телефона:');
@@ -1253,13 +1281,13 @@
                 for (let i = 1; i < data.length; i++) {
                     const row = data[i];
                     if (!row || row.length === 0) continue;
-                    let cardHtml = `<div class="bg-black/30 p-4 rounded-2xl border border-white/5 shadow-sm mb-3">`;
+                    let cardHtml = `<div class="bg-black/30 p-3 rounded-2xl border border-white/5 shadow-sm mb-2">`;
                     row.forEach((cell, index) => {
                         const headerName = headers[index] || `Колонка ${index + 1}`;
                         if (cell !== undefined && cell !== null && cell !== '') {
-                            cardHtml += `<div class="mb-2 last:mb-0 flex justify-between gap-4 border-b border-white/5 pb-2 last:border-0 last:pb-0">
-                                            <span class="text-xs text-gray-500 font-bold uppercase tracking-wider">${headerName}</span>
-                                            <span class="text-sm text-gray-200 text-right font-medium">${cell}</span>
+                            cardHtml += `<div class="mb-1 last:mb-0 flex justify-between gap-4 border-b border-white/5 pb-1 last:border-0 last:pb-0">
+                                            <span class="text-[11px] text-gray-500 font-bold uppercase tracking-wider">${headerName}</span>
+                                            <span class="text-xs text-gray-200 text-right font-medium">${cell}</span>
                                          </div>`;
                         }
                     });
