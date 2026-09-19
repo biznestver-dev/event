@@ -129,7 +129,7 @@
 
     <!-- Кнопки управления -->
     <div class="px-4 flex gap-3 mb-8 relative z-20">
-        <label class="flex-1 bg-gradient-to-r from-gray-800 to-gray-900 hover:from-gray-700 hover:to-gray-800 backdrop-blur-md text-white py-3.5 px-2 rounded-2xl cursor-pointer transition-all border border-white/10 flex items-center justify-center gap-2 relative overflow-hidden shadow-md">
+        <label class="flex-1 bg-gradient-to-r from-gray-800 to-gray-900 hover:from-gray-700 hover:to-gray-800 backdrop-blur-md text-white py-3.5 px-2 rounded-2xl cursor-pointer transition-all border border-white/10 flex items-center justify-center gap-2 relative overflow-hidden shadow-lg">
             <i data-lucide="file-spreadsheet" class="w-5 h-5 text-green-400"></i>
             <span class="text-xs font-bold uppercase tracking-wider">Загрузить Excel</span>
             <input type="file" id="excel-upload" class="hidden" accept=".xlsx, .xls">
@@ -206,16 +206,16 @@
                 </div>
             </div>
 
-            <!-- Кнопка "Подробно" в самом низу карточки с красивым градиентом и подсветкой -->
+            <!-- Кнопка "Транспорт, участники, списки" в самом низу с объемным градиентом -->
             <div>
                 <button id="open-details-modal-btn" class="w-full bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 hover:from-blue-500 hover:to-purple-500 text-white font-bold py-4 px-4 rounded-2xl border border-blue-400/40 flex justify-between items-center shadow-[0_0_25px_rgba(79,70,229,0.4)] active:scale-[0.99] transition-all cursor-pointer">
                     <div class="flex items-center gap-3">
-                        <div class="w-9 h-9 rounded-xl bg-white/10 flex items-center justify-center border border-white/20">
+                        <div class="w-9 h-9 rounded-xl bg-white/10 flex items-center justify-center border border-white/20 shadow-inner">
                             <i data-lucide="list-checks" class="w-5 h-5 text-white"></i>
                         </div>
                         <div class="text-left">
-                            <div class="text-sm font-extrabold tracking-wide">Подробно по проекту</div>
-                            <div class="text-[10px] text-blue-200 font-medium">Транспорт, участники, списки и файлы</div>
+                            <div class="text-sm font-extrabold tracking-wide">Транспорт, участники, списки</div>
+                            <div class="text-[10px] text-blue-200 font-medium">Управление площадкой и аккредитацией</div>
                         </div>
                     </div>
                     <i data-lucide="chevron-right" class="w-5 h-5 text-white/80"></i>
@@ -224,7 +224,7 @@
         </div>
     </div>
 
-    <!-- МОДАЛЬНОЕ ОКНО "ПОДРОБНО" (Транспорт, Участники, Списки) -->
+    <!-- МОДАЛЬНОЕ ОКНО -->
     <div id="details-modal" class="hidden fixed inset-0 z-50 bg-black/85 backdrop-blur-md items-center justify-center p-4">
         <div class="bg-gray-900 border border-gray-700 p-6 rounded-[2rem] w-full max-w-[420px] shadow-2xl relative max-h-[90vh] overflow-y-auto hidden-scrollbar">
             <div class="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-blue-500 to-purple-500"></div>
@@ -571,7 +571,7 @@
             
             document.getElementById('cancel-date').addEventListener('click', closeModal);
 
-            // --- МОДАЛЬНОЕ ОКНО "ПОДРОБНО" ---
+            // --- МОДАЛЬНОЕ ОКНО ДЕТАЛЕЙ ---
             const detailsModal = document.getElementById('details-modal');
             document.getElementById('open-details-modal-btn').addEventListener('click', () => {
                 const project = activeProjects.find(p => p.id === selectedProjectId);
