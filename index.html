@@ -206,7 +206,7 @@
                 </div>
             </div>
 
-            <!-- Контроль прибытия участников / списки -->
+            <!-- Контроль прибытия участников -->
             <div class="bg-black/20 border border-white/5 p-4 rounded-2xl mb-6">
                 <div class="flex justify-between items-center mb-3 border-b border-white/5 pb-2">
                     <h3 class="text-xs text-gray-400 font-bold uppercase tracking-widest">Контроль прибытия</h3>
@@ -216,6 +216,17 @@
                     <input type="text" id="checkin-search" placeholder="Поиск по фамилии или роли..." class="w-full bg-gray-950 text-white text-xs rounded-xl py-2.5 px-3 outline-none border border-gray-700 block focus:border-blue-500">
                 </div>
                 <div id="checkin-list" class="space-y-2 max-h-72 overflow-y-auto hidden-scrollbar pr-1"></div>
+            </div>
+
+            <!-- Пересадочный транспорт и парковка -->
+            <div class="bg-black/20 border border-white/5 p-4 rounded-2xl mb-6">
+                <div class="flex justify-between items-center mb-3 border-b border-white/5 pb-2">
+                    <h3 class="text-xs text-gray-400 font-bold uppercase tracking-widest">Пересадочный транспорт</h3>
+                    <button type="button" id="add-transport-btn" class="text-[10px] text-purple-400 font-bold bg-purple-900/20 px-2 py-1 rounded-lg border border-purple-500/20 flex items-center gap-1 active:scale-95">
+                        <i data-lucide="car" class="w-3.5 h-3.5"></i> Добавить машину
+                    </button>
+                </div>
+                <div id="transport-list" class="space-y-3"></div>
             </div>
 
             <!-- Excel списки -->
@@ -300,6 +311,28 @@
             <div class="flex gap-3">
                 <button id="cancel-date" type="button" class="flex-1 py-3 rounded-xl bg-gray-800 text-gray-300 font-bold uppercase tracking-wide text-xs active:scale-95 transition-transform">Отмена</button>
                 <button id="save-date" type="button" class="flex-1 py-3 rounded-xl bg-gradient-to-r from-blue-600 to-purple-600 text-white font-bold uppercase tracking-wide text-xs active:scale-95 transition-transform shadow-lg shadow-blue-500/30">Сохранить</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Модальное окно добавления машины -->
+    <div id="transport-modal" class="hidden fixed inset-0 z-50 bg-black/80 backdrop-blur-md items-center justify-center p-4">
+        <div class="bg-gray-900 border border-gray-700 p-6 rounded-[2rem] w-full max-w-[360px] shadow-2xl relative">
+            <h3 class="text-lg font-bold mb-4 text-center">Добавить транспорт</h3>
+            <div class="space-y-3 mb-6">
+                <input type="text" id="tr-model" placeholder="Марка / Модель (напр. Мерседес)" class="w-full bg-gray-950 text-white text-sm rounded-xl p-3 outline-none border border-gray-700">
+                <input type="text" id="tr-number" placeholder="Гос. номер (напр. О 156 ТР 777)" class="w-full bg-gray-950 text-white text-sm rounded-xl p-3 outline-none border border-gray-700">
+                <div class="flex gap-2">
+                    <input type="text" id="tr-driver" placeholder="ФИО Водителя" class="flex-1 bg-gray-950 text-white text-sm rounded-xl p-3 outline-none border border-gray-700">
+                    <button type="button" id="pick-contact-btn" class="bg-purple-900/30 text-purple-400 px-3 rounded-xl border border-purple-500/30 flex items-center justify-center" title="Выбрать из телефонной книги">
+                        <i data-lucide="contact" class="w-5 h-5"></i>
+                    </button>
+                </div>
+                <input type="tel" id="tr-phone" placeholder="Телефон (+7...)" class="w-full bg-gray-950 text-white text-sm rounded-xl p-3 outline-none border border-gray-700">
+            </div>
+            <div class="flex gap-3">
+                <button id="cancel-transport" type="button" class="flex-1 py-3 rounded-xl bg-gray-800 text-gray-300 font-bold text-xs">Отмена</button>
+                <button id="save-transport" type="button" class="flex-1 py-3 rounded-xl bg-gradient-to-r from-blue-600 to-purple-600 text-white font-bold text-xs shadow-lg">Добавить</button>
             </div>
         </div>
     </div>
@@ -491,7 +524,7 @@
                 dashPending.textContent = `${pending.toLocaleString('ru-RU')} ₽`;
             }
 
-            // --- УПРАВЛЕНИЕ МОДАЛЬНЫМ ОКНОМ ---
+            // --- УПРАВЛЕНИЕ МОДАЛЬНЫМ ОКНОМ ПРОЕКТА ---
             const openModal = (editMode = false) => {
                 isEditMode = editMode;
                 modalTitle.textContent = editMode ? 'Изменить проект' : 'Новый проект';
@@ -632,7 +665,6 @@
                 addTeamMemberRow('', '', true, false);
             });
 
-            // Автоподсчет ФОТ и автоматическое обновление итоговой сметы
             function calcTeamTotal() {
                 let total = 0;
                 document.querySelectorAll('.custom-team-row').forEach(row => {
@@ -685,7 +717,8 @@
                     cost: costInput.value ? Number(costInput.value) : 0,
                     method: methodInput.value || 'Наличные',
                     isPaid: isEditMode ? existingProj.isPaid : false,
-                    checkinList: isEditMode && existingProj ? existingProj.checkinList : []
+                    checkinList: isEditMode && existingProj ? existingProj.checkinList : [],
+                    transportList: isEditMode && existingProj ? existingProj.transportList : []
                 };
 
                 const existingIndex = activeProjects.findIndex(proj => proj.id === projectData.id);
@@ -892,6 +925,7 @@
                 }
 
                 renderCheckinSection(project);
+                renderTransportSection(project);
             }
 
             // --- МОДУЛЬ КОНТРОЛЯ ПРИБЫТИЯ ---
@@ -949,7 +983,6 @@
                 if(counter) counter.textContent = `${onSiteCount} / ${project.checkinList.length} на площадке`;
                 lucide.createIcons({root: container});
 
-                // Обработчики кнопок
                 container.querySelectorAll('.arrived-btn').forEach(btn => {
                     btn.addEventListener('click', (e) => {
                         const idx = e.currentTarget.getAttribute('data-index');
@@ -978,6 +1011,109 @@
                     if (project) renderCheckinSection(project);
                 });
             }
+
+            // --- МОДУЛЬ ПЕРЕСАДОЧНОГО ТРАНСПОРТА ---
+            function renderTransportSection(project) {
+                const container = document.getElementById('transport-list');
+                if (!container) return;
+
+                if (!project.transportList) project.transportList = [];
+
+                container.innerHTML = '';
+                if (project.transportList.length === 0) {
+                    container.innerHTML = `<div class="text-center text-gray-500 text-xs py-2">Транспорт не добавлен</div>`;
+                    return;
+                }
+
+                project.transportList.forEach((car, index) => {
+                    const item = document.createElement('div');
+                    item.className = "bg-black/30 p-3 rounded-2xl border border-white/5 flex flex-col gap-2";
+                    item.innerHTML = `
+                        <div class="flex justify-between items-start">
+                            <div>
+                                <div class="text-xs font-bold text-white flex items-center gap-1.5"><i data-lucide="car" class="w-3.5 h-3.5 text-purple-400"></i> ${car.model}</div>
+                                <div class="text-xs font-mono text-yellow-400 font-bold mt-0.5">${car.number}</div>
+                            </div>
+                            <button type="button" class="delete-car text-red-400/80 hover:text-red-400 p-1" data-index="${index}"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
+                        </div>
+                        <div class="flex justify-between items-center bg-gray-950/50 p-2 rounded-xl border border-white/5 mt-1">
+                            <div>
+                                <div class="text-[11px] text-gray-300 font-medium">${car.driver || 'Водитель не указан'}</div>
+                                <div class="text-[10px] text-gray-500">${car.phone || 'Нет телефона'}</div>
+                            </div>
+                            ${car.phone ? `<a href="tel:${car.phone}" class="bg-green-600/20 text-green-400 hover:bg-green-600/30 p-2 rounded-xl border border-green-500/30 flex items-center gap-1 text-xs font-bold"><i data-lucide="phone" class="w-3.5 h-3.5"></i> Звонок</a>` : ''}
+                        </div>
+                    `;
+                    container.appendChild(item);
+                });
+                lucide.createIcons({root: container});
+
+                container.querySelectorAll('.delete-car').forEach(btn => {
+                    btn.addEventListener('click', (e) => {
+                        const idx = e.currentTarget.getAttribute('data-index');
+                        project.transportList.splice(idx, 1);
+                        syncData(project, null);
+                        renderTransportSection(project);
+                    });
+                });
+            }
+
+            // Управление модалкой транспорта
+            const transportModal = document.getElementById('transport-modal');
+            document.getElementById('add-transport-btn').addEventListener('click', () => {
+                document.getElementById('tr-model').value = '';
+                document.getElementById('tr-number').value = '';
+                document.getElementById('tr-driver').value = '';
+                document.getElementById('tr-phone').value = '';
+                transportModal.classList.remove('hidden');
+                transportModal.classList.add('flex');
+            });
+
+            document.getElementById('cancel-transport').addEventListener('click', () => {
+                transportModal.classList.remove('flex');
+                transportModal.classList.add('hidden');
+            });
+
+            document.getElementById('save-transport').addEventListener('click', () => {
+                const model = document.getElementById('tr-model').value.trim();
+                const number = document.getElementById('tr-number').value.trim();
+                const driver = document.getElementById('tr-driver').value.trim();
+                const phone = document.getElementById('tr-phone').value.trim();
+
+                if (!model && !number) { alert('Укажите марку или номер машины!'); return; }
+
+                const project = activeProjects.find(p => p.id === selectedProjectId);
+                if (project) {
+                    if (!project.transportList) project.transportList = [];
+                    project.transportList.push({ model: model || 'Автомобиль', number: number || 'Без номера', driver, phone });
+                    syncData(project, null);
+                    updateContentArea();
+                }
+                transportModal.classList.remove('flex');
+                transportModal.classList.add('hidden');
+            });
+
+            // Выбор из телефонной книги (Contacts Picker API)
+            document.getElementById('pick-contact-btn').addEventListener('click', async () => {
+                if ('contacts' in navigator && 'Picker' in window) {
+                    try {
+                        const props = ['name', 'tel'];
+                        const opts = { multiple: false };
+                        const contacts = await navigator.contacts.select(props, opts);
+                        if (contacts.length > 0) {
+                            const contact = contacts[0];
+                            if (contact.name && contact.name[0]) document.getElementById('tr-driver').value = contact.name[0];
+                            if (contact.tel && contact.tel[0]) document.getElementById('tr-phone').value = contact.tel[0];
+                        }
+                    } catch (ex) { console.error(ex); }
+                } else {
+                    // Запасной вариант через стандартный ввод, если API контактов недоступно на десктопе или в Safari
+                    const name = prompt('Введите ФИО водителя:');
+                    if(name) document.getElementById('tr-driver').value = name;
+                    const tel = prompt('Введите номер телефона:');
+                    if(tel) document.getElementById('tr-phone').value = tel;
+                }
+            });
 
             // --- ДЕЙСТВИЯ ---
             document.getElementById('mark-paid-btn').addEventListener('click', () => {
@@ -1070,6 +1206,13 @@
                         teamSum += m.fee;
                     });
                     text += `ФОТ Итого: ${teamSum.toLocaleString('ru-RU')} ₽\n`;
+                }
+
+                if (project.transportList && project.transportList.length > 0) {
+                    text += `\n🚗 Транспорт:\n`;
+                    project.transportList.forEach(t => {
+                        text += `• ${t.model} (${t.number}) — ${t.driver} (${t.phone})\n`;
+                    });
                 }
                 
                 text += `\n💰 Смета: ${project.cost.toLocaleString('ru-RU')} ₽\n💵 Оплата: ${project.isPaid ? '✅ Оплачено' : '⏳ Ожидается'} (${project.method})`;
