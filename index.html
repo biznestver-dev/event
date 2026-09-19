@@ -58,14 +58,14 @@
         }
 
         @keyframes pulse-border {
-            0% { box-shadow: 0 0 0 0 rgba(59,130,246, 0.6); }
-            70% { box-shadow: 0 0 0 10px rgba(59,130,246, 0); }
+            0% { box-shadow: 0 0 0 0 rgba(59,130,246, 0.4); }
+            70% { box-shadow: 0 0 0 8px rgba(59,130,246, 0); }
             100% { box-shadow: 0 0 0 0 rgba(59,130,246, 0); }
         }
         .date-icon.active {
             background: linear-gradient(135deg, #3b82f6, #8b5cf6, #3b82f6);
             background-size: 200% 200%;
-            animation: shimmer-bg 3s ease infinite, pulse-border 2s infinite;
+            animation: shimmer-bg 3s ease infinite, pulse-border 3s infinite;
             border: none;
             transform: scale(1.05);
             z-index: 10;
@@ -73,20 +73,21 @@
         
         .date-icon:active { transform: scale(0.9); }
 
-        @keyframes sun-cycle {
-            0% { filter: hue-rotate(0deg); }
-            50% { filter: hue-rotate(40deg) brightness(1.2); }
-            100% { filter: hue-rotate(0deg); }
+        /* Плавная анимация для информационной плашки */
+        @keyframes soft-glow {
+            0% { border-color: rgba(59, 130, 246, 0.2); box-shadow: 0 0 15px rgba(59, 130, 246, 0.05); }
+            50% { border-color: rgba(139, 92, 246, 0.4); box-shadow: 0 0 25px rgba(139, 92, 246, 0.15); }
+            100% { border-color: rgba(59, 130, 246, 0.2); box-shadow: 0 0 15px rgba(59, 130, 246, 0.05); }
         }
-        .sun-animated { animation: sun-cycle 6s ease-in-out infinite; }
+        .animated-info-card {
+            animation: soft-glow 5s ease-in-out infinite;
+        }
 
-        @keyframes spin-slow { 100% { transform: rotate(360deg); } }
-        @keyframes float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-3px); } }
-        @keyframes rain-drop { 0% { transform: translateY(-2px); opacity: 0.8; } 100% { transform: translateY(4px); opacity: 0; } }
-        
-        .weather-spin { display: inline-block; animation: spin-slow 10s linear infinite; }
-        .weather-float { display: inline-block; animation: float 3s ease-in-out infinite; }
-        .weather-rain { display: inline-block; animation: rain-drop 1.2s linear infinite; }
+        @keyframes float-slow {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-3px); }
+        }
+        .weather-float { display: inline-block; animation: float-slow 3s ease-in-out infinite; }
         
         input[type="checkbox"].team-checkbox {
             accent-color: #3b82f6;
@@ -149,7 +150,7 @@
 
     <!-- Сетка проектов -->
     <div class="px-4 mb-8">
-        <div id="projects-timeline" class="grid grid-cols-2 gap-3"></div>
+        <div id="projects-timeline" class="grid grid-cols-4 gap-3"></div>
     </div>
 
     <!-- Детальная карточка проекта -->
@@ -160,7 +161,9 @@
                 <h2 id="project-title-label" class="text-2xl font-bold mb-3 text-white leading-tight">Название проекта</h2>
                 
                 <div id="project-location-container" class="mb-4"></div>
-                <div id="project-dates-container" class="flex flex-col gap-2"></div>
+                
+                <!-- Анимированная плашка с датой, временем, солнцем и погодой -->
+                <div id="project-dates-container" class="space-y-2"></div>
             </div>
 
             <!-- Управление -->
@@ -213,7 +216,7 @@
                 </div>
             </div>
 
-            <!-- Кнопка "Транспорт, участники, списки" -->
+            <!-- Кнопка перехода к списку транспорта и участников -->
             <div>
                 <button id="open-details-modal-btn" class="w-full bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 hover:from-blue-500 hover:to-purple-500 text-white font-bold py-4 px-4 rounded-2xl border border-blue-400/40 flex justify-between items-center shadow-[0_0_25px_rgba(79,70,229,0.4)] active:scale-[0.99] transition-all cursor-pointer">
                     <div class="flex items-center gap-3">
@@ -782,7 +785,7 @@
                 closeModal();
             });
 
-            // --- РЕНДЕР ПРОЕКТОВ (С АНИМИРОВАННЫМИ ИКОНКАМИ РАССВЕТА/ЗАКАТА И ПОГОДОЙ) ---
+            // --- РЕНДЕР ПРОЕКТОВ (С ПЛАВНОЙ ПУЛЬСАЦИЕЙ) ---
             function renderTimeline() {
                 timeline.innerHTML = '';
                 if (activeProjects.length > 0) {
@@ -790,35 +793,24 @@
                     setTimeout(() => document.getElementById('project-content').classList.remove('opacity-0'), 50);
                 } else {
                     document.getElementById('project-content').classList.add('hidden', 'opacity-0');
-                    timeline.innerHTML = `<div class="col-span-2 text-center text-gray-500 text-sm py-4 border border-dashed border-gray-800 rounded-2xl">Нажмите +, чтобы добавить проект</div>`;
+                    timeline.innerHTML = `<div class="col-span-4 text-center text-gray-500 text-sm py-4 border border-dashed border-gray-800 rounded-2xl">Нажмите +, чтобы добавить проект</div>`;
                 }
 
                 activeProjects.forEach(project => {
                     const isActive = project.id === selectedProjectId;
-                    const icon = document.createElement('div');
+                    const icon = document.createElement('button');
                     const firstDate = new Date(project.dates[0].date);
                     const day = firstDate.getDate();
                     const month = new Intl.DateTimeFormat('ru-RU', { month: 'short' }).format(firstDate).replace('.', '');
                     const multiBadge = project.dates.length > 1 ? `<div class="absolute top-1 right-1 bg-red-500 text-white text-[9px] font-bold px-1 rounded-full shadow">+${project.dates.length - 1}</div>` : '';
 
                     const borderStyle = project.isPaid && !isActive ? 'border-green-500/40 text-green-400 bg-green-900/10' : 'border-white/10 text-gray-300 bg-gray-800/60';
-                    icon.className = `date-icon w-full rounded-2xl flex flex-col items-center justify-between p-2 border outline-none shadow-lg backdrop-blur-md cursor-pointer ${isActive ? 'active text-white' : borderStyle}`;
-                    
+                    icon.className = `date-icon w-full rounded-2xl flex flex-col items-center justify-center border outline-none shadow-sm backdrop-blur-md ${isActive ? 'active text-white' : borderStyle}`;
                     icon.innerHTML = `
                         ${multiBadge}
-                        <div class="flex justify-between w-full items-center text-[10px] font-bold uppercase tracking-wider opacity-80">
-                            <span>${month}</span>
-                            <span class="text-xs font-black">${day}</span>
-                        </div>
-                        <div class="flex items-center justify-center my-1" id="timeline-weather-${project.id}">
-                            <span class="text-xl sun-animated">⏳</span>
-                        </div>
-                        <div class="w-full flex justify-between text-[9px] font-medium opacity-80 px-0.5 border-t border-white/10 pt-1" id="timeline-sun-${project.id}">
-                            <span>🌅 --:--</span>
-                            <span>🌇 --:--</span>
-                        </div>
+                        <span class="text-[10px] uppercase font-bold ${isActive ? 'text-white' : 'opacity-60'} mb-1 tracking-widest z-10">${month}</span>
+                        <span class="text-2xl font-black leading-none ${isActive ? 'text-white' : ''} z-10">${day}</span>
                     `;
-
                     icon.addEventListener('click', () => { 
                         selectedProjectId = project.id; 
                         renderTimeline(); 
@@ -826,45 +818,8 @@
                         document.getElementById('project-content').scrollIntoView({ behavior: 'smooth', block: 'start' });
                     });
                     timeline.appendChild(icon);
-
-                    // Асинхронный запрос погоды, рассвета и заката для плашки таймлайна
-                    fetchSunAndWeather(project.dates[0].date, project.id);
                 });
                 lucide.createIcons();
-            }
-
-            async function fetchSunAndWeather(dateStr, projId) {
-                try {
-                    const res = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=55.7522&longitude=37.6156&daily=weathercode,temperature_2m_max,sunrise,sunset&timezone=Europe%2FMoscow&start_date=${dateStr}&end_date=${dateStr}`);
-                    const data = await res.json();
-                    if (data.daily && data.daily.weathercode && data.daily.weathercode.length > 0) {
-                        const code = data.daily.weathercode[0];
-                        const temp = Math.round(data.daily.temperature_2m_max[0]);
-                        const sunriseISO = data.daily.sunrise[0];
-                        const sunsetISO = data.daily.sunset[0];
-
-                        const sunriseTime = sunriseISO ? sunriseISO.split('T')[1].substring(0, 5) : '--:--';
-                        const sunsetTime = sunsetISO ? sunsetISO.split('T')[1].substring(0, 5) : '--:--';
-
-                        let weatherIcon = '☀️'; let animClass = 'sun-animated';
-                        if (code >= 1 && code <= 3) { weatherIcon = '⛅'; animClass = 'weather-float'; }
-                        else if (code >= 45 && code <= 48) { weatherIcon = '🌫️'; animClass = 'weather-float'; }
-                        else if (code >= 51 && code <= 67) { weatherIcon = '🌧️'; animClass = 'weather-rain'; }
-                        else if (code >= 71 && code <= 77) { weatherIcon = '❄️'; animClass = 'weather-float'; }
-                        else if (code >= 80 && code <= 82) { weatherIcon = '🌦️'; animClass = 'weather-rain'; }
-                        else if (code >= 95) { weatherIcon = '⛈️'; animClass = 'weather-rain'; }
-
-                        const wContainer = document.getElementById(`timeline-weather-${projId}`);
-                        const sContainer = document.getElementById(`timeline-sun-${projId}`);
-
-                        if (wContainer) {
-                            wContainer.innerHTML = `<span class="text-xl ${animClass}" style="text-shadow: 0 0 10px rgba(255,255,255,0.4);">${weatherIcon}</span> <span class="text-xs font-extrabold ml-1">${temp > 0 ? '+' : ''}${temp}°</span>`;
-                        }
-                        if (sContainer) {
-                            sContainer.innerHTML = `<span>🌅 ${sunriseTime}</span><span>🌇 ${sunsetTime}</span>`;
-                        }
-                    }
-                } catch(e) {}
             }
 
             function updateContentArea() {
@@ -905,6 +860,7 @@
                     locContainer.classList.add('hidden');
                 }
                 
+                // Анимированная плашка под картой с датой, временем, солнцем и погодой
                 const datesContainer = document.getElementById('project-dates-container');
                 datesContainer.innerHTML = '';
                 project.dates.forEach(async (d, index) => {
@@ -912,27 +868,29 @@
                     const formattedDate = new Intl.DateTimeFormat('ru-RU', { day: 'numeric', month: 'long', year: 'numeric' }).format(dateObj);
                     let timeHtml = '';
                     if(d.start || d.end) {
-                        timeHtml = `<div class="flex items-center gap-1.5 text-purple-400 text-[10px] font-bold bg-purple-900/20 px-2 py-1 rounded-lg border border-purple-500/20 uppercase tracking-wide">
+                        timeHtml = `<div class="flex items-center gap-1.5 text-purple-300 text-[11px] font-bold bg-purple-900/30 px-2.5 py-1 rounded-lg border border-purple-500/30 w-fit">
                                         <i data-lucide="clock" class="w-3.5 h-3.5"></i> ${d.start} ${d.start&&d.end?'-':''} ${d.end}
                                     </div>`;
                     }
                     const row = document.createElement('div');
-                    row.className = "flex justify-between items-center bg-gray-900/60 p-3 rounded-2xl border border-white/5";
+                    row.className = "animated-info-card bg-gradient-to-r from-gray-900/90 via-gray-900/70 to-blue-950/40 p-4 rounded-2xl border border-blue-500/20 shadow-xl flex justify-between items-center backdrop-blur-md";
                     row.innerHTML = `
-                        <div class="flex flex-col items-start gap-1.5">
-                            <div class="flex items-center gap-1.5 text-blue-400 text-xs font-bold uppercase tracking-wide">
-                                <i data-lucide="calendar" class="w-4 h-4"></i> ${formattedDate}
+                        <div class="flex flex-col gap-2">
+                            <div class="flex items-center gap-2 text-blue-400 text-xs font-extrabold uppercase tracking-wide">
+                                <i data-lucide="calendar" class="w-4 h-4 text-blue-400"></i> ${formattedDate}
                             </div>
                             ${timeHtml}
                         </div>
-                        <div id="weather-det-${project.id}-${index}" class="text-right flex items-center gap-2">
-                            <span class="text-xs text-gray-400">Загрузка погоды...</span>
+                        <div id="weather-det-${project.id}-${index}" class="flex items-center gap-3">
+                            <div class="text-right text-[10px] text-gray-300 font-medium">
+                                <div class="opacity-70">Загрузка...</div>
+                            </div>
                         </div>
                     `;
                     datesContainer.appendChild(row);
                     lucide.createIcons({root: row});
 
-                    // Запрос погоды и солнца для детального блока
+                    // Запрос погоды и солнца
                     try {
                         const res = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=55.7522&longitude=37.6156&daily=weathercode,temperature_2m_max,sunrise,sunset&timezone=Europe%2FMoscow&start_date=${d.date}&end_date=${d.date}`);
                         const data = await res.json();
@@ -941,18 +899,20 @@
                             const temp = Math.round(data.daily.temperature_2m_max[0]);
                             const sunrise = data.daily.sunrise[0].split('T')[1].substring(0, 5);
                             const sunset = data.daily.sunset[0].split('T')[1].substring(0, 5);
-                            let icon = '☀️';
+                            let icon = '☀️'; let animCls = 'weather-float';
                             if (code >= 1 && code <= 3) icon = '⛅';
                             else if (code >= 51) icon = '🌧️';
 
                             const detBox = document.getElementById(`weather-det-${project.id}-${index}`);
                             if(detBox) {
                                 detBox.innerHTML = `
-                                    <div class="text-right text-[10px] text-gray-300 font-medium">
-                                        <div>🌅 ${sunrise} | 🌇 ${sunset}</div>
+                                    <div class="text-right text-[10px] text-gray-300 font-medium leading-tight">
+                                        <div class="text-yellow-400/90">🌅 ${sunrise}</div>
+                                        <div class="text-orange-400/90 mt-0.5">🌇 ${sunset}</div>
                                     </div>
-                                    <div class="text-xl bg-black/40 px-2.5 py-1 rounded-xl border border-white/10 text-center">
-                                        ${icon} <span class="text-xs font-bold">${temp > 0 ? '+' : ''}${temp}°</span>
+                                    <div class="text-xl bg-black/50 px-3 py-1.5 rounded-xl border border-white/10 text-center shadow-inner flex items-center gap-1.5">
+                                        <span class="${animCls}">${icon}</span>
+                                        <span class="text-xs font-black text-white">${temp > 0 ? '+' : ''}${temp}°</span>
                                     </div>
                                 `;
                             }
