@@ -199,16 +199,28 @@
                     <button id="paid-status" class="hidden w-full bg-green-500/10 text-green-400 hover:bg-green-500/20 font-bold py-3 rounded-xl border border-green-500/20 flex justify-center items-center gap-2 shadow-[0_0_15px_rgba(34,197,94,0.1)] transition-colors cursor-pointer" title="Нажмите, чтобы отменить оплату">
                         <i data-lucide="check-circle-2" class="w-5 h-5"></i> Оплачено (нажмите для отмены)
                     </button>
-                    <!-- Кнопка отправки чека в Telegram (появляется только когда оплачено) -->
+                    <!-- Кнопка отправки чека в Telegram -->
                     <button id="share-telegram-btn" class="hidden w-full bg-sky-600/20 text-sky-400 hover:bg-sky-600/30 font-bold py-3 rounded-xl transition-colors border border-sky-500/30 flex justify-center items-center gap-2">
                         <i data-lucide="send" class="w-5 h-5"></i> Отправить чек в Telegram
                     </button>
                 </div>
             </div>
 
+            <!-- Контроль прибытия участников / списки -->
+            <div class="bg-black/20 border border-white/5 p-4 rounded-2xl mb-6">
+                <div class="flex justify-between items-center mb-3 border-b border-white/5 pb-2">
+                    <h3 class="text-xs text-gray-400 font-bold uppercase tracking-widest">Контроль прибытия</h3>
+                    <div class="text-[10px] text-blue-400 font-bold bg-blue-900/20 px-2 py-1 rounded-lg border border-blue-500/20" id="attendance-counter">0 / 0 на площадке</div>
+                </div>
+                <div class="mb-3">
+                    <input type="text" id="checkin-search" placeholder="Поиск по фамилии или роли..." class="w-full bg-gray-950 text-white text-xs rounded-xl py-2.5 px-3 outline-none border border-gray-700 block focus:border-blue-500">
+                </div>
+                <div id="checkin-list" class="space-y-2 max-h-72 overflow-y-auto hidden-scrollbar pr-1"></div>
+            </div>
+
             <!-- Excel списки -->
             <div class="flex justify-between items-center mb-4 mt-2">
-                <h3 class="text-lg font-bold">Списки на площадку</h3>
+                <h3 class="text-lg font-bold">Списки из файлов</h3>
             </div>
             <div id="excel-data-container" class="space-y-3 pb-2">
                 <div class="text-center text-gray-600 mt-4 text-sm border border-dashed border-gray-700/50 rounded-2xl p-6 bg-gray-900/20" id="excel-empty-state">
@@ -269,7 +281,7 @@
                     </button>
                 </div>
 
-                <!-- Сумма и Оплата общие (с автоподсчетом из ФОТ) -->
+                <!-- Сумма и Оплата общие -->
                 <div class="relative mt-2">
                     <span class="absolute left-4 top-3 text-gray-500 font-medium">₽</span>
                     <input type="number" id="new-project-cost" placeholder="Итоговая смета (все расходы)" class="w-full bg-gray-950 text-white text-sm rounded-xl py-3 pl-9 pr-4 outline-none border border-gray-700 block transition-colors focus:border-blue-500">
@@ -631,8 +643,6 @@
                     }
                 });
                 document.getElementById('team-total-calc').textContent = total.toLocaleString('ru-RU');
-                
-                // Автоматически подставляем сумму в итоговую смету
                 if (total > 0) {
                     document.getElementById('new-project-cost').value = total;
                 }
@@ -663,6 +673,7 @@
                     }
                 });
 
+                const existingProj = activeProjects.find(p => p.id === selectedProjectId);
                 const projectData = {
                     id: isEditMode ? selectedProjectId : Date.now().toString(),
                     title: titleInput.value || 'Без названия',
@@ -673,7 +684,8 @@
                     team: extractedTeam,
                     cost: costInput.value ? Number(costInput.value) : 0,
                     method: methodInput.value || 'Наличные',
-                    isPaid: isEditMode ? activeProjects.find(p=>p.id===selectedProjectId).isPaid : false
+                    isPaid: isEditMode ? existingProj.isPaid : false,
+                    checkinList: isEditMode && existingProj ? existingProj.checkinList : []
                 };
 
                 const existingIndex = activeProjects.findIndex(proj => proj.id === projectData.id);
@@ -878,10 +890,96 @@
                 } else {
                     financeBlock.classList.add('hidden');
                 }
+
+                renderCheckinSection(project);
+            }
+
+            // --- МОДУЛЬ КОНТРОЛЯ ПРИБЫТИЯ ---
+            function renderCheckinSection(project) {
+                const container = document.getElementById('checkin-list');
+                const counter = document.getElementById('attendance-counter');
+                const searchInput = document.getElementById('checkin-search');
+                if (!container) return;
+
+                if (!project.checkinList) {
+                    project.checkinList = [
+                        { name: "Сергей Филин", role: "Народный артист РФ", arrivedTime: null, leftTime: null },
+                        { name: "Диана Гурцкая", role: "Народная артистка РФ", arrivedTime: null, leftTime: null },
+                        { name: "Миа Бойка (Елизавета Бойко)", role: "Солистка", arrivedTime: null, leftTime: null },
+                        { name: "Алексей Чумаков", role: "Солист", arrivedTime: null, leftTime: null }
+                    ];
+                }
+
+                const filterText = searchInput ? searchInput.value.toLowerCase() : '';
+                container.innerHTML = '';
+                let onSiteCount = 0;
+
+                project.checkinList.forEach((person, index) => {
+                    if (person.arrivedTime && !person.leftTime) onSiteCount++;
+
+                    if (filterText && !person.name.toLowerCase().includes(filterText) && !person.role.toLowerCase().includes(filterText)) {
+                        return;
+                    }
+
+                    const item = document.createElement('div');
+                    item.className = "bg-black/30 p-3 rounded-2xl border border-white/5 flex flex-col gap-2";
+                    item.innerHTML = `
+                        <div class="flex justify-between items-start">
+                            <div>
+                                <div class="text-xs font-bold text-white">${person.name}</div>
+                                <div class="text-[10px] text-gray-400">${person.role}</div>
+                            </div>
+                            <div class="flex flex-col items-end text-[10px]">
+                                <span class="text-green-400 font-bold">Вход: ${person.arrivedTime || '—'}</span>
+                                <span class="text-red-400 font-bold">Выход: ${person.leftTime || '—'}</span>
+                            </div>
+                        </div>
+                        <div class="flex gap-2 mt-1">
+                            <button type="button" class="arrived-btn flex-1 bg-green-600/20 text-green-400 hover:bg-green-600/30 text-[11px] font-bold py-2 px-2 rounded-xl border border-green-500/30 transition-colors flex justify-center items-center gap-1 active:scale-95" data-index="${index}">
+                                <i data-lucide="log-in" class="w-3.5 h-3.5"></i> На площадке
+                            </button>
+                            <button type="button" class="left-btn flex-1 bg-red-600/20 text-red-400 hover:bg-red-600/30 text-[11px] font-bold py-2 px-2 rounded-xl border border-red-500/30 transition-colors flex justify-center items-center gap-1 active:scale-95" data-index="${index}">
+                                <i data-lucide="log-out" class="w-3.5 h-3.5"></i> Уехал
+                            </button>
+                        </div>
+                    `;
+                    container.appendChild(item);
+                });
+
+                if(counter) counter.textContent = `${onSiteCount} / ${project.checkinList.length} на площадке`;
+                lucide.createIcons({root: container});
+
+                // Обработчики кнопок
+                container.querySelectorAll('.arrived-btn').forEach(btn => {
+                    btn.addEventListener('click', (e) => {
+                        const idx = e.currentTarget.getAttribute('data-index');
+                        const now = new Date().toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' });
+                        project.checkinList[idx].arrivedTime = now;
+                        syncData(project, null);
+                        renderCheckinSection(project);
+                    });
+                });
+
+                container.querySelectorAll('.left-btn').forEach(btn => {
+                    btn.addEventListener('click', (e) => {
+                        const idx = e.currentTarget.getAttribute('data-index');
+                        const now = new Date().toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' });
+                        project.checkinList[idx].leftTime = now;
+                        syncData(project, null);
+                        renderCheckinSection(project);
+                    });
+                });
+            }
+
+            const checkinSearch = document.getElementById('checkin-search');
+            if (checkinSearch) {
+                checkinSearch.addEventListener('input', () => {
+                    const project = activeProjects.find(p => p.id === selectedProjectId);
+                    if (project) renderCheckinSection(project);
+                });
             }
 
             // --- ДЕЙСТВИЯ ---
-            // Отметить как оплачено
             document.getElementById('mark-paid-btn').addEventListener('click', () => {
                 const project = activeProjects.find(p => p.id === selectedProjectId);
                 if (project) {
@@ -892,7 +990,6 @@
                 }
             });
 
-            // Отменить оплату (клик по статусу "Оплачено")
             document.getElementById('paid-status').addEventListener('click', () => {
                 const project = activeProjects.find(p => p.id === selectedProjectId);
                 if (project) {
@@ -903,7 +1000,6 @@
                 }
             });
 
-            // Отправка чека в Telegram
             document.getElementById('share-telegram-btn').addEventListener('click', () => {
                 const project = activeProjects.find(p => p.id === selectedProjectId);
                 if (!project) return;
