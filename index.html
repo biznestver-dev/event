@@ -302,6 +302,9 @@
         document.addEventListener('DOMContentLoaded', () => {
             lucide.createIcons();
 
+            // Объявляем timeline в самом начале DOMContentLoaded
+            const timeline = document.getElementById('projects-timeline');
+
             const PREDEFINED_TEAM = [
                 "Зломанов Олег Викторович",
                 "Дубовой Андрей Николаевич",
@@ -340,7 +343,7 @@
             const dropdownArrow = document.getElementById('dropdown-arrow');
             const filterIcon = document.getElementById('filter-icon');
 
-            // 1. Загрузка из localStorage (ставим ПЕРЕД вызовом функций рендеринга)
+            // 1. Загрузка из localStorage
             const savedData = localStorage.getItem('amProdData');
             if (savedData) {
                 try {
@@ -349,7 +352,6 @@
                 } catch(e) { console.error(e); }
             }
             
-            // Теперь переменные инициализированы, можно безопасно вызывать функции:
             renderDashboardFilters();
             renderTimeline();
             if (selectedProjectId) updateContentArea();
@@ -668,7 +670,6 @@
             });
 
             // --- РЕНДЕР ПРОЕКТОВ ---
-            const timeline = document.getElementById('projects-timeline');
             function renderTimeline() {
                 timeline.innerHTML = '';
                 if (activeProjects.length > 0) {
