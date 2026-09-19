@@ -316,7 +316,31 @@
 
             const syncIcon = document.getElementById('sync-icon');
 
-            // 1. Загрузка из localStorage
+            // DOM Элементы
+            const modal = document.getElementById('date-modal');
+            const dynamicDatesList = document.getElementById('dynamic-dates-list');
+            const teamSelectionList = document.getElementById('team-selection-list');
+            
+            const titleInput = document.getElementById('new-project-title');
+            const contractorInput = document.getElementById('new-project-contractor');
+            const addressInput = document.getElementById('new-project-address');
+            const metroInput = document.getElementById('new-project-metro');
+            const costInput = document.getElementById('new-project-cost');
+            const methodInput = document.getElementById('new-project-method');
+            const modalTitle = document.getElementById('modal-title');
+            
+            const dashTotal = document.getElementById('dash-total');
+            const dashPaid = document.getElementById('dash-paid');
+            const dashPending = document.getElementById('dash-pending');
+
+            // --- КАСТОМНЫЙ ВЫПАДАЮЩИЙ СПИСОК ---
+            const dropdownBtn = document.getElementById('custom-dropdown-btn');
+            const dropdownMenu = document.getElementById('custom-dropdown-menu');
+            const currentFilterText = document.getElementById('current-filter-text');
+            const dropdownArrow = document.getElementById('dropdown-arrow');
+            const filterIcon = document.getElementById('filter-icon');
+
+            // 1. Загрузка из localStorage (ставим ПЕРЕД вызовом функций рендеринга)
             const savedData = localStorage.getItem('amProdData');
             if (savedData) {
                 try {
@@ -325,6 +349,7 @@
                 } catch(e) { console.error(e); }
             }
             
+            // Теперь переменные инициализированы, можно безопасно вызывать функции:
             renderDashboardFilters();
             renderTimeline();
             if (selectedProjectId) updateContentArea();
@@ -361,29 +386,6 @@
                     if (projectToUpsert) await _supabase.from('am_projects').upsert({ id: projectToUpsert.id, project_data: projectToUpsert });
                 } catch (e) {}
             }
-
-            const modal = document.getElementById('date-modal');
-            const dynamicDatesList = document.getElementById('dynamic-dates-list');
-            const teamSelectionList = document.getElementById('team-selection-list');
-            
-            const titleInput = document.getElementById('new-project-title');
-            const contractorInput = document.getElementById('new-project-contractor');
-            const addressInput = document.getElementById('new-project-address');
-            const metroInput = document.getElementById('new-project-metro');
-            const costInput = document.getElementById('new-project-cost');
-            const methodInput = document.getElementById('new-project-method');
-            const modalTitle = document.getElementById('modal-title');
-            
-            const dashTotal = document.getElementById('dash-total');
-            const dashPaid = document.getElementById('dash-paid');
-            const dashPending = document.getElementById('dash-pending');
-
-            // --- КАСТОМНЫЙ ВЫПАДАЮЩИЙ СПИСОК ---
-            const dropdownBtn = document.getElementById('custom-dropdown-btn');
-            const dropdownMenu = document.getElementById('custom-dropdown-menu');
-            const currentFilterText = document.getElementById('current-filter-text');
-            const dropdownArrow = document.getElementById('dropdown-arrow');
-            const filterIcon = document.getElementById('filter-icon');
 
             dropdownBtn.addEventListener('click', (e) => {
                 e.stopPropagation();
