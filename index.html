@@ -129,7 +129,7 @@
 
     <!-- Кнопки управления -->
     <div class="px-4 flex gap-3 mb-8 relative z-20">
-        <label class="flex-1 bg-gray-800/80 hover:bg-gray-700 backdrop-blur-md text-white py-3.5 px-2 rounded-2xl cursor-pointer transition-colors border border-white/10 flex items-center justify-center gap-2 relative overflow-hidden">
+        <label class="flex-1 bg-gradient-to-r from-gray-800 to-gray-900 hover:from-gray-700 hover:to-gray-800 backdrop-blur-md text-white py-3.5 px-2 rounded-2xl cursor-pointer transition-all border border-white/10 flex items-center justify-center gap-2 relative overflow-hidden shadow-md">
             <i data-lucide="file-spreadsheet" class="w-5 h-5 text-green-400"></i>
             <span class="text-xs font-bold uppercase tracking-wider">Загрузить Excel</span>
             <input type="file" id="excel-upload" class="hidden" accept=".xlsx, .xls">
@@ -157,22 +157,15 @@
             </div>
 
             <!-- Управление -->
-            <div class="flex gap-2 mb-4">
-                <button id="edit-project-btn" class="flex-1 bg-gray-800/80 text-gray-300 py-3 rounded-xl text-xs font-bold uppercase tracking-wide flex justify-center items-center gap-2 border border-white/5 active:scale-95 transition-transform">
-                    <i data-lucide="edit" class="w-4 h-4"></i> Изменить
+            <div class="flex gap-2 mb-6">
+                <button id="edit-project-btn" class="flex-1 bg-gradient-to-r from-gray-800 to-gray-900 text-gray-300 py-3 rounded-xl text-xs font-bold uppercase tracking-wide flex justify-center items-center gap-2 border border-white/10 active:scale-95 transition-all shadow-md">
+                    <i data-lucide="edit" class="w-4 h-4 text-blue-400"></i> Изменить
                 </button>
-                <button id="share-project-btn" class="flex-1 bg-blue-900/30 text-blue-400 py-3 rounded-xl text-xs font-bold uppercase tracking-wide flex justify-center items-center gap-2 border border-blue-500/20 active:scale-95 transition-transform">
-                    <i data-lucide="send" class="w-4 h-4"></i> Отправить
+                <button id="share-project-btn" class="flex-1 bg-gradient-to-r from-blue-900/40 to-indigo-900/40 text-blue-300 py-3 rounded-xl text-xs font-bold uppercase tracking-wide flex justify-center items-center gap-2 border border-blue-500/30 active:scale-95 transition-all shadow-md">
+                    <i data-lucide="send" class="w-4 h-4 text-blue-400"></i> Отправить
                 </button>
-                <button id="delete-project-btn" class="flex-1 bg-red-900/20 text-red-400 py-3 rounded-xl text-xs font-bold uppercase tracking-wide flex justify-center items-center gap-2 border border-red-500/20 active:scale-95 transition-transform">
-                    <i data-lucide="trash-2" class="w-4 h-4"></i> Удалить
-                </button>
-            </div>
-
-            <!-- Кнопка "Подробно" (открывает модалку со списками, транспортом и контролем прибытия) -->
-            <div class="mb-6">
-                <button id="open-details-modal-btn" class="w-full bg-gradient-to-r from-purple-600/30 to-blue-600/30 hover:from-purple-600/40 hover:to-blue-600/40 text-white font-bold py-3.5 rounded-2xl border border-purple-500/30 flex justify-center items-center gap-2 shadow-lg active:scale-[0.99] transition-transform">
-                    <i data-lucide="list-checks" class="w-5 h-5 text-purple-400"></i> Подробно (Транспорт, Участники, Списки)
+                <button id="delete-project-btn" class="flex-1 bg-gradient-to-r from-red-950/40 to-red-900/30 text-red-300 py-3 rounded-xl text-xs font-bold uppercase tracking-wide flex justify-center items-center gap-2 border border-red-500/30 active:scale-95 transition-all shadow-md">
+                    <i data-lucide="trash-2" class="w-4 h-4 text-red-400"></i> Удалить
                 </button>
             </div>
 
@@ -199,18 +192,34 @@
                 </div>
                 
                 <div id="payment-actions" class="space-y-2">
-                    <button id="mark-paid-btn" class="w-full bg-gradient-to-r from-blue-600/20 to-purple-600/20 text-blue-400 hover:from-blue-600/30 hover:to-purple-600/30 font-bold py-3 rounded-xl transition-colors border border-blue-500/30 flex justify-center items-center gap-2">
-                        <i data-lucide="circle-dollar-sign" class="w-5 h-5"></i> Отметить как оплаченное
+                    <button id="mark-paid-btn" class="w-full bg-gradient-to-r from-blue-600/20 to-purple-600/20 text-blue-300 hover:from-blue-600/30 hover:to-purple-600/30 font-bold py-3 rounded-xl transition-all border border-blue-500/40 flex justify-center items-center gap-2 shadow-md">
+                        <i data-lucide="circle-dollar-sign" class="w-5 h-5 text-blue-400"></i> Отметить как оплаченное
                     </button>
                     <!-- Кликабельный статус Оплачено -->
-                    <button id="paid-status" class="hidden w-full bg-green-500/10 text-green-400 hover:bg-green-500/20 font-bold py-3 rounded-xl border border-green-500/20 flex justify-center items-center gap-2 shadow-[0_0_15px_rgba(34,197,94,0.1)] transition-colors cursor-pointer" title="Нажмите, чтобы отменить оплату">
-                        <i data-lucide="check-circle-2" class="w-5 h-5"></i> Оплачено (нажмите для отмены)
+                    <button id="paid-status" class="hidden w-full bg-gradient-to-r from-green-950/40 to-green-900/30 text-green-300 hover:from-green-900/40 hover:to-green-800/40 font-bold py-3 rounded-xl border border-green-500/40 flex justify-center items-center gap-2 shadow-[0_0_15px_rgba(34,197,94,0.15)] transition-all cursor-pointer" title="Нажмите, чтобы отменить оплату">
+                        <i data-lucide="check-circle-2" class="w-5 h-5 text-green-400"></i> Оплачено (нажмите для отмены)
                     </button>
                     <!-- Кнопка отправки чека в Telegram -->
-                    <button id="share-telegram-btn" class="hidden w-full bg-sky-600/20 text-sky-400 hover:bg-sky-600/30 font-bold py-3 rounded-xl transition-colors border border-sky-500/30 flex justify-center items-center gap-2">
-                        <i data-lucide="send" class="w-5 h-5"></i> Отправить чек в Telegram
+                    <button id="share-telegram-btn" class="hidden w-full bg-gradient-to-r from-sky-900/30 to-blue-900/30 text-sky-300 hover:from-sky-900/40 hover:to-blue-900/40 font-bold py-3 rounded-xl transition-all border border-sky-500/40 flex justify-center items-center gap-2 shadow-md">
+                        <i data-lucide="send" class="w-5 h-5 text-sky-400"></i> Отправить чек в Telegram
                     </button>
                 </div>
+            </div>
+
+            <!-- Кнопка "Подробно" в самом низу карточки с красивым градиентом и подсветкой -->
+            <div>
+                <button id="open-details-modal-btn" class="w-full bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 hover:from-blue-500 hover:to-purple-500 text-white font-bold py-4 px-4 rounded-2xl border border-blue-400/40 flex justify-between items-center shadow-[0_0_25px_rgba(79,70,229,0.4)] active:scale-[0.99] transition-all cursor-pointer">
+                    <div class="flex items-center gap-3">
+                        <div class="w-9 h-9 rounded-xl bg-white/10 flex items-center justify-center border border-white/20">
+                            <i data-lucide="list-checks" class="w-5 h-5 text-white"></i>
+                        </div>
+                        <div class="text-left">
+                            <div class="text-sm font-extrabold tracking-wide">Подробно по проекту</div>
+                            <div class="text-[10px] text-blue-200 font-medium">Транспорт, участники, списки и файлы</div>
+                        </div>
+                    </div>
+                    <i data-lucide="chevron-right" class="w-5 h-5 text-white/80"></i>
+                </button>
             </div>
         </div>
     </div>
@@ -218,7 +227,7 @@
     <!-- МОДАЛЬНОЕ ОКНО "ПОДРОБНО" (Транспорт, Участники, Списки) -->
     <div id="details-modal" class="hidden fixed inset-0 z-50 bg-black/85 backdrop-blur-md items-center justify-center p-4">
         <div class="bg-gray-900 border border-gray-700 p-6 rounded-[2rem] w-full max-w-[420px] shadow-2xl relative max-h-[90vh] overflow-y-auto hidden-scrollbar">
-            <div class="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-purple-500 to-blue-500"></div>
+            <div class="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-blue-500 to-purple-500"></div>
             
             <div class="flex justify-between items-center mb-4 mt-2">
                 <h3 class="text-lg font-bold" id="details-modal-title">Детали проекта</h3>
@@ -241,8 +250,8 @@
             <div class="bg-black/30 border border-white/5 p-4 rounded-2xl mb-5">
                 <div class="flex justify-between items-center mb-3 border-b border-white/5 pb-2">
                     <h4 class="text-xs text-gray-400 font-bold uppercase tracking-widest">Пересадочный транспорт</h4>
-                    <button type="button" id="add-transport-btn" class="text-[10px] text-purple-400 font-bold bg-purple-900/20 px-2 py-1 rounded-lg border border-purple-500/20 flex items-center gap-1 active:scale-95">
-                        <i data-lucide="car" class="w-3.5 h-3.5"></i> Добавить машину
+                    <button type="button" id="add-transport-btn" class="text-[10px] text-purple-300 font-bold bg-gradient-to-r from-purple-900/40 to-indigo-900/40 px-2.5 py-1.5 rounded-lg border border-purple-500/30 flex items-center gap-1 active:scale-95 shadow-sm">
+                        <i data-lucide="car" class="w-3.5 h-3.5 text-purple-400"></i> Добавить машину
                     </button>
                 </div>
                 <div id="transport-list" class="space-y-3 max-h-60 overflow-y-auto hidden-scrollbar pr-1"></div>
