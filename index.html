@@ -195,9 +195,10 @@
                     <button id="mark-paid-btn" class="w-full bg-gradient-to-r from-blue-600/20 to-purple-600/20 text-blue-400 hover:from-blue-600/30 hover:to-purple-600/30 font-bold py-3 rounded-xl transition-colors border border-blue-500/30 flex justify-center items-center gap-2">
                         <i data-lucide="circle-dollar-sign" class="w-5 h-5"></i> Отметить как оплаченное
                     </button>
-                    <div id="paid-status" class="hidden w-full bg-green-500/10 text-green-400 font-bold py-3 rounded-xl border border-green-500/20 flex justify-center items-center gap-2 shadow-[0_0_15px_rgba(34,197,94,0.1)]">
-                        <i data-lucide="check-circle-2" class="w-5 h-5"></i> Оплачено
-                    </div>
+                    <!-- Кликабельный статус Оплачено (позволяет отменить оплату обратно) -->
+                    <button id="paid-status" class="hidden w-full bg-green-500/10 text-green-400 hover:bg-green-500/20 font-bold py-3 rounded-xl border border-green-500/20 flex justify-center items-center gap-2 shadow-[0_0_15px_rgba(34,197,94,0.1)] transition-colors cursor-pointer" title="Нажмите, чтобы отменить оплату">
+                        <i data-lucide="check-circle-2" class="w-5 h-5"></i> Оплачено (нажмите для отмены)
+                    </button>
                     <!-- Кнопка отправки чека в Telegram (появляется только когда оплачено) -->
                     <button id="share-telegram-btn" class="hidden w-full bg-sky-600/20 text-sky-400 hover:bg-sky-600/30 font-bold py-3 rounded-xl transition-colors border border-sky-500/30 flex justify-center items-center gap-2">
                         <i data-lucide="send" class="w-5 h-5"></i> Отправить чек в Telegram
@@ -268,7 +269,7 @@
                     </button>
                 </div>
 
-                <!-- Сумма и Оплата общие -->
+                <!-- Сумма и Оплата общие (с автоподсчетом из ФОТ) -->
                 <div class="relative mt-2">
                     <span class="absolute left-4 top-3 text-gray-500 font-medium">₽</span>
                     <input type="number" id="new-project-cost" placeholder="Итоговая смета (все расходы)" class="w-full bg-gray-950 text-white text-sm rounded-xl py-3 pl-9 pr-4 outline-none border border-gray-700 block transition-colors focus:border-blue-500">
@@ -589,7 +590,7 @@
                         <input type="checkbox" class="team-checkbox shrink-0 hidden" value="custom" checked>
                         <input type="text" class="custom-team-name flex-1 bg-gray-900 text-white text-[11px] rounded p-1.5 outline-none border border-gray-600 focus:border-purple-500" placeholder="ФИО или Роль" value="${name}">
                         <input type="number" class="team-fee w-20 shrink-0 bg-gray-900 text-white text-xs rounded p-1.5 outline-none border border-gray-600 focus:border-purple-500 text-right" placeholder="0 ₽" value="${fee}">
-                        <button type="button" class="text-red-500/80 hover:text-red-400 p-1 flex justify-center w-6 shrink-0" onclick="this.parentElement.remove(); document.getElementById('team-total-calc').innerText='0';"><i data-lucide="x" class="w-4 h-4"></i></button>
+                        <button type="button" class="text-red-500/80 hover:text-red-400 p-1 flex justify-center w-6 shrink-0" onclick="this.parentElement.remove(); calcTeamTotal();"><i data-lucide="x" class="w-4 h-4"></i></button>
                     `;
                 }
                 
@@ -619,6 +620,7 @@
                 addTeamMemberRow('', '', true, false);
             });
 
+            // Автоподсчет ФОТ и автоматическое обновление итоговой сметы
             function calcTeamTotal() {
                 let total = 0;
                 document.querySelectorAll('.custom-team-row').forEach(row => {
@@ -629,6 +631,11 @@
                     }
                 });
                 document.getElementById('team-total-calc').textContent = total.toLocaleString('ru-RU');
+                
+                // Автоматически подставляем сумму в итоговую смету
+                if (total > 0) {
+                    document.getElementById('new-project-cost').value = total;
+                }
             }
 
             // --- СОХРАНЕНИЕ ПРОЕКТА ---
@@ -874,10 +881,22 @@
             }
 
             // --- ДЕЙСТВИЯ ---
+            // Отметить как оплачено
             document.getElementById('mark-paid-btn').addEventListener('click', () => {
                 const project = activeProjects.find(p => p.id === selectedProjectId);
                 if (project) {
                     project.isPaid = true;
+                    syncData(project, null);
+                    updateContentArea();
+                    renderTimeline();
+                }
+            });
+
+            // Отменить оплату (клик по статусу "Оплачено")
+            document.getElementById('paid-status').addEventListener('click', () => {
+                const project = activeProjects.find(p => p.id === selectedProjectId);
+                if (project) {
+                    project.isPaid = false;
                     syncData(project, null);
                     updateContentArea();
                     renderTimeline();
