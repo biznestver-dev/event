@@ -90,7 +90,7 @@
             animation: neonBorderShift 8s ease-in-out infinite;
         }
 
-        /* Specific Rounded Glowing Borders matching user's exact gamuts */
+        /* Specific Rounded Glowing Borders matching exact gamuts */
         @keyframes greenGlow {
             0% { border-color: rgba(34, 197, 94, 0.6); box-shadow: 0 0 15px rgba(34, 197, 94, 0.25); }
             50% { border-color: rgba(132, 204, 22, 0.9); box-shadow: 0 0 25px rgba(132, 204, 22, 0.45); }
@@ -98,7 +98,7 @@
         }
         .glow-green {
             border: 2px solid #22c55e;
-            border-radius: 1rem;
+            border-radius: 1.5rem;
             animation: greenGlow 4s ease-in-out infinite;
         }
 
@@ -109,7 +109,7 @@
         }
         .glow-yellow-orange {
             border: 2px solid #eab308;
-            border-radius: 1rem;
+            border-radius: 1.5rem;
             animation: yellowOrangeGlow 4s ease-in-out infinite;
         }
 
@@ -120,7 +120,7 @@
         }
         .glow-blue {
             border: 2px solid #3b82f6;
-            border-radius: 1rem;
+            border-radius: 1.5rem;
             animation: blueGlow 4s ease-in-out infinite;
         }
 
@@ -131,7 +131,7 @@
         }
         .glow-purple {
             border: 2px solid #a855f7;
-            border-radius: 1rem;
+            border-radius: 1.5rem;
             animation: purpleGlow 4s ease-in-out infinite;
         }
 
@@ -142,7 +142,7 @@
         }
         .glow-red {
             border: 2px solid #ef4444;
-            border-radius: 1rem;
+            border-radius: 1.5rem;
             animation: redGlow 4s ease-in-out infinite;
         }
 
@@ -153,7 +153,7 @@
         }
         .glow-sky {
             border: 2px solid #38bdf8;
-            border-radius: 1rem;
+            border-radius: 1.5rem;
             animation: skyGlow 4s ease-in-out infinite;
         }
 
@@ -196,7 +196,7 @@
 </head>
 <body class="bg-gray-950 text-white font-sans antialiased pb-24 overflow-x-hidden selection:bg-blue-500/30">
 
-    <!-- Заголовок с интерактивной иконкой облака для обновления (БЕЗ ОКАНТОВКИ) -->
+    <!-- Заголовок с интерактивной иконкой облака для обновления (БЕЗ ОКОНТОВКИ) -->
     <div class="pt-14 pb-4 px-4 text-center">
         <h1 class="text-2xl font-extrabold tracking-tight text-transparent bg-clip-text bg-gradient-to-r from-blue-400 via-purple-400 to-blue-400 animated-title inline-flex items-center gap-2 justify-center w-full">
             Event Kremlin
@@ -984,6 +984,31 @@
                     if (project.address) {
                         locHtml += `<iframe src="https://yandex.ru/map-widget/v1/?text=${encodeURIComponent(project.address)}&z=15" width="100%" height="180" frameborder="0" allowfullscreen="true" class="rounded-xl border border-white/10 opacity-90 shadow-lg mt-1 pointer-events-auto"></iframe>`;
                     }
+                    
+                    // Расширенный блок логистики и транспорта
+                    locHtml += `
+                        <div class="mt-4 pt-3 border-t border-white/10 space-y-3 text-xs">
+                            <div class="flex items-start gap-2.5 text-gray-200">
+                                <i data-lucide="train" class="w-4 h-4 text-red-400 shrink-0 mt-0.5"></i>
+                                <div>
+                                    <span class="font-semibold text-white">Метро:</span> <span class="text-gray-300">${project.metro || 'Охотный ряд, Библиотека им. Ленина (5-7 мин пешком)'}</span>
+                                </div>
+                            </div>
+                            <div class="flex items-start gap-2.5 text-gray-200">
+                                <i data-lucide="bus" class="w-4 h-4 text-purple-400 shrink-0 mt-0.5"></i>
+                                <div>
+                                    <span class="font-semibold text-white">Общественный транспорт:</span> <span class="text-gray-300">Автобусы № м1, м2, с511, т54, н11 (до остановки «Манежная площадь» или «Библиотека им. Ленина»)</span>
+                                </div>
+                            </div>
+                            <div class="flex items-start gap-2.5 text-gray-200">
+                                <i data-lucide="parking-square" class="w-4 h-4 text-green-400 shrink-0 mt-0.5"></i>
+                                <div>
+                                    <span class="font-semibold text-white">Парковки:</span> <span class="text-gray-300">Городские парковки № 3001, 3002 (у стен Кремля, 380 ₽/ч). Служебный въезд через КПП по аккредитации.</span>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+
                     locHtml += `</div>`;
                     locContainer.innerHTML = locHtml;
                     lucide.createIcons({root: locContainer});
