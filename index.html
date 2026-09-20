@@ -38,6 +38,7 @@
             transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
             position: relative;
             overflow: hidden;
+            border-radius: 1rem;
         }
         
         .date-icon::before {
@@ -73,7 +74,7 @@
         
         .date-icon:active { transform: scale(0.9); }
 
-        /* Continuous Neon Gradient Border Animation for Info Card */
+        /* Continuous Neon Gradient Border Animation with Rounded Corners */
         @keyframes neonBorderShift {
             0% { border-color: #0088ff; box-shadow: 0 0 25px rgba(0, 136, 255, 0.5), inset 0 2px 10px rgba(255, 255, 255, 0.2); }
             33% { border-color: #a855f7; box-shadow: 0 0 25px rgba(168, 85, 247, 0.5), inset 0 2px 10px rgba(255, 255, 255, 0.2); }
@@ -85,7 +86,75 @@
             position: relative;
             overflow: hidden;
             border: 3px solid #0088ff;
+            border-radius: 1.5rem;
             animation: neonBorderShift 8s ease-in-out infinite;
+        }
+
+        /* Specific Rounded Glowing Borders matching user's exact gamuts */
+        @keyframes greenGlow {
+            0% { border-color: rgba(34, 197, 94, 0.6); box-shadow: 0 0 15px rgba(34, 197, 94, 0.25); }
+            50% { border-color: rgba(132, 204, 22, 0.9); box-shadow: 0 0 25px rgba(132, 204, 22, 0.45); }
+            100% { border-color: rgba(34, 197, 94, 0.6); box-shadow: 0 0 15px rgba(34, 197, 94, 0.25); }
+        }
+        .glow-green {
+            border: 2px solid #22c55e;
+            border-radius: 1rem;
+            animation: greenGlow 4s ease-in-out infinite;
+        }
+
+        @keyframes yellowOrangeGlow {
+            0% { border-color: rgba(234, 179, 8, 0.6); box-shadow: 0 0 15px rgba(234, 179, 8, 0.25); }
+            50% { border-color: rgba(239, 68, 68, 0.9); box-shadow: 0 0 25px rgba(239, 68, 68, 0.45); }
+            100% { border-color: rgba(234, 179, 8, 0.6); box-shadow: 0 0 15px rgba(234, 179, 8, 0.25); }
+        }
+        .glow-yellow-orange {
+            border: 2px solid #eab308;
+            border-radius: 1rem;
+            animation: yellowOrangeGlow 4s ease-in-out infinite;
+        }
+
+        @keyframes blueGlow {
+            0% { border-color: rgba(59, 130, 246, 0.6); box-shadow: 0 0 15px rgba(59, 130, 246, 0.25); }
+            50% { border-color: rgba(99, 102, 241, 0.9); box-shadow: 0 0 25px rgba(99, 102, 241, 0.45); }
+            100% { border-color: rgba(59, 130, 246, 0.6); box-shadow: 0 0 15px rgba(59, 130, 246, 0.25); }
+        }
+        .glow-blue {
+            border: 2px solid #3b82f6;
+            border-radius: 1rem;
+            animation: blueGlow 4s ease-in-out infinite;
+        }
+
+        @keyframes purpleGlow {
+            0% { border-color: rgba(168, 85, 247, 0.6); box-shadow: 0 0 15px rgba(168, 85, 247, 0.25); }
+            50% { border-color: rgba(217, 70, 239, 0.9); box-shadow: 0 0 25px rgba(217, 70, 239, 0.45); }
+            100% { border-color: rgba(168, 85, 247, 0.6); box-shadow: 0 0 15px rgba(168, 85, 247, 0.25); }
+        }
+        .glow-purple {
+            border: 2px solid #a855f7;
+            border-radius: 1rem;
+            animation: purpleGlow 4s ease-in-out infinite;
+        }
+
+        @keyframes redGlow {
+            0% { border-color: rgba(239, 68, 68, 0.6); box-shadow: 0 0 15px rgba(239, 68, 68, 0.25); }
+            50% { border-color: rgba(244, 63, 94, 0.9); box-shadow: 0 0 25px rgba(244, 63, 94, 0.45); }
+            100% { border-color: rgba(239, 68, 68, 0.6); box-shadow: 0 0 15px rgba(239, 68, 68, 0.25); }
+        }
+        .glow-red {
+            border: 2px solid #ef4444;
+            border-radius: 1rem;
+            animation: redGlow 4s ease-in-out infinite;
+        }
+
+        @keyframes skyGlow {
+            0% { border-color: rgba(56, 189, 248, 0.6); box-shadow: 0 0 15px rgba(56, 189, 248, 0.25); }
+            50% { border-color: rgba(14, 165, 233, 0.9); box-shadow: 0 0 25px rgba(14, 165, 233, 0.45); }
+            100% { border-color: rgba(56, 189, 248, 0.6); box-shadow: 0 0 15px rgba(56, 189, 248, 0.25); }
+        }
+        .glow-sky {
+            border: 2px solid #38bdf8;
+            border-radius: 1rem;
+            animation: skyGlow 4s ease-in-out infinite;
         }
 
         #sky-canvas {
@@ -95,6 +164,7 @@
             height: 100%;
             z-index: 1;
             pointer-events: none;
+            border-radius: 1.5rem;
         }
 
         .card-content {
@@ -122,45 +192,45 @@
             50% { transform: translateY(-3px); }
         }
         .weather-float { display: inline-block; animation: float-slow 3s ease-in-out infinite; }
-        
-        input[type="checkbox"].team-checkbox {
-            accent-color: #3b82f6;
-            width: 18px;
-            height: 18px;
-        }
     </style>
 </head>
 <body class="bg-gray-950 text-white font-sans antialiased pb-24 overflow-x-hidden selection:bg-blue-500/30">
 
-    <!-- Заголовок с интерактивной иконкой облака для обновления -->
+    <!-- Заголовок с интерактивной иконкой облака для обновления (БЕЗ ОКАНТОВКИ) -->
     <div class="pt-14 pb-4 px-4 text-center">
         <h1 class="text-2xl font-extrabold tracking-tight text-transparent bg-clip-text bg-gradient-to-r from-blue-400 via-purple-400 to-blue-400 animated-title inline-flex items-center gap-2 justify-center w-full">
             Event Kremlin
-            <button id="update-app-btn" class="cursor-pointer focus:outline-none p-1 rounded-full hover:bg-white/10 transition-colors" title="Нажмите, чтобы обновить приложение до последней версии">
-                <i data-lucide="cloud" id="sync-icon" class="w-6 h-6 text-green-400 hover:text-green-300 transition-colors"></i>
+            <button id="update-app-btn" class="cursor-pointer focus:outline-none p-1 rounded-full hover:scale-110 transition-all border-none bg-transparent shadow-none" title="Нажмите, чтобы обновить приложение до последней версии">
+                <i data-lucide="cloud" id="sync-icon" class="w-6 h-6 text-green-400"></i>
             </button>
         </h1>
     </div>
 
-    <!-- Дашборд -->
+    <!-- Дашборд с закругленными градиентными подсветками -->
     <div class="px-4 grid grid-cols-3 gap-3 mb-3">
-        <div class="bg-green-900/20 p-3 rounded-2xl border border-green-500/30 flex flex-col items-center justify-center shadow-[0_0_15px_rgba(34,197,94,0.1)] transition-transform duration-200" id="dash-card-paid">
-            <div class="text-[10px] text-green-500/90 uppercase tracking-wider mb-1 font-semibold">Оплачено</div>
-            <div class="text-sm font-bold text-green-400" id="dash-paid">0 ₽</div>
+        <div class="bg-gradient-to-br from-green-950/60 via-green-900/30 to-transparent p-3 rounded-2xl glow-green flex flex-col items-center justify-center transition-all duration-200" id="dash-card-paid">
+            <div class="text-[10px] text-green-400 uppercase tracking-wider mb-1 font-semibold flex items-center gap-1">
+                <i data-lucide="check-circle-2" class="w-3 h-3 text-green-400"></i> Оплачено
+            </div>
+            <div class="text-sm font-bold text-green-300 drop-shadow" id="dash-paid">0 ₽</div>
         </div>
-        <div class="bg-yellow-900/20 p-3 rounded-2xl border border-yellow-500/30 flex flex-col items-center justify-center shadow-[0_0_15px_rgba(234,179,8,0.1)] transition-transform duration-200" id="dash-card-pending">
-            <div class="text-[10px] text-yellow-500/90 uppercase tracking-wider mb-1 font-semibold">Остаток</div>
-            <div class="text-sm font-bold text-yellow-400" id="dash-pending">0 ₽</div>
+        <div class="bg-gradient-to-br from-yellow-950/60 via-yellow-900/30 to-transparent p-3 rounded-2xl glow-yellow-orange flex flex-col items-center justify-center transition-all duration-200" id="dash-card-pending">
+            <div class="text-[10px] text-yellow-400 uppercase tracking-wider mb-1 font-semibold flex items-center gap-1">
+                <i data-lucide="clock" class="w-3 h-3 text-yellow-400"></i> Остаток
+            </div>
+            <div class="text-sm font-bold text-yellow-300 drop-shadow" id="dash-pending">0 ₽</div>
         </div>
-        <div class="bg-blue-900/20 p-3 rounded-2xl border border-blue-500/30 flex flex-col items-center justify-center shadow-[0_0_15px_rgba(59,130,246,0.1)] transition-transform duration-200" id="dash-card-total">
-            <div class="text-[10px] text-blue-400/90 uppercase tracking-wider mb-1 font-semibold">Всего</div>
-            <div class="text-sm font-bold text-blue-400" id="dash-total">0 ₽</div>
+        <div class="bg-gradient-to-br from-blue-950/60 via-blue-900/30 to-transparent p-3 rounded-2xl glow-blue flex flex-col items-center justify-center transition-all duration-200" id="dash-card-total">
+            <div class="text-[10px] text-blue-400 uppercase tracking-wider mb-1 font-semibold flex items-center gap-1">
+                <i data-lucide="wallet" class="w-3 h-3 text-blue-400"></i> Всего
+            </div>
+            <div class="text-sm font-bold text-blue-300 drop-shadow" id="dash-total">0 ₽</div>
         </div>
     </div>
     
     <!-- Выпадающий список фильтра -->
     <div class="px-4 mb-6 relative z-30">
-        <div id="custom-dropdown-btn" class="w-full bg-gray-800/80 text-white text-sm font-bold rounded-xl py-3 px-4 outline-none border border-white/10 shadow-sm flex items-center justify-between cursor-pointer active:scale-[0.99] transition-transform">
+        <div id="custom-dropdown-btn" class="w-full bg-gradient-to-r from-gray-900 via-slate-900 to-gray-900 text-white text-sm font-bold rounded-2xl py-3 px-4 outline-none glow-blue flex items-center justify-between cursor-pointer active:scale-[0.99] transition-all">
             <div class="flex items-center gap-2 truncate">
                 <i data-lucide="users" class="w-4 h-4 text-blue-400 shrink-0" id="filter-icon"></i>
                 <span id="current-filter-text" class="truncate">Все проекты</span>
@@ -168,18 +238,18 @@
             <i data-lucide="chevron-down" class="w-4 h-4 text-gray-400 shrink-0 transition-transform duration-200" id="dropdown-arrow"></i>
         </div>
         
-        <div id="custom-dropdown-menu" class="hidden absolute left-4 right-4 mt-2 bg-gray-900 border border-gray-700 rounded-2xl shadow-2xl overflow-hidden max-h-60 overflow-y-auto hidden-scrollbar z-40 p-1"></div>
+        <div id="custom-dropdown-menu" class="hidden absolute left-4 right-4 mt-2 bg-gray-900 border border-blue-500/40 rounded-2xl shadow-2xl overflow-hidden max-h-60 overflow-y-auto hidden-scrollbar z-40 p-1"></div>
     </div>
 
-    <!-- Кнопки управления -->
+    <!-- Кнопки управления с закругленной подсветкой -->
     <div class="px-4 flex gap-3 mb-8 relative z-20">
-        <label class="flex-1 bg-gradient-to-r from-gray-800 to-gray-900 hover:from-gray-700 hover:to-gray-800 backdrop-blur-md text-white py-3.5 px-2 rounded-2xl cursor-pointer transition-all border border-white/10 flex items-center justify-center gap-2 relative overflow-hidden shadow-lg">
-            <i data-lucide="file-spreadsheet" class="w-5 h-5 text-green-400"></i>
+        <label class="flex-1 bg-gradient-to-r from-gray-900 via-slate-900 to-gray-900 hover:from-gray-800 hover:to-gray-900 backdrop-blur-md text-white py-3.5 px-2 rounded-2xl cursor-pointer transition-all glow-green flex items-center justify-center gap-2 relative overflow-hidden">
+            <i data-lucide="file-spreadsheet" class="w-5 h-5 text-green-400 drop-shadow-[0_0_8px_rgba(34,197,94,0.8)]"></i>
             <span class="text-xs font-bold uppercase tracking-wider">Загрузить Excel</span>
             <input type="file" id="excel-upload" class="hidden" accept=".xlsx, .xls">
         </label>
-        <button id="add-date-btn" type="button" class="flex-1 bg-gradient-to-r from-blue-600 to-purple-600 text-white py-3.5 px-2 rounded-2xl transition-all shadow-[0_0_20px_rgba(59,130,246,0.4)] border border-blue-400/30 flex items-center justify-center gap-2 cursor-pointer active:scale-95">
-            <i data-lucide="plus-circle" class="w-5 h-5"></i>
+        <button id="add-date-btn" type="button" class="flex-1 bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 hover:from-blue-500 hover:to-purple-500 text-white py-3.5 px-2 rounded-2xl transition-all glow-purple flex items-center justify-center gap-2 cursor-pointer active:scale-95">
+            <i data-lucide="plus-circle" class="w-5 h-5 text-blue-200 drop-shadow-[0_0_8px_rgba(255,255,255,0.8)]"></i>
             <span class="text-xs font-bold uppercase tracking-wider">Добавить</span>
         </button>
     </div>
@@ -191,80 +261,84 @@
 
     <!-- Детальная карточка проекта -->
     <div id="project-content" class="px-4 hidden opacity-0 transition-opacity duration-500 scroll-mt-6">
-        <div class="bg-gray-900/40 backdrop-blur-xl border border-white/10 rounded-3xl p-5 shadow-2xl relative">
-            <div class="mb-5 border-b border-white/5 pb-4 relative">
-                <div class="text-[10px] text-gray-500 font-bold uppercase tracking-widest mb-1 hidden" id="project-contractor-label">Контрагент</div>
+        <div class="bg-gray-900/40 backdrop-blur-xl border border-blue-500/30 rounded-3xl p-5 shadow-[0_0_30px_rgba(59,130,246,0.15)] relative">
+            <div class="mb-5 border-b border-white/10 pb-4 relative">
+                <div class="text-[10px] text-gray-400 font-bold uppercase tracking-widest mb-1 hidden" id="project-contractor-label">Контрагент</div>
                 <h2 id="project-title-label" class="text-2xl font-bold mb-3 text-white leading-tight">Название проекта</h2>
                 
                 <div id="project-location-container" class="mb-4"></div>
                 
-                <!-- Анимированная плашка с фотореалистичным небом, облаками и пульсирующим солнцем -->
+                <!-- Анимированная плашка с небом и центрированным рассветом/закатом -->
                 <div id="project-dates-container" class="space-y-2"></div>
             </div>
 
-            <!-- Управление -->
+            <!-- Управление с подсветкой -->
             <div class="flex gap-2 mb-6">
-                <button id="edit-project-btn" class="flex-1 bg-gradient-to-r from-gray-800 to-gray-900 text-gray-300 py-3 rounded-xl text-xs font-bold uppercase tracking-wide flex justify-center items-center gap-2 border border-white/10 active:scale-95 transition-all shadow-md">
-                    <i data-lucide="edit" class="w-4 h-4 text-blue-400"></i> Изменить
+                <button id="edit-project-btn" class="flex-1 bg-gradient-to-r from-slate-900 to-gray-900 text-gray-200 py-3 rounded-2xl text-xs font-bold uppercase tracking-wide flex justify-center items-center gap-2 glow-blue active:scale-95 transition-all">
+                    <i data-lucide="edit" class="w-4 h-4 text-blue-400 drop-shadow-[0_0_8px_rgba(59,130,246,0.8)]"></i> Изменить
                 </button>
-                <button id="share-project-btn" class="flex-1 bg-gradient-to-r from-blue-900/40 to-indigo-900/40 text-blue-300 py-3 rounded-xl text-xs font-bold uppercase tracking-wide flex justify-center items-center gap-2 border border-blue-500/30 active:scale-95 transition-all shadow-md">
-                    <i data-lucide="send" class="w-4 h-4 text-blue-400"></i> Отправить
+                <button id="share-project-btn" class="flex-1 bg-gradient-to-r from-blue-950/70 to-purple-950/70 text-blue-200 py-3 rounded-2xl text-xs font-bold uppercase tracking-wide flex justify-center items-center gap-2 glow-purple active:scale-95 transition-all">
+                    <i data-lucide="send" class="w-4 h-4 text-purple-400 drop-shadow-[0_0_8px_rgba(168,85,247,0.8)]"></i> Отправить
                 </button>
-                <button id="delete-project-btn" class="flex-1 bg-gradient-to-r from-red-950/40 to-red-900/30 text-red-300 py-3 rounded-xl text-xs font-bold uppercase tracking-wide flex justify-center items-center gap-2 border border-red-500/30 active:scale-95 transition-all shadow-md">
-                    <i data-lucide="trash-2" class="w-4 h-4 text-red-400"></i> Удалить
+                <button id="delete-project-btn" class="flex-1 bg-gradient-to-r from-red-950/70 to-rose-950/70 text-red-200 py-3 rounded-2xl text-xs font-bold uppercase tracking-wide flex justify-center items-center gap-2 glow-red active:scale-95 transition-all">
+                    <i data-lucide="trash-2" class="w-4 h-4 text-red-400 drop-shadow-[0_0_8px_rgba(239,68,68,0.8)]"></i> Удалить
                 </button>
             </div>
 
             <!-- Блок Команды (ФОТ) -->
-            <div id="project-team-container" class="bg-black/20 border border-white/5 p-4 rounded-2xl mb-6 hidden">
-                <div class="flex justify-between items-center mb-3 border-b border-white/5 pb-2">
-                    <div class="text-[10px] text-gray-500 font-bold uppercase tracking-widest">Команда на проекте</div>
-                    <div class="text-[10px] text-blue-400 font-bold bg-blue-900/20 px-2 py-1 rounded-lg border border-blue-500/20">ФОТ: <span id="project-team-total">0 ₽</span></div>
+            <div id="project-team-container" class="bg-black/30 glow-blue p-4 rounded-2xl mb-6 hidden shadow-inner">
+                <div class="flex justify-between items-center mb-3 border-b border-white/10 pb-2">
+                    <div class="text-[10px] text-gray-400 font-bold uppercase tracking-widest flex items-center gap-1.5">
+                        <i data-lucide="users" class="w-3.5 h-3.5 text-blue-400"></i> Команда на проекте
+                    </div>
+                    <div class="text-[10px] text-blue-300 font-bold bg-blue-900/30 px-2.5 py-1 rounded-xl border border-blue-500/30 shadow-[0_0_10px_rgba(59,130,246,0.2)]">ФОТ: <span id="project-team-total">0 ₽</span></div>
                 </div>
                 <div id="project-team-list" class="space-y-2 pt-1"></div>
             </div>
 
             <!-- Финансы общие -->
-            <div id="finance-block" class="bg-black/20 border border-white/5 p-4 rounded-2xl mb-6 hidden">
+            <div id="finance-block" class="bg-black/30 glow-blue p-4 rounded-2xl mb-6 hidden shadow-inner">
                 <div class="flex justify-between items-start mb-4">
                     <div>
-                        <div class="text-[10px] text-gray-500 font-bold uppercase tracking-widest mb-1">Итоговая смета</div>
+                        <div class="text-[10px] text-gray-400 font-bold uppercase tracking-widest mb-1 flex items-center gap-1.5">
+                            <i data-lucide="wallet" class="w-3.5 h-3.5 text-blue-400"></i> Итоговая смета
+                        </div>
                         <div id="project-cost-label" class="text-2xl font-bold text-white">0 ₽</div>
                     </div>
                     <div class="text-right">
-                        <div class="text-[10px] text-gray-500 font-bold uppercase tracking-widest mb-1">Способ оплаты</div>
-                        <div id="project-method-label" class="text-sm text-gray-300 font-medium">Наличные</div>
+                        <div class="text-[10px] text-gray-400 font-bold uppercase tracking-widest mb-1">Способ оплаты</div>
+                        <div id="project-method-label" class="text-sm text-gray-200 font-medium">Наличные</div>
                     </div>
                 </div>
                 
                 <div id="payment-actions" class="space-y-2">
-                    <button id="mark-paid-btn" class="w-full bg-gradient-to-r from-blue-600/20 to-purple-600/20 text-blue-300 hover:from-blue-600/30 hover:to-purple-600/30 font-bold py-3 rounded-xl transition-all border border-blue-500/40 flex justify-center items-center gap-2 shadow-md">
-                        <i data-lucide="circle-dollar-sign" class="w-5 h-5 text-blue-400"></i> Отметить как оплаченное
+                    <button id="mark-paid-btn" class="w-full bg-gradient-to-r from-blue-600/30 via-indigo-600/20 to-purple-600/30 text-blue-200 hover:from-blue-600/40 hover:to-purple-600/40 font-bold py-3 rounded-2xl transition-all glow-blue flex justify-center items-center gap-2">
+                        <i data-lucide="circle-dollar-sign" class="w-5 h-5 text-blue-400 drop-shadow-[0_0_8px_rgba(59,130,246,0.8)]"></i> Отметить как оплаченное
                     </button>
                     <!-- Кликабельный статус Оплачено -->
-                    <button id="paid-status" class="hidden w-full bg-gradient-to-r from-green-950/40 to-green-900/30 text-green-300 hover:from-green-900/40 hover:to-green-800/40 font-bold py-3 rounded-xl border border-green-500/40 flex justify-center items-center gap-2 shadow-[0_0_15px_rgba(34,197,94,0.15)] transition-all cursor-pointer" title="Нажмите, чтобы отменить оплату">
-                        <i data-lucide="check-circle-2" class="w-5 h-5 text-green-400"></i> Оплачено (нажмите для отмены)
+                    <button id="paid-status" class="hidden w-full bg-gradient-to-r from-green-950/70 via-green-900/40 to-emerald-950/70 text-green-200 font-bold py-3 rounded-2xl glow-green flex justify-center items-center gap-2 transition-all cursor-pointer" title="Нажмите, чтобы отменить оплату">
+                        <i data-lucide="check-circle-2" class="w-5 h-5 text-green-400 drop-shadow-[0_0_8px_rgba(34,197,94,0.8)]"></i> Оплачено (нажмите для отмены)
                     </button>
                     <!-- Кнопка отправки чека в Telegram -->
-                    <button id="share-telegram-btn" class="hidden w-full bg-gradient-to-r from-sky-900/30 to-blue-900/30 text-sky-300 hover:from-sky-900/40 hover:to-blue-900/40 font-bold py-3 rounded-xl transition-all border border-sky-500/40 flex justify-center items-center gap-2 shadow-md">
-                        <i data-lucide="send" class="w-5 h-5 text-sky-400"></i> Отправить чек в Telegram
+                    <button id="share-telegram-btn" class="hidden w-full bg-gradient-to-r from-sky-950/70 via-sky-900/40 to-blue-950/70 text-sky-200 font-bold py-3 rounded-2xl transition-all glow-sky flex justify-center items-center gap-2">
+                        <i data-lucide="send" class="w-5 h-5 text-sky-400 drop-shadow-[0_0_8px_rgba(56,189,248,0.8)]"></i> Отправить чек в Telegram
                     </button>
                 </div>
             </div>
 
             <!-- Кнопка перехода к списку транспорта и участников -->
             <div>
-                <button id="open-details-modal-btn" class="w-full bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 hover:from-blue-500 hover:to-purple-500 text-white font-bold py-4 px-4 rounded-2xl border border-blue-400/40 flex justify-between items-center shadow-[0_0_25px_rgba(79,70,229,0.4)] active:scale-[0.99] transition-all cursor-pointer">
+                <button id="open-details-modal-btn" class="w-full bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 hover:from-blue-500 hover:to-purple-500 text-white font-bold py-4 px-4 rounded-2xl glow-purple flex justify-between items-center active:scale-[0.99] transition-all cursor-pointer">
                     <div class="flex items-center gap-3">
-                        <div class="w-9 h-9 rounded-xl bg-white/10 flex items-center justify-center border border-white/20 shadow-inner">
-                            <i data-lucide="list-checks" class="w-5 h-5 text-white"></i>
+                        <div class="w-10 h-10 rounded-xl bg-white/15 flex items-center justify-center border border-white/30 shadow-inner">
+                            <i data-lucide="list-checks" class="w-5 h-5 text-white drop-shadow-[0_0_8px_rgba(255,255,255,0.8)]"></i>
                         </div>
                         <div class="text-left">
                             <div class="text-sm font-extrabold tracking-wide">Транспорт, участники, списки</div>
                             <div class="text-[10px] text-blue-200 font-medium">Управление площадкой и аккредитацией</div>
                         </div>
                     </div>
-                    <i data-lucide="chevron-right" class="w-5 h-5 text-white/80"></i>
+                    <i data-lucide="chevron-right" class="w-5 h-5 text-white/90"></i>
                 </button>
             </div>
         </div>
@@ -272,8 +346,8 @@
 
     <!-- МОДАЛЬНОЕ ОКНО -->
     <div id="details-modal" class="hidden fixed inset-0 z-50 bg-black/85 backdrop-blur-md items-center justify-center p-4">
-        <div class="bg-gray-900 border border-gray-700 p-6 rounded-[2rem] w-full max-w-[420px] shadow-2xl relative max-h-[90vh] overflow-y-auto hidden-scrollbar">
-            <div class="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-blue-500 to-purple-500"></div>
+        <div class="bg-gray-900 glow-blue p-6 rounded-[2rem] w-full max-w-[420px] relative max-h-[90vh] overflow-y-auto hidden-scrollbar">
+            <div class="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-blue-500 via-purple-500 to-blue-500"></div>
             
             <div class="flex justify-between items-center mb-4 mt-2">
                 <h3 class="text-lg font-bold" id="details-modal-title">Детали проекта</h3>
@@ -281,10 +355,12 @@
             </div>
 
             <!-- Контроль прибытия участников -->
-            <div class="bg-black/30 border border-white/5 p-4 rounded-2xl mb-5">
-                <div class="flex justify-between items-center mb-3 border-b border-white/5 pb-2">
-                    <h4 class="text-xs text-gray-400 font-bold uppercase tracking-widest">Контроль прибытия</h4>
-                    <div class="text-[10px] text-blue-400 font-bold bg-blue-900/20 px-2 py-1 rounded-lg border border-blue-500/20" id="attendance-counter">0 / 0 на площадке</div>
+            <div class="bg-black/30 glow-blue p-4 rounded-2xl mb-5 shadow-inner">
+                <div class="flex justify-between items-center mb-3 border-b border-white/10 pb-2">
+                    <h4 class="text-xs text-gray-300 font-bold uppercase tracking-widest flex items-center gap-1.5">
+                        <i data-lucide="user-check" class="w-3.5 h-3.5 text-blue-400"></i> Контроль прибытия
+                    </h4>
+                    <div class="text-[10px] text-blue-300 font-bold bg-blue-900/30 px-2 py-1 rounded-xl border border-blue-500/30 shadow-[0_0_10px_rgba(59,130,246,0.2)]" id="attendance-counter">0 / 0 на площадке</div>
                 </div>
                 <div class="mb-3">
                     <input type="text" id="checkin-search" placeholder="Поиск по фамилии или роли..." class="w-full bg-gray-950 text-white text-xs rounded-xl py-2.5 px-3 outline-none border border-gray-700 block focus:border-blue-500">
@@ -293,22 +369,26 @@
             </div>
 
             <!-- Пересадочный транспорт и парковка -->
-            <div class="bg-black/30 border border-white/5 p-4 rounded-2xl mb-5">
-                <div class="flex justify-between items-center mb-3 border-b border-white/5 pb-2">
-                    <h4 class="text-xs text-gray-400 font-bold uppercase tracking-widest">Пересадочный транспорт</h4>
-                    <button type="button" id="add-transport-btn" class="text-[10px] text-purple-300 font-bold bg-gradient-to-r from-purple-900/40 to-indigo-900/40 px-2.5 py-1.5 rounded-lg border border-purple-500/30 flex items-center gap-1 active:scale-95 shadow-sm">
-                        <i data-lucide="car" class="w-3.5 h-3.5 text-purple-400"></i> Добавить машину
+            <div class="bg-black/30 glow-purple p-4 rounded-2xl mb-5 shadow-inner">
+                <div class="flex justify-between items-center mb-3 border-b border-white/10 pb-2">
+                    <h4 class="text-xs text-gray-300 font-bold uppercase tracking-widest flex items-center gap-1.5">
+                        <i data-lucide="car" class="w-3.5 h-3.5 text-purple-400"></i> Пересадочный транспорт
+                    </h4>
+                    <button type="button" id="add-transport-btn" class="text-[10px] text-purple-200 font-bold bg-gradient-to-r from-purple-900/50 to-indigo-900/50 px-2.5 py-1.5 rounded-xl glow-purple flex items-center gap-1 active:scale-95">
+                        <i data-lucide="plus" class="w-3.5 h-3.5 text-purple-300"></i> Добавить машину
                     </button>
                 </div>
                 <div id="transport-list" class="space-y-3 max-h-60 overflow-y-auto hidden-scrollbar pr-1"></div>
             </div>
 
             <!-- Списки из файлов Excel -->
-            <div class="bg-black/30 border border-white/5 p-4 rounded-2xl">
-                <h4 class="text-xs text-gray-400 font-bold uppercase tracking-widest mb-3 border-b border-white/5 pb-2">Списки из файлов</h4>
+            <div class="bg-black/30 glow-green p-4 rounded-2xl shadow-inner">
+                <h4 class="text-xs text-gray-300 font-bold uppercase tracking-widest mb-3 border-b border-white/10 pb-2 flex items-center gap-1.5">
+                    <i data-lucide="file-spreadsheet" class="w-3.5 h-3.5 text-green-400"></i> Списки из файлов
+                </h4>
                 <div id="excel-data-container" class="space-y-3 pb-2 max-h-60 overflow-y-auto hidden-scrollbar">
-                    <div class="text-center text-gray-600 mt-2 text-sm border border-dashed border-gray-700/50 rounded-2xl p-4 bg-gray-900/20" id="excel-empty-state">
-                        <i data-lucide="list-x" class="w-6 h-6 mx-auto mb-1 opacity-30"></i>
+                    <div class="text-center text-gray-500 mt-2 text-sm border border-dashed border-gray-700/50 rounded-2xl p-4 bg-gray-900/20" id="excel-empty-state">
+                        <i data-lucide="list-x" class="w-6 h-6 mx-auto mb-1 opacity-40"></i>
                         Таблицы не загружены
                     </div>
                 </div>
@@ -317,9 +397,9 @@
     </div>
 
     <!-- Модальное окно (Новый проект) -->
-    <div id="date-modal" class="hidden fixed inset-0 z-50 bg-black/80 backdrop-blur-md items-center justify-center p-4">
-        <div class="bg-gray-900 border border-gray-700 p-6 rounded-[2rem] w-full max-w-[360px] shadow-2xl relative max-h-[90vh] overflow-y-auto hidden-scrollbar" id="date-modal-content">
-            <div class="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-blue-500 to-purple-500"></div>
+    <div id="date-modal" class="hidden fixed inset-0 z-50 bg-black/85 backdrop-blur-md items-center justify-center p-4">
+        <div class="bg-gray-900 glow-blue p-6 rounded-[2rem] w-full max-w-[360px] relative max-h-[90vh] overflow-y-auto hidden-scrollbar" id="date-modal-content">
+            <div class="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-blue-500 via-purple-500 to-blue-500"></div>
             
             <h3 id="modal-title" class="text-lg font-bold mb-4 text-center mt-2">Новый проект</h3>
             
@@ -327,13 +407,13 @@
                 <input type="text" id="new-project-title" placeholder="Название проекта" class="w-full bg-gray-950 text-white text-sm rounded-xl p-3 outline-none border border-gray-700 block transition-colors focus:border-blue-500">
                 <input type="text" id="new-project-contractor" placeholder="Контрагент (Агентство/Клиент)" class="w-full bg-gray-950 text-white text-sm rounded-xl p-3 outline-none border border-gray-700 block transition-colors focus:border-blue-500">
                 
-                <div class="flex flex-col gap-2 bg-gray-800/30 p-2 rounded-xl border border-gray-700/50">
+                <div class="flex flex-col gap-2 bg-gray-800/30 p-2 rounded-2xl border border-gray-700/50">
                     <div class="flex gap-2">
                         <div class="relative flex-1">
                             <span class="absolute left-3 top-3 text-gray-400"><i data-lucide="map-pin" class="w-4 h-4"></i></span>
                             <input type="text" id="new-project-address" placeholder="Точный адрес площадки" class="w-full bg-gray-950 text-white text-sm rounded-xl py-3 pl-9 pr-3 outline-none border border-gray-700 block transition-colors focus:border-blue-500">
                         </div>
-                        <button type="button" id="get-location-btn" class="bg-blue-900/30 text-blue-400 px-3 rounded-xl border border-blue-500/30 hover:bg-blue-900/50 transition-colors flex items-center justify-center" title="Определить геопозицию">
+                        <button type="button" id="get-location-btn" class="bg-blue-900/40 text-blue-300 px-3 rounded-xl glow-blue hover:bg-blue-900/60 transition-colors flex items-center justify-center" title="Определить геопозицию">
                             <i data-lucide="navigation" class="w-5 h-5"></i>
                         </button>
                     </div>
@@ -343,21 +423,21 @@
                     </div>
                 </div>
                 
-                <div class="bg-gray-800/30 p-3 rounded-xl border border-gray-700/50">
+                <div class="bg-gray-800/30 p-3 rounded-2xl border border-gray-700/50">
                     <div class="text-[10px] text-gray-400 font-bold uppercase mb-2 ml-1">График работы (Даты и Тайминг)</div>
                     <div id="dynamic-dates-list" class="space-y-2 mb-3"></div>
-                    <button type="button" id="add-dynamic-date-btn" class="w-full bg-gray-800/80 hover:bg-gray-700 text-blue-400 text-[11px] font-bold uppercase py-2.5 rounded-lg border border-gray-700 transition-colors flex justify-center items-center gap-1">
+                    <button type="button" id="add-dynamic-date-btn" class="w-full bg-gradient-to-r from-gray-800 to-gray-900 hover:from-gray-700 hover:to-gray-800 text-blue-300 text-[11px] font-bold uppercase py-2.5 rounded-xl glow-blue transition-all flex justify-center items-center gap-1">
                         <i data-lucide="calendar-plus" class="w-3.5 h-3.5"></i> Добавить день
                     </button>
                 </div>
 
-                <div class="bg-gray-800/30 p-3 rounded-xl border border-gray-700/50">
+                <div class="bg-gray-800/30 p-3 rounded-2xl border border-gray-700/50">
                     <div class="flex justify-between items-center mb-3 ml-1">
                         <div class="text-[10px] text-gray-400 font-bold uppercase">Команда и Гонорары (ФОТ)</div>
-                        <div class="text-[10px] text-blue-400 font-bold bg-blue-900/20 px-2 py-0.5 rounded border border-blue-500/20">ФОТ: <span id="team-total-calc">0</span> ₽</div>
+                        <div class="text-[10px] text-blue-300 font-bold bg-blue-900/30 px-2 py-0.5 rounded-xl border border-blue-500/30">ФОТ: <span id="team-total-calc">0</span> ₽</div>
                     </div>
                     <div id="team-selection-list" class="space-y-2 mb-3"></div>
-                    <button type="button" id="add-custom-member-btn" class="w-full bg-gray-800/80 hover:bg-gray-700 text-purple-400 text-[11px] font-bold uppercase py-2.5 rounded-lg border border-gray-700 transition-colors flex justify-center items-center gap-1">
+                    <button type="button" id="add-custom-member-btn" class="w-full bg-gradient-to-r from-gray-800 to-gray-900 hover:from-gray-700 hover:to-gray-800 text-purple-300 text-[11px] font-bold uppercase py-2.5 rounded-xl glow-purple transition-all flex justify-center items-center gap-1">
                         <i data-lucide="user-plus" class="w-3.5 h-3.5"></i> Добавить человека
                     </button>
                 </div>
@@ -378,30 +458,30 @@
             </div>
 
             <div class="flex gap-3">
-                <button id="cancel-date" type="button" class="flex-1 py-3 rounded-xl bg-gray-800 text-gray-300 font-bold uppercase tracking-wide text-xs active:scale-95 transition-transform">Отмена</button>
-                <button id="save-date" type="button" class="flex-1 py-3 rounded-xl bg-gradient-to-r from-blue-600 to-purple-600 text-white font-bold uppercase tracking-wide text-xs active:scale-95 transition-transform shadow-lg shadow-blue-500/30">Сохранить</button>
+                <button id="cancel-date" type="button" class="flex-1 py-3 rounded-2xl bg-gradient-to-r from-gray-800 to-gray-900 text-gray-300 font-bold uppercase tracking-wide text-xs active:scale-95 transition-transform border border-white/10">Отмена</button>
+                <button id="save-date" type="button" class="flex-1 py-3 rounded-2xl bg-gradient-to-r from-blue-600 to-purple-600 text-white font-bold uppercase tracking-wide text-xs active:scale-95 transition-transform glow-purple border border-blue-400/40">Сохранить</button>
             </div>
         </div>
     </div>
 
     <!-- Модальное окно добавления машины -->
-    <div id="transport-modal" class="hidden fixed inset-0 z-50 bg-black/80 backdrop-blur-md items-center justify-center p-4">
-        <div class="bg-gray-900 border border-gray-700 p-6 rounded-[2rem] w-full max-w-[360px] shadow-2xl relative">
+    <div id="transport-modal" class="hidden fixed inset-0 z-50 bg-black/85 backdrop-blur-md items-center justify-center p-4">
+        <div class="bg-gray-900 glow-purple p-6 rounded-[2rem] w-full max-w-[360px] relative">
             <h3 class="text-lg font-bold mb-4 text-center">Добавить транспорт</h3>
             <div class="space-y-3 mb-6">
                 <input type="text" id="tr-model" placeholder="Марка / Модель (напр. Мерседес)" class="w-full bg-gray-950 text-white text-sm rounded-xl p-3 outline-none border border-gray-700">
                 <input type="text" id="tr-number" placeholder="Гос. номер (напр. О 156 ТР 777)" class="w-full bg-gray-950 text-white text-sm rounded-xl p-3 outline-none border border-gray-700">
                 <div class="flex gap-2">
                     <input type="text" id="tr-driver" placeholder="ФИО Водителя" class="flex-1 bg-gray-950 text-white text-sm rounded-xl p-3 outline-none border border-gray-700">
-                    <button type="button" id="pick-contact-btn" class="bg-purple-900/30 text-purple-400 px-3 rounded-xl border border-purple-500/30 flex items-center justify-center" title="Выбрать из телефонной книги">
+                    <button type="button" id="pick-contact-btn" class="bg-purple-900/40 text-purple-300 px-3 rounded-xl glow-purple flex items-center justify-center" title="Выбрать из телефонной книги">
                         <i data-lucide="contact" class="w-5 h-5"></i>
                     </button>
                 </div>
                 <input type="tel" id="tr-phone" placeholder="Телефон (+7...)" class="w-full bg-gray-950 text-white text-sm rounded-xl p-3 outline-none border border-gray-700">
             </div>
             <div class="flex gap-3">
-                <button id="cancel-transport" type="button" class="flex-1 py-3 rounded-xl bg-gray-800 text-gray-300 font-bold text-xs">Отмена</button>
-                <button id="save-transport" type="button" class="flex-1 py-3 rounded-xl bg-gradient-to-r from-blue-600 to-purple-600 text-white font-bold text-xs shadow-lg">Добавить</button>
+                <button id="cancel-transport" type="button" class="flex-1 py-3 rounded-2xl bg-gradient-to-r from-gray-800 to-gray-900 text-gray-300 font-bold text-xs border border-white/10">Отмена</button>
+                <button id="save-transport" type="button" class="flex-1 py-3 rounded-2xl bg-gradient-to-r from-blue-600 to-purple-600 text-white font-bold text-xs glow-purple border border-blue-400/40">Добавить</button>
             </div>
         </div>
     </div>
@@ -435,7 +515,6 @@
             let isEditMode = false;
             let currentDashFilter = 'Все проекты'; 
 
-            // --- ОБНОВЛЕНИЕ ПРИЛОЖЕНИЯ ПО КЛИКУ НА ОБЛАКО ---
             const updateAppBtn = document.getElementById('update-app-btn');
             if (updateAppBtn) {
                 updateAppBtn.addEventListener('click', async () => {
@@ -463,7 +542,6 @@
                 });
             }
 
-            // DOM Элементы
             const modal = document.getElementById('date-modal');
             const dynamicDatesList = document.getElementById('dynamic-dates-list');
             const teamSelectionList = document.getElementById('team-selection-list');
@@ -480,14 +558,12 @@
             const dashPaid = document.getElementById('dash-paid');
             const dashPending = document.getElementById('dash-pending');
 
-            // --- КАСТОМНЫЙ ВЫПАДАЮЩИЙ СПИСОК ---
             const dropdownBtn = document.getElementById('custom-dropdown-btn');
             const dropdownMenu = document.getElementById('custom-dropdown-menu');
             const currentFilterText = document.getElementById('current-filter-text');
             const dropdownArrow = document.getElementById('dropdown-arrow');
             const filterIcon = document.getElementById('filter-icon');
 
-            // 1. Загрузка из localStorage
             const savedData = localStorage.getItem('amProdData');
             if (savedData) {
                 try {
@@ -501,7 +577,6 @@
             if (selectedProjectId) updateContentArea();
             updateDashboard();
 
-            // 2. Фоновое обновление из облака
             async function fetchFromCloud() {
                 if (!_supabase) return;
                 try {
@@ -521,7 +596,6 @@
             }
             setTimeout(fetchFromCloud, 1000);
 
-            // Safe Realtime subscription with error suppression for sandboxed canvas environments
             if (_supabase) {
                 try {
                     _supabase
@@ -529,12 +603,8 @@
                         .on('postgres_changes', { event: '*', schema: 'public', table: 'am_projects' }, payload => {
                             fetchFromCloud();
                         })
-                        .subscribe((status, err) => {
-                            if (err) console.warn("Supabase Realtime warning:", err);
-                        });
-                } catch (realtimeErr) {
-                    console.warn("Realtime not supported in this container environment, falling back to REST API sync.", realtimeErr);
-                }
+                        .subscribe();
+                } catch (e) {}
             }
 
             async function syncData(projectToUpsert = null, idToDelete = null) {
@@ -701,10 +771,10 @@
                 const row = document.createElement('div');
                 row.className = "date-row flex gap-1 items-center";
                 row.innerHTML = `
-                    <input type="date" class="row-date w-[45%] bg-gray-950 text-white text-xs rounded-lg p-2 outline-none border border-gray-700" style="color-scheme: dark;" value="${dateVal}" required>
-                    <input type="time" class="row-start w-[22%] bg-gray-950 text-white text-xs rounded-lg p-2 outline-none border border-gray-700" style="color-scheme: dark;" value="${startVal}">
+                    <input type="date" class="row-date w-[45%] bg-gray-950 text-white text-xs rounded-xl p-2 outline-none border border-gray-700" style="color-scheme: dark;" value="${dateVal}" required>
+                    <input type="time" class="row-start w-[22%] bg-gray-950 text-white text-xs rounded-xl p-2 outline-none border border-gray-700" style="color-scheme: dark;" value="${startVal}">
                     <span class="text-gray-500 text-xs">-</span>
-                    <input type="time" class="row-end w-[22%] bg-gray-950 text-white text-xs rounded-lg p-2 outline-none border border-gray-700" style="color-scheme: dark;" value="${endVal}">
+                    <input type="time" class="row-end w-[22%] bg-gray-950 text-white text-xs rounded-xl p-2 outline-none border border-gray-700" style="color-scheme: dark;" value="${endVal}">
                     <button type="button" class="remove-row-btn w-[10%] text-red-500/80 hover:text-red-400 p-1 flex justify-center"><i data-lucide="x-circle" class="w-4 h-4"></i></button>
                 `;
                 dynamicDatesList.appendChild(row);
@@ -734,7 +804,7 @@
 
             function addTeamMemberRow(name = '', fee = '', isChecked = false, isPredefined = false) {
                 const row = document.createElement('div');
-                row.className = "custom-team-row flex justify-between items-center bg-gray-950 p-2 rounded-lg border border-gray-700/80 gap-2";
+                row.className = "custom-team-row flex justify-between items-center bg-gray-950 p-2 rounded-xl border border-gray-700/80 gap-2";
                 
                 if (isPredefined) {
                     row.innerHTML = `
@@ -742,13 +812,13 @@
                             <input type="checkbox" class="team-checkbox shrink-0" value="${name}" ${isChecked ? 'checked' : ''}>
                             <span class="text-[11px] text-gray-300 font-medium truncate">${name}</span>
                         </label>
-                        <input type="number" class="team-fee w-20 shrink-0 bg-gray-900 text-white text-xs rounded p-1.5 outline-none border border-gray-600 focus:border-blue-500 transition-colors text-right ${isChecked ? '' : 'opacity-30'}" placeholder="0 ₽" value="${fee}" ${isChecked ? '' : 'disabled'}>
+                        <input type="number" class="team-fee w-20 shrink-0 bg-gray-900 text-white text-xs rounded-xl p-1.5 outline-none border border-gray-600 focus:border-blue-500 transition-colors text-right ${isChecked ? '' : 'opacity-30'}" placeholder="0 ₽" value="${fee}" ${isChecked ? '' : 'disabled'}>
                     `;
                 } else {
                     row.innerHTML = `
                         <input type="checkbox" class="team-checkbox shrink-0 hidden" value="custom" checked>
-                        <input type="text" class="custom-team-name flex-1 bg-gray-900 text-white text-[11px] rounded p-1.5 outline-none border border-gray-600 focus:border-purple-500" placeholder="ФИО или Роль" value="${name}">
-                        <input type="number" class="team-fee w-20 shrink-0 bg-gray-900 text-white text-xs rounded p-1.5 outline-none border border-gray-600 focus:border-purple-500 text-right" placeholder="0 ₽" value="${fee}">
+                        <input type="text" class="custom-team-name flex-1 bg-gray-900 text-white text-[11px] rounded-xl p-1.5 outline-none border border-gray-600 focus:border-purple-500" placeholder="ФИО или Роль" value="${name}">
+                        <input type="number" class="team-fee w-20 shrink-0 bg-gray-900 text-white text-xs rounded-xl p-1.5 outline-none border border-gray-600 focus:border-purple-500 text-right" placeholder="0 ₽" value="${fee}">
                         <button type="button" class="text-red-500/80 hover:text-red-400 p-1 flex justify-center w-6 shrink-0" onclick="this.parentElement.remove(); calcTeamTotal();"><i data-lucide="x" class="w-4 h-4"></i></button>
                     `;
                 }
@@ -921,7 +991,6 @@
                     locContainer.classList.add('hidden');
                 }
                 
-                // Рендер дат с фотореалистичной плашкой и центрированным рассветом/закатом
                 const datesContainer = document.getElementById('project-dates-container');
                 datesContainer.innerHTML = '';
                 project.dates.forEach(async (d, index) => {
@@ -929,7 +998,7 @@
                     const formattedDate = new Intl.DateTimeFormat('ru-RU', { day: 'numeric', month: 'long', year: 'numeric' }).format(dateObj);
                     let timeHtml = '';
                     if(d.start || d.end) {
-                        timeHtml = `<div class="flex items-center gap-1.5 text-purple-200 text-[11px] font-bold bg-purple-900/40 px-2.5 py-1 rounded-lg border border-purple-500/40 w-fit drop-shadow">
+                        timeHtml = `<div class="flex items-center gap-1.5 text-purple-200 text-[11px] font-bold bg-purple-900/40 px-2.5 py-1 rounded-xl border border-purple-500/40 w-fit drop-shadow">
                                         <i data-lucide="clock" class="w-3.5 h-3.5"></i> ${d.start} ${d.start&&d.end?'-':''} ${d.end}
                                     </div>`;
                     }
@@ -938,7 +1007,6 @@
                     row.innerHTML = `
                         <canvas id="sky-canvas-${project.id}-${index}" class="absolute inset-0 w-full h-full pointer-events-none z-0"></canvas>
                         
-                        <!-- Верхний ряд: Дата слева, Погода/Температура справа -->
                         <div class="card-content flex justify-between items-start z-10">
                             <div class="flex flex-col gap-1">
                                 <div class="flex items-center gap-2 text-blue-300 text-xs font-extrabold uppercase tracking-wide drop-shadow">
@@ -971,7 +1039,6 @@
                     datesContainer.appendChild(row);
                     lucide.createIcons({root: row});
 
-                    // Инициализация Canvas для фотореалистичных облаков
                     const canvas = document.getElementById(`sky-canvas-${project.id}-${index}`);
                     if (canvas) {
                         const ctx = canvas.getContext('2d');
@@ -1031,7 +1098,6 @@
                         drawSky();
                     }
 
-                    // Запрос погоды
                     try {
                         const res = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=55.7522&longitude=37.6156&daily=weathercode,temperature_2m_max,sunrise,sunset&timezone=Europe%2FMoscow&start_date=${d.date}&end_date=${d.date}`);
                         const data = await res.json();
@@ -1152,10 +1218,10 @@
                             </div>
                         </div>
                         <div class="flex gap-2 mt-1">
-                            <button type="button" class="arrived-btn flex-1 bg-green-600/20 text-green-400 hover:bg-green-600/30 text-[11px] font-bold py-2 px-2 rounded-xl border border-green-500/30 transition-colors flex justify-center items-center gap-1 active:scale-95" data-index="${index}">
+                            <button type="button" class="arrived-btn flex-1 bg-green-600/20 text-green-400 hover:bg-green-600/30 text-[11px] font-bold py-2 px-2 rounded-xl glow-green transition-colors flex justify-center items-center gap-1 active:scale-95" data-index="${index}">
                                 <i data-lucide="log-in" class="w-3.5 h-3.5"></i> На площадке
                             </button>
-                            <button type="button" class="left-btn flex-1 bg-red-600/20 text-red-400 hover:bg-red-600/30 text-[11px] font-bold py-2 px-2 rounded-xl border border-red-500/30 transition-colors flex justify-center items-center gap-1 active:scale-95" data-index="${index}">
+                            <button type="button" class="left-btn flex-1 bg-red-600/20 text-red-400 hover:bg-red-600/30 text-[11px] font-bold py-2 px-2 rounded-xl glow-red transition-colors flex justify-center items-center gap-1 active:scale-95" data-index="${index}">
                                 <i data-lucide="log-out" class="w-3.5 h-3.5"></i> Уехал
                             </button>
                         </div>
@@ -1223,7 +1289,7 @@
                                 <div class="text-[11px] text-gray-300 font-medium">${car.driver || 'Водитель не указан'}</div>
                                 <div class="text-[10px] text-gray-500">${car.phone || 'Нет телефона'}</div>
                             </div>
-                            ${car.phone ? `<a href="tel:${car.phone}" class="bg-green-600/20 text-green-400 hover:bg-green-600/30 p-2 rounded-xl border border-green-500/30 flex items-center gap-1 text-xs font-bold"><i data-lucide="phone" class="w-3.5 h-3.5"></i> Звонок</a>` : ''}
+                            ${car.phone ? `<a href="tel:${car.phone}" class="bg-green-600/20 text-green-400 hover:bg-green-600/30 p-2 rounded-xl glow-green flex items-center gap-1 text-xs font-bold"><i data-lucide="phone" class="w-3.5 h-3.5"></i> Звонок</a>` : ''}
                         </div>
                     `;
                     container.appendChild(item);
