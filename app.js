@@ -84,6 +84,49 @@ document.addEventListener('DOMContentLoaded', () => {
     if (selectedProjectId) updateContentArea();
     updateDashboard();
 
+    // Кнопка отправки общей сводки по всем проектам
+    const shareAllBtn = document.getElementById('share-all-projects-btn');
+    if (shareAllBtn) {
+        shareAllBtn.addEventListener('click', async () => {
+            if (activeProjects.length === 0) {
+                alert('Нет активных проектов для отправки!');
+                return;
+            }
+
+            let summaryText = `📋 **ОБЩАЯ СВОДКА ПО ПРОЕКТАМ** 📋\n\n`;
+            let totalAllSum = 0;
+
+            activeProjects.forEach((proj, idx) => {
+                summaryText += `${idx + 1}. *${proj.title}*\n`;
+                if (proj.contractor) summaryText += `   🏢 Контрагент: ${proj.contractor}\n`;
+                if (proj.address) summaryText += `   📍 Площадка: ${proj.address}\n`;
+                
+                if (proj.dates && proj.dates.length > 0) {
+                    summaryText += `   📅 Даты: `;
+                    const dateStrs = proj.dates.map(d => {
+                        const formatted = new Intl.DateTimeFormat('ru-RU', { day: 'numeric', month: 'short' }).format(new Date(d.date));
+                        return `${formatted} (${d.start || '09:00'}-${d.end || '23:00'})`;
+                    });
+                    summaryText += `${dateStrs.join(', ')}\n`;
+                }
+
+                summaryText += `   💰 Смета: ${proj.cost ? proj.cost.toLocaleString('ru-RU') : 0} ₽ (${proj.isPaid ? '✅ Оплачено' : '⏳ Ожидается'})\n\n`;
+                totalAllSum += proj.cost || 0;
+            });
+
+            summaryText += `💎 **Общая сумма по всем проектам:** ${totalAllSum.toLocaleString('ru-RU')} ₽`;
+
+            if (navigator.share) {
+                try {
+                    await navigator.share({ title: 'Сводка по всем проектам', text: summaryText });
+                } catch (err) {}
+            } else {
+                navigator.clipboard.writeText(summaryText);
+                alert('Общая сводка по всем проектам скопирована в буфер обмена!');
+            }
+        });
+    }
+
     function scheduleProjectReminders() {
         if (!('Notification' in window) || Notification.permission !== 'granted') return;
         activeProjects.forEach(project => {
@@ -375,6 +418,13 @@ document.addEventListener('DOMContentLoaded', () => {
         });
 
         const existingProj = activeProjects.find(p => p.id === selectedProjectId);
+        
+        // Дефолтные водители по умолчанию для новых проектов
+        const defaultTransport = [
+            { model: "Автомобиль", number: "—", driver: "Семенов Иван", phone: "+79263451616" },
+            { model: "Автомобиль", number: "—", driver: "Юра", phone: "+79166298513" }
+        ];
+
         const projectData = {
             id: isEditMode ? selectedProjectId : Date.now().toString(),
             title: titleInput.value || 'Без названия',
@@ -387,7 +437,7 @@ document.addEventListener('DOMContentLoaded', () => {
             method: methodInput.value || 'Наличные',
             isPaid: isEditMode ? existingProj.isPaid : false,
             checkinList: isEditMode && existingProj ? existingProj.checkinList : [],
-            transportList: isEditMode && existingProj ? existingProj.transportList : []
+            transportList: isEditMode && existingProj ? (existingProj.transportList.length > 0 ? existingProj.transportList : defaultTransport) : defaultTransport
         };
 
         const existingIndex = activeProjects.findIndex(proj => proj.id === projectData.id);
@@ -766,7 +816,12 @@ document.addEventListener('DOMContentLoaded', () => {
     function renderTransportSection(project) {
         const container = document.getElementById('transport-list');
         if (!container) return;
-        if (!project.transportList) project.transportList = [];
+        if (!project.transportList) {
+            project.transportList = [
+                { model: "Автомобиль", number: "—", driver: "Семенов Иван", phone: "+79263451616" },
+                { model: "Автомобиль", number: "—", driver: "Юра", phone: "+79166298513" }
+            ];
+        }
         container.innerHTML = '';
         if (project.transportList.length === 0) {
             container.innerHTML = `<div class="text-center text-gray-500 text-xs py-2">Транспорт не добавлен</div>`;
