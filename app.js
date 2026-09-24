@@ -88,6 +88,22 @@ document.addEventListener('DOMContentLoaded', () => {
     if (selectedProjectId) updateContentArea();
     updateDashboard();
 
+    // Обработка кликов по быстрым площадкам в модальном окне
+    document.querySelectorAll('.venue-tag').forEach(btn => {
+        btn.addEventListener('click', () => {
+            const addr = btn.getAttribute('data-address');
+            const metro = btn.getAttribute('data-metro');
+            
+            if (addressInput) addressInput.value = addr;
+            if (metroInput) metroInput.value = metro;
+            
+            btn.classList.add('bg-blue-600', 'text-white');
+            setTimeout(() => {
+                btn.classList.remove('bg-blue-600', 'text-white');
+            }, 300);
+        });
+    });
+
     async function fetchFromCloud() {
         if (!_supabase) return;
         try {
@@ -444,7 +460,6 @@ document.addEventListener('DOMContentLoaded', () => {
             const firstDate = new Date(project.dates[0].date);
             const day = firstDate.getDate();
             const month = new Intl.DateTimeFormat('ru-RU', { month: 'short' }).format(firstDate).replace('.', '');
-            // Получаем день недели (например, "пн", "вт", "ср"...)
             const weekday = new Intl.DateTimeFormat('ru-RU', { weekday: 'short' }).format(firstDate);
             
             const multiBadge = project.dates.length > 1 ? `<div class="absolute top-1 right-1 bg-red-500 text-white text-[9px] font-bold px-1 rounded-full shadow">+${project.dates.length - 1}</div>` : '';
@@ -452,7 +467,6 @@ document.addEventListener('DOMContentLoaded', () => {
             const borderStyle = project.isPaid && !isActive ? 'border-green-500/40 text-green-400 bg-green-900/10' : 'border-white/10 text-gray-300 bg-gray-800/60';
             icon.className = `date-icon w-full rounded-2xl flex flex-col items-center justify-center border outline-none shadow-sm backdrop-blur-md ${isActive ? 'active text-white' : borderStyle}`;
             
-            // Вывод: День недели -> Месяц -> Число
             icon.innerHTML = `
                 ${multiBadge}
                 <span class="text-[9px] uppercase font-extrabold ${isActive ? 'text-blue-100' : 'text-blue-400'} tracking-wider z-10">${weekday}</span>
