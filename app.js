@@ -84,7 +84,6 @@ document.addEventListener('DOMContentLoaded', () => {
     if (selectedProjectId) updateContentArea();
     updateDashboard();
 
-    // Напоминания за день
     function scheduleProjectReminders() {
         if (!('Notification' in window) || Notification.permission !== 'granted') return;
         activeProjects.forEach(project => {
@@ -229,7 +228,7 @@ document.addEventListener('DOMContentLoaded', () => {
         titleInput.value = ''; contractorInput.value = ''; addressInput.value = ''; metroInput.value = '';
         costInput.value = '15000'; methodInput.value = 'Наличные';
         dynamicDatesList.innerHTML = '';
-        addDateRow('', '09:00', '23:00'); // Время по умолчанию
+        addDateRow('', '09:00', '23:00');
         renderTeamSelection([]);
         openModal(false);
     });
@@ -487,7 +486,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         ${timeHtml}
                     </div>
                     <div id="weather-det-${project.id}-${index}" class="card-content flex items-center gap-3 z-10">
-                        <div class="text-right text-[10px] text-gray-200 font-medium drop-shadow"><div class="opacity-80">Погода...</div></div>
+                        <div class="text-right text-[10px] text-gray-200 font-medium drop-shadow"><div class="opacity-80">Загрузка...</div></div>
                     </div>
                 </div>
                 <div class="card-content flex flex-col items-center justify-center pt-2 border-t border-white/10 z-10">
@@ -506,20 +505,20 @@ document.addEventListener('DOMContentLoaded', () => {
             datesContainer.appendChild(row);
             lucide.createIcons({root: row});
 
-            // Продвинутый анимационный движок погоды (День/Ночь/Звезды/Облака/Дождь/Снег)
             const canvas = document.getElementById(`sky-canvas-${project.id}-${index}`);
             if (canvas) {
                 const ctx = canvas.getContext('2d');
                 canvas.width = row.offsetWidth || 350;
                 canvas.height = row.offsetHeight || 140;
 
-                let weatherType = 'clear'; // 'clear', 'clouds', 'rain', 'snow'
+                let weatherType = 'clear';
                 let isNight = false;
 
                 try {
                     const res = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=55.7522&longitude=37.6156&daily=weathercode,temperature_2m_max,sunrise,sunset&timezone=Europe%2FMoscow&start_date=${d.date}&end_date=${d.date}`);
                     const data = await res.json();
-                    if (data.daily && data.daily.weathercode) {
+                    
+                    if (data.daily && data.daily.weathercode && data.daily.weathercode.length > 0) {
                         const code = data.daily.weathercode[0];
                         const temp = Math.round(data.daily.temperature_2m_max[0]);
                         const sunrise = data.daily.sunrise[0].split('T')[1].substring(0, 5);
@@ -528,12 +527,10 @@ document.addEventListener('DOMContentLoaded', () => {
                         document.getElementById(`sunrise-${project.id}-${index}`).textContent = sunrise;
                         document.getElementById(`sunset-${project.id}-${index}`).textContent = sunset;
 
-                        // Определение типа погоды по коду Open-Meteo
                         if (code >= 51 && code <= 67 || code >= 80) { weatherType = 'rain'; }
                         else if (code >= 71 && code <= 77) { weatherType = 'snow'; }
                         else if (code >= 1 && code <= 3) { weatherType = 'clouds'; }
 
-                        // Проверка ночного времени по таймингу проекта или текущему часу
                         const checkHour = d.start ? parseInt(d.start.split(':')[0]) : new Date().getHours();
                         if (checkHour < 6 || checkHour >= 21) { isNight = true; }
 
@@ -551,10 +548,19 @@ document.addEventListener('DOMContentLoaded', () => {
                                     <span class="text-xs font-black text-white">${temp > 0 ? '+' : ''}°${temp}</span>
                                 </div>`;
                         }
+                    } else {
+                        throw new Error('Пустые данные погоды');
                     }
-                } catch(e) {}
+                } catch(err) {
+                    const detBox = document.getElementById(`weather-det-${project.id}-${index}`);
+                    if(detBox) {
+                        detBox.innerHTML = `
+                            <div class="text-right text-[10px] text-gray-400 font-medium drop-shadow">
+                                <div>Нет прогноза</div>
+                            </div>`;
+                    }
+                }
 
-                // Создание элементов анимации (Звезды, Облака, Капли дождя, Снежинки)
                 const stars = [];
                 if (isNight) {
                     for (let s = 0; s < 35; s++) {
@@ -603,7 +609,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
 
                 function animateSky() {
-                    // Фоновый градиент (День / Теплый закат / Ночь со звездами)
                     let grad = ctx.createLinearGradient(0, 0, 0, canvas.height);
                     if (isNight) {
                         grad.addColorStop(0, '#020617'); grad.addColorStop(1, '#0f172a');
@@ -613,7 +618,6 @@ document.addEventListener('DOMContentLoaded', () => {
                     ctx.fillStyle = grad;
                     ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-                    // Отрисовка звезд ночью
                     if (isNight) {
                         stars.forEach(st => {
                             st.alpha += (Math.random() * 0.04 - 0.02);
@@ -623,10 +627,8 @@ document.addEventListener('DOMContentLoaded', () => {
                         });
                     }
 
-                    // Отрисовка облаков
                     clouds.forEach(cl => { cl.update(); cl.draw(); });
 
-                    // Отрисовка дождя или снега
                     particles.forEach(pt => {
                         ctx.beginPath();
                         if (weatherType === 'rain') {
