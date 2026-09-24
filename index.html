@@ -187,11 +187,22 @@
     </div>
 
     <!-- Кнопка отправки сводки по ВСЕМ проектам -->
-    <div class="px-4 mb-6 relative z-20">
+    <div class="px-4 mb-3 relative z-20">
         <button id="share-all-projects-btn" type="button" class="w-full bg-gradient-to-r from-sky-950/70 via-indigo-950/70 to-purple-950/70 hover:from-sky-900 hover:to-purple-900 text-sky-200 py-3 px-4 rounded-2xl transition-all glow-sky-warm flex items-center justify-center gap-2 cursor-pointer active:scale-95 shadow-lg text-xs font-bold uppercase tracking-wider">
             <i data-lucide="share-2" class="w-4 h-4 text-sky-400 drop-shadow-[0_0_8px_rgba(56,189,248,0.8)]"></i>
             Отправить сводку по всем проектам
         </button>
+    </div>
+
+    <!-- Блок резервного копирования (Экспорт / Импорт) -->
+    <div class="px-4 flex gap-3 mb-3 relative z-20">
+        <button id="export-backup-btn" type="button" class="flex-1 bg-gradient-to-r from-slate-900 to-gray-900 hover:from-slate-800 text-sky-300 py-3 px-2 rounded-2xl transition-all glow-sky-warm flex items-center justify-center gap-2 cursor-pointer active:scale-95 shadow-lg text-[11px] font-bold uppercase">
+            <i data-lucide="download" class="w-4 h-4 text-sky-400"></i> Скачать базу
+        </button>
+        <label class="flex-1 bg-gradient-to-r from-slate-900 to-gray-900 hover:from-slate-800 text-purple-300 py-3 px-2 rounded-2xl transition-all glow-purple flex items-center justify-center gap-2 cursor-pointer active:scale-95 shadow-lg text-[11px] font-bold uppercase">
+            <i data-lucide="upload" class="w-4 h-4 text-purple-400"></i> Загрузить базу
+            <input type="file" id="import-backup-input" class="hidden" accept=".json">
+        </label>
     </div>
 
     <div class="px-4 flex gap-3 mb-8 relative z-20">
