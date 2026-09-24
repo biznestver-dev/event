@@ -12,7 +12,6 @@ try {
 document.addEventListener('DOMContentLoaded', () => {
     lucide.createIcons();
 
-    // Запрос разрешений на пуш-уведомления для напоминаний
     if ('Notification' in window && Notification.permission !== 'granted') {
         Notification.requestPermission();
     }
@@ -36,24 +35,17 @@ document.addEventListener('DOMContentLoaded', () => {
         updateAppBtn.addEventListener('click', async () => {
             const icon = document.getElementById('sync-icon');
             icon.classList.add('animate-spin', 'text-sky-400');
-            
             try {
                 if ('serviceWorker' in navigator) {
                     const registrations = await navigator.serviceWorker.getRegistrations();
-                    for (let registration of registrations) {
-                        await registration.update();
-                    }
+                    for (let registration of registrations) { await registration.update(); }
                 }
                 if ('caches' in window) {
                     const cacheNames = await caches.keys();
                     await Promise.all(cacheNames.map(name => caches.delete(name)));
                 }
-                setTimeout(() => {
-                    window.location.reload(true);
-                }, 800);
-            } catch(err) {
-                window.location.reload(true);
-            }
+                setTimeout(() => { window.location.reload(true); }, 800);
+            } catch(err) { window.location.reload(true); }
         });
     }
 
@@ -92,17 +84,14 @@ document.addEventListener('DOMContentLoaded', () => {
     if (selectedProjectId) updateContentArea();
     updateDashboard();
 
-    // Планировщик напоминаний за день
+    // Напоминания за день
     function scheduleProjectReminders() {
         if (!('Notification' in window) || Notification.permission !== 'granted') return;
-        
         activeProjects.forEach(project => {
             if (!project.dates || project.dates.length === 0) return;
-            const firstDateStr = project.dates[0].date;
-            const eventDate = new Date(firstDateStr);
-            const reminderTime = new Date(eventDate.getTime() - (24 * 60 * 60 * 1000)); // За 24 часа
+            const eventDate = new Date(project.dates[0].date);
+            const reminderTime = new Date(eventDate.getTime() - (24 * 60 * 60 * 1000));
             const now = new Date();
-
             const timeDiff = reminderTime.getTime() - now.getTime();
             if (timeDiff > 0 && timeDiff < 30 * 24 * 60 * 60 * 1000) {
                 setTimeout(() => {
@@ -116,18 +105,14 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     scheduleProjectReminders();
 
-    // Быстрые площадки
     document.querySelectorAll('.venue-tag').forEach(btn => {
         btn.addEventListener('click', () => {
             const addr = btn.getAttribute('data-address');
             const metro = btn.getAttribute('data-metro');
             if (addressInput) addressInput.value = addr;
             if (metroInput) metroInput.value = metro;
-            
             btn.classList.add('bg-sky-600', 'text-white');
-            setTimeout(() => {
-                btn.classList.remove('bg-sky-600', 'text-white');
-            }, 300);
+            setTimeout(() => { btn.classList.remove('bg-sky-600', 'text-white'); }, 300);
         });
     });
 
@@ -139,7 +124,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 activeProjects = data.map(d => d.project_data);
                 activeProjects.sort((a, b) => new Date(a.dates[0].date) - new Date(b.dates[0].date));
                 if(activeProjects.length > 0 && !selectedProjectId) selectedProjectId = activeProjects[0].id;
-                
                 localStorage.setItem('amProdData', JSON.stringify(activeProjects));
                 renderDashboardFilters();
                 renderTimeline();
@@ -153,11 +137,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
     if (_supabase) {
         try {
-            _supabase
-                .channel('public:am_projects')
-                .on('postgres_changes', { event: '*', schema: 'public', table: 'am_projects' }, payload => {
-                    fetchFromCloud();
-                })
+            _supabase.channel('public:am_projects')
+                .on('postgres_changes', { event: '*', schema: 'public', table: 'am_projects' }, () => { fetchFromCloud(); })
                 .subscribe();
         } catch (e) {}
     }
@@ -167,7 +148,6 @@ document.addEventListener('DOMContentLoaded', () => {
         renderDashboardFilters();
         updateDashboard();
         scheduleProjectReminders();
-
         if (!_supabase) return;
         try {
             if (idToDelete) await _supabase.from('am_projects').delete().eq('id', idToDelete);
@@ -190,9 +170,7 @@ document.addEventListener('DOMContentLoaded', () => {
         dropdownMenu.innerHTML = '';
         const filters = ['Все проекты', 'Весь ФОТ', ...PREDEFINED_TEAM];
         activeProjects.forEach(p => {
-            (p.team || []).forEach(m => {
-                if (!filters.includes(m.name)) filters.push(m.name);
-            });
+            (p.team || []).forEach(m => { if (!filters.includes(m.name)) filters.push(m.name); });
         });
 
         filters.forEach(f => {
@@ -200,7 +178,6 @@ document.addEventListener('DOMContentLoaded', () => {
             const isSelected = currentDashFilter === f;
             item.className = `px-4 py-3 rounded-xl text-xs font-bold cursor-pointer transition-colors flex items-center justify-between ${isSelected ? 'bg-sky-600/30 text-sky-400' : 'text-gray-300 hover:bg-gray-800'}`;
             item.innerHTML = `<span>${f}</span> ${isSelected ? '<i data-lucide="check" class="w-4 h-4"></i>' : ''}`;
-            
             item.addEventListener('click', () => {
                 currentDashFilter = f;
                 currentFilterText.textContent = f;
@@ -212,15 +189,7 @@ document.addEventListener('DOMContentLoaded', () => {
             dropdownMenu.appendChild(item);
         });
         lucide.createIcons({root: dropdownMenu});
-
         currentFilterText.textContent = currentDashFilter;
-        if (currentDashFilter !== 'Все проекты' && currentDashFilter !== 'Весь ФОТ') {
-            dropdownBtn.classList.add('bg-sky-900/40', 'border-sky-500/50', 'text-sky-300');
-            filterIcon.classList.replace('text-sky-400', 'text-sky-300');
-        } else {
-            dropdownBtn.classList.remove('bg-sky-900/40', 'border-sky-500/50', 'text-sky-300');
-            filterIcon.classList.replace('text-sky-300', 'text-sky-400');
-        }
     }
 
     function updateDashboard() {
@@ -228,24 +197,20 @@ document.addEventListener('DOMContentLoaded', () => {
         activeProjects.forEach(p => {
             if (currentDashFilter === 'Все проекты') {
                 total += p.cost || 0;
-                if (p.isPaid) paid += p.cost || 0;
-                else pending += p.cost || 0;
+                if (p.isPaid) paid += p.cost || 0; else pending += p.cost || 0;
             } else if (currentDashFilter === 'Весь ФОТ') {
                 let projectFot = 0;
                 p.team.forEach(m => projectFot += m.fee);
                 total += projectFot;
-                if (p.isPaid) paid += projectFot;
-                else pending += projectFot;
+                if (p.isPaid) paid += projectFot; else pending += projectFot;
             } else {
                 const member = (p.team || []).find(m => m.name === currentDashFilter);
                 if (member) {
                     total += member.fee || 0;
-                    if (p.isPaid) paid += member.fee || 0;
-                    else pending += member.fee || 0;
+                    if (p.isPaid) paid += member.fee || 0; else pending += member.fee || 0;
                 }
             }
         });
-
         dashTotal.textContent = `${total.toLocaleString('ru-RU')} ₽`;
         dashPaid.textContent = `${paid.toLocaleString('ru-RU')} ₽`;
         dashPending.textContent = `${pending.toLocaleString('ru-RU')} ₽`;
@@ -258,16 +223,13 @@ document.addEventListener('DOMContentLoaded', () => {
         modal.classList.add('flex');
     };
 
-    const closeModal = () => {
-        modal.classList.remove('flex');
-        modal.classList.add('hidden');
-    };
+    const closeModal = () => { modal.classList.remove('flex'); modal.classList.add('hidden'); };
 
     document.getElementById('add-date-btn').addEventListener('click', () => {
         titleInput.value = ''; contractorInput.value = ''; addressInput.value = ''; metroInput.value = '';
         costInput.value = '15000'; methodInput.value = 'Наличные';
         dynamicDatesList.innerHTML = '';
-        addDateRow('', '09:00', '23:00'); // Автоматическое время по умолчанию
+        addDateRow('', '09:00', '23:00'); // Время по умолчанию
         renderTeamSelection([]);
         openModal(false);
     });
@@ -296,34 +258,20 @@ document.addEventListener('DOMContentLoaded', () => {
         const originalHtml = btn.innerHTML;
         btn.innerHTML = `<i data-lucide="loader-2" class="w-5 h-5 animate-spin"></i>`;
         lucide.createIcons({root: btn});
-        
         if (navigator.geolocation) {
             navigator.geolocation.getCurrentPosition(async (pos) => {
-                const {latitude, longitude} = pos.coords;
                 try {
-                    const res = await fetch(`https://nominatim.openstreetmap.org/reverse?lat=${latitude}&lon=${longitude}&format=json&accept-language=ru`);
+                    const res = await fetch(`https://nominatim.openstreetmap.org/reverse?lat=${pos.coords.latitude}&lon=${pos.coords.longitude}&format=json&accept-language=ru`);
                     const data = await res.json();
                     if(data && data.address) {
-                        let street = data.address.road || '';
-                        let house = data.address.house_number || '';
-                        let city = data.address.city || data.address.town || '';
-                        let fullAddress = `${city ? city + ', ' : ''}${street} ${house}`.trim();
-                        if(!fullAddress) fullAddress = data.display_name;
-                        addressInput.value = fullAddress;
+                        addressInput.value = `${data.address.city || ''}, ${data.address.road || ''} ${data.address.house_number || ''}`.trim();
                     }
                 } catch(e) { alert('Не удалось получить адрес'); }
                 btn.innerHTML = originalHtml;
-            }, () => {
-                alert('Доступ к геолокации запрещен');
-                btn.innerHTML = originalHtml;
-            });
-        } else {
-            alert('Ваш браузер не поддерживает геолокацию');
-            btn.innerHTML = originalHtml;
-        }
+            }, () => { alert('Доступ к геолокации запрещен'); btn.innerHTML = originalHtml; });
+        } else { btn.innerHTML = originalHtml; }
     });
 
-    // Функция добавления ряда дат с дефолтным временем 09:00 и 23:00
     function addDateRow(dateVal='', startVal='09:00', endVal='23:00') {
         const row = document.createElement('div');
         row.className = "date-row flex gap-1 items-center";
@@ -336,10 +284,8 @@ document.addEventListener('DOMContentLoaded', () => {
         `;
         dynamicDatesList.appendChild(row);
         lucide.createIcons({root: row});
-        
         row.querySelector('.remove-row-btn').addEventListener('click', () => {
-            if(dynamicDatesList.children.length > 1) row.remove();
-            else alert('В проекте должен быть минимум один день!');
+            if(dynamicDatesList.children.length > 1) row.remove(); else alert('Минимум один день!');
         });
     }
     document.getElementById('add-dynamic-date-btn').addEventListener('click', () => addDateRow('', '09:00', '23:00'));
@@ -352,9 +298,7 @@ document.addEventListener('DOMContentLoaded', () => {
             addTeamMemberRow(name, memberData.fee, isChecked, true);
         });
         existingTeam.forEach(member => {
-            if (!PREDEFINED_TEAM.includes(member.name)) {
-                addTeamMemberRow(member.name, member.fee, true, false);
-            }
+            if (!PREDEFINED_TEAM.includes(member.name)) addTeamMemberRow(member.name, member.fee, true, false);
         });
         calcTeamTotal();
     }
@@ -362,38 +306,29 @@ document.addEventListener('DOMContentLoaded', () => {
     function addTeamMemberRow(name = '', fee = 15000, isChecked = false, isPredefined = false) {
         const row = document.createElement('div');
         row.className = "custom-team-row flex justify-between items-center bg-gray-950 p-2 rounded-xl border border-gray-700/80 gap-2";
-        
         if (isPredefined) {
             row.innerHTML = `
                 <label class="flex items-center gap-2 flex-1 cursor-pointer min-w-0 pr-2">
                     <input type="checkbox" class="team-checkbox shrink-0" value="${name}" ${isChecked ? 'checked' : ''}>
                     <span class="text-[11px] text-gray-300 font-medium truncate">${name}</span>
                 </label>
-                <input type="number" class="team-fee w-20 shrink-0 bg-gray-900 text-white text-xs rounded-xl p-1.5 outline-none border border-gray-600 focus:border-sky-500 transition-colors text-right ${isChecked ? '' : 'opacity-30'}" placeholder="0 ₽" value="${fee !== '' ? fee : 15000}" ${isChecked ? '' : 'disabled'}>
-            `;
+                <input type="number" class="team-fee w-20 shrink-0 bg-gray-900 text-white text-xs rounded-xl p-1.5 outline-none border border-gray-600 focus:border-sky-500 text-right ${isChecked ? '' : 'opacity-30'}" value="${fee !== '' ? fee : 15000}" ${isChecked ? '' : 'disabled'}>`;
         } else {
             row.innerHTML = `
                 <input type="checkbox" class="team-checkbox shrink-0 hidden" value="custom" checked>
                 <input type="text" class="custom-team-name flex-1 bg-gray-900 text-white text-[11px] rounded-xl p-1.5 outline-none border border-gray-600 focus:border-purple-500" placeholder="ФИО или Роль" value="${name}">
-                <input type="number" class="team-fee w-20 shrink-0 bg-gray-900 text-white text-xs rounded-xl p-1.5 outline-none border border-gray-600 focus:border-purple-500 text-right" placeholder="0 ₽" value="${fee !== '' ? fee : 15000}">
-                <button type="button" class="text-red-500/80 hover:text-red-400 p-1 flex justify-center w-6 shrink-0" onclick="this.parentElement.remove(); calcTeamTotal();"><i data-lucide="x" class="w-4 h-4"></i></button>
-            `;
+                <input type="number" class="team-fee w-20 shrink-0 bg-gray-900 text-white text-xs rounded-xl p-1.5 outline-none border border-gray-600 focus:border-purple-500 text-right" value="${fee !== '' ? fee : 15000}">
+                <button type="button" class="text-red-500/80 hover:text-red-400 p-1 flex justify-center w-6 shrink-0" onclick="this.parentElement.remove(); calcTeamTotal();"><i data-lucide="x" class="w-4 h-4"></i></button>`;
         }
-        
         const checkbox = row.querySelector('.team-checkbox');
         const feeInput = row.querySelector('.team-fee');
-        
         if(checkbox && isPredefined) {
             checkbox.addEventListener('change', (e) => {
                 if (e.target.checked) {
-                    feeInput.disabled = false;
-                    feeInput.classList.remove('opacity-30');
-                    if(!feeInput.value) feeInput.value = 15000;
-                    feeInput.focus();
+                    feeInput.disabled = false; feeInput.classList.remove('opacity-30');
+                    if(!feeInput.value) feeInput.value = 15000; feeInput.focus();
                 } else {
-                    feeInput.disabled = true;
-                    feeInput.classList.add('opacity-30');
-                    feeInput.value = '';
+                    feeInput.disabled = true; feeInput.classList.add('opacity-30'); feeInput.value = '';
                 }
                 calcTeamTotal();
             });
@@ -403,23 +338,17 @@ document.addEventListener('DOMContentLoaded', () => {
         lucide.createIcons({root: row});
     }
 
-    document.getElementById('add-custom-member-btn').addEventListener('click', () => {
-        addTeamMemberRow('', 15000, true, false);
-    });
+    document.getElementById('add-custom-member-btn').addEventListener('click', () => { addTeamMemberRow('', 15000, true, false); });
 
     function calcTeamTotal() {
         let total = 0;
         document.querySelectorAll('.custom-team-row').forEach(row => {
             const checkbox = row.querySelector('.team-checkbox');
             const feeInput = row.querySelector('.team-fee');
-            if (checkbox && checkbox.checked && feeInput && feeInput.value) {
-                total += Number(feeInput.value);
-            }
+            if (checkbox && checkbox.checked && feeInput && feeInput.value) total += Number(feeInput.value);
         });
         document.getElementById('team-total-calc').textContent = total.toLocaleString('ru-RU');
-        if (total > 0) {
-            document.getElementById('new-project-cost').value = total;
-        }
+        if (total > 0) document.getElementById('new-project-cost').value = total;
     }
 
     document.getElementById('save-date').addEventListener('click', () => {
@@ -463,8 +392,7 @@ document.addEventListener('DOMContentLoaded', () => {
         };
 
         const existingIndex = activeProjects.findIndex(proj => proj.id === projectData.id);
-        if (existingIndex > -1) activeProjects[existingIndex] = projectData;
-        else activeProjects.push(projectData);
+        if (existingIndex > -1) activeProjects[existingIndex] = projectData; else activeProjects.push(projectData);
 
         activeProjects.sort((a, b) => new Date(a.dates[0].date) - new Date(b.dates[0].date));
         selectedProjectId = projectData.id;
@@ -492,19 +420,15 @@ document.addEventListener('DOMContentLoaded', () => {
             const day = firstDate.getDate();
             const month = new Intl.DateTimeFormat('ru-RU', { month: 'short' }).format(firstDate).replace('.', '');
             const weekday = new Intl.DateTimeFormat('ru-RU', { weekday: 'short' }).format(firstDate);
-            
             const multiBadge = project.dates.length > 1 ? `<div class="absolute top-1 right-1 bg-sky-500 text-white text-[9px] font-bold px-1 rounded-full shadow">+${project.dates.length - 1}</div>` : '';
 
             const borderStyle = project.isPaid && !isActive ? 'border-green-500/40 text-green-400 bg-green-900/10' : 'border-white/10 text-gray-300 bg-gray-800/60';
             icon.className = `date-icon w-full rounded-2xl flex flex-col items-center justify-center border outline-none shadow-sm backdrop-blur-md ${isActive ? 'active text-white' : borderStyle}`;
-            
-            // Вывод теплого голубого акцента для дней недели
             icon.innerHTML = `
                 ${multiBadge}
                 <span class="text-[9px] uppercase font-extrabold ${isActive ? 'text-sky-100' : 'text-sky-400'} tracking-wider z-10">${weekday}</span>
                 <span class="text-[9px] uppercase font-bold ${isActive ? 'text-white' : 'opacity-60'} tracking-widest z-10">${month}</span>
-                <span class="text-xl font-black leading-none ${isActive ? 'text-white' : ''} mt-0.5 z-10">${day}</span>
-            `;
+                <span class="text-xl font-black leading-none ${isActive ? 'text-white' : ''} mt-0.5 z-10">${day}</span>`;
 
             icon.addEventListener('click', () => { 
                 selectedProjectId = project.id; 
@@ -522,77 +446,39 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!project) return;
 
         document.getElementById('project-title-label').textContent = project.title;
-        
         const contrLabel = document.getElementById('project-contractor-label');
-        if(project.contractor) { contrLabel.classList.remove('hidden'); contrLabel.textContent = `Контрагент: ${project.contractor}`; }
-        else { contrLabel.classList.add('hidden'); }
+        if(project.contractor) { contrLabel.classList.remove('hidden'); contrLabel.textContent = `Контрагент: ${project.contractor}`; } else { contrLabel.classList.add('hidden'); }
 
         const locContainer = document.getElementById('project-location-container');
         if (project.address || project.metro) {
             locContainer.classList.remove('hidden');
             let locHtml = `<div class="bg-black/30 border border-white/5 rounded-2xl p-4 mb-2 shadow-inner">`;
             if (project.address) {
-                locHtml += `
-                <div class="flex items-start gap-2 mb-2">
-                    <i data-lucide="map-pin" class="w-4 h-4 text-sky-400 shrink-0 mt-0.5"></i>
-                    <a href="https://yandex.ru/maps/?text=${encodeURIComponent(project.address)}" target="_blank" class="text-[13px] text-sky-100 font-medium hover:text-sky-300 underline underline-offset-4 decoration-sky-500/30">${project.address}</a>
-                </div>`;
+                locHtml += `<div class="flex items-start gap-2 mb-2"><i data-lucide="map-pin" class="w-4 h-4 text-sky-400 shrink-0 mt-0.5"></i><a href="https://yandex.ru/maps/?text=${encodeURIComponent(project.address)}" target="_blank" class="text-[13px] text-sky-100 font-medium hover:text-sky-300 underline underline-offset-4 decoration-sky-500/30">${project.address}</a></div>`;
             }
             if (project.metro) {
-                locHtml += `
-                <div class="flex items-start gap-2 ${project.address ? 'mb-3' : 'mb-1'}">
-                    <div class="w-4 h-4 rounded-full bg-red-500/20 text-red-500 flex items-center justify-center shrink-0 mt-0.5 border border-red-500/30"><span class="text-[10px] font-bold">M</span></div>
-                    <span class="text-[13px] text-gray-200 font-medium">${project.metro}</span>
-                </div>`;
+                locHtml += `<div class="flex items-start gap-2 mb-1"><div class="w-4 h-4 rounded-full bg-red-500/20 text-red-500 flex items-center justify-center shrink-0 mt-0.5 border border-red-500/30"><span class="text-[10px] font-bold">M</span></div><span class="text-[13px] text-gray-200 font-medium">${project.metro}</span></div>`;
             }
             if (project.address) {
                 locHtml += `<iframe src="https://yandex.ru/map-widget/v1/?text=${encodeURIComponent(project.address)}&z=15" width="100%" height="180" frameborder="0" allowfullscreen="true" class="rounded-xl border border-white/10 opacity-90 shadow-lg mt-1 pointer-events-auto"></iframe>`;
             }
-            
-            let transitMetro = project.metro || 'Определяется по карте...';
-            let transitBus = 'Остановка наземного транспорта в радиусе доступа';
-            let transitParking = 'Городская парковка (380 ₽/ч). Служебный въезд через КПП по аккредитации.';
-
-            locHtml += `
-                <div class="mt-4 pt-3 border-t border-white/10 space-y-3 text-xs">
-                    <div class="flex items-start gap-2.5 text-gray-200">
-                        <i data-lucide="train" class="w-4 h-4 text-red-400 shrink-0 mt-0.5"></i>
-                        <div><span class="font-semibold text-white">Метро / МЦД:</span> <span class="text-gray-300">${transitMetro}</span></div>
-                    </div>
-                    <div class="flex items-start gap-2.5 text-gray-200">
-                        <i data-lucide="bus" class="w-4 h-4 text-purple-400 shrink-0 mt-0.5"></i>
-                        <div><span class="font-semibold text-white">Общественный транспорт:</span> <span class="text-gray-300">${transitBus}</span></div>
-                    </div>
-                    <div class="flex items-start gap-2.5 text-gray-200">
-                        <i data-lucide="parking-square" class="w-4 h-4 text-green-400 shrink-0 mt-0.5"></i>
-                        <div><span class="font-semibold text-white">Парковки:</span> <span class="text-gray-300">${transitParking}</span></div>
-                    </div>
-                </div>`;
-
             locHtml += `</div>`;
             locContainer.innerHTML = locHtml;
             lucide.createIcons({root: locContainer});
-        } else {
-            locContainer.classList.add('hidden');
-        }
+        } else { locContainer.classList.add('hidden'); }
         
         const datesContainer = document.getElementById('project-dates-container');
         datesContainer.innerHTML = '';
+        
         project.dates.forEach(async (d, index) => {
             const dateObj = new Date(d.date);
             const formattedDate = new Intl.DateTimeFormat('ru-RU', { day: 'numeric', month: 'long', year: 'numeric' }).format(dateObj);
-            let timeHtml = '';
-            if(d.start || d.end) {
-                // Теплый голубой акцент для отображения времени в карточке проекта
-                timeHtml = `<div class="flex items-center gap-1.5 text-sky-200 text-[11px] font-bold bg-sky-950/60 px-2.5 py-1 rounded-xl border border-sky-500/50 w-fit drop-shadow">
-                                <i data-lucide="clock" class="w-3.5 h-3.5 text-sky-400"></i> ${d.start} ${d.start&&d.end?'-':''} ${d.end}
-                            </div>`;
-            }
+            let timeHtml = (d.start || d.end) ? `<div class="flex items-center gap-1.5 text-sky-200 text-[11px] font-bold bg-sky-950/60 px-2.5 py-1 rounded-xl border border-sky-500/50 w-fit drop-shadow"><i data-lucide="clock" class="w-3.5 h-3.5 text-sky-400"></i> ${d.start || '09:00'} - ${d.end || '23:00'}</div>` : '';
+
             const row = document.createElement('div');
             row.className = "animated-info-card glow-sky-warm p-4 rounded-3xl shadow-2xl flex flex-col gap-3 backdrop-blur-md relative";
             row.innerHTML = `
-                <canvas id="sky-canvas-${project.id}-${index}" class="absolute inset-0 w-full h-full pointer-events-none z-0"></canvas>
-                
+                <canvas id="sky-canvas-${project.id}-${index}" class="sky-canvas"></canvas>
                 <div class="card-content flex justify-between items-start z-10">
                     <div class="flex flex-col gap-1">
                         <div class="flex items-center gap-2 text-sky-300 text-xs font-extrabold uppercase tracking-wide drop-shadow">
@@ -601,12 +487,9 @@ document.addEventListener('DOMContentLoaded', () => {
                         ${timeHtml}
                     </div>
                     <div id="weather-det-${project.id}-${index}" class="card-content flex items-center gap-3 z-10">
-                        <div class="text-right text-[10px] text-gray-200 font-medium drop-shadow">
-                            <div class="opacity-80">Загрузка...</div>
-                        </div>
+                        <div class="text-right text-[10px] text-gray-200 font-medium drop-shadow"><div class="opacity-80">Погода...</div></div>
                     </div>
                 </div>
-
                 <div class="card-content flex flex-col items-center justify-center pt-2 border-t border-white/10 z-10">
                     <div class="flex items-center justify-between w-full max-w-xs">
                         <div class="flex items-center gap-1.5 text-amber-300 text-[11px] font-bold drop-shadow">
@@ -619,98 +502,153 @@ document.addEventListener('DOMContentLoaded', () => {
                             <i data-lucide="sunset" class="w-4 h-4 text-orange-400"></i> <span id="sunset-${project.id}-${index}">18:27</span>
                         </div>
                     </div>
-                </div>
-            `;
+                </div>`;
             datesContainer.appendChild(row);
             lucide.createIcons({root: row});
 
+            // Продвинутый анимационный движок погоды (День/Ночь/Звезды/Облака/Дождь/Снег)
             const canvas = document.getElementById(`sky-canvas-${project.id}-${index}`);
             if (canvas) {
                 const ctx = canvas.getContext('2d');
                 canvas.width = row.offsetWidth || 350;
                 canvas.height = row.offsetHeight || 140;
 
-                class MiniCloud {
+                let weatherType = 'clear'; // 'clear', 'clouds', 'rain', 'snow'
+                let isNight = false;
+
+                try {
+                    const res = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=55.7522&longitude=37.6156&daily=weathercode,temperature_2m_max,sunrise,sunset&timezone=Europe%2FMoscow&start_date=${d.date}&end_date=${d.date}`);
+                    const data = await res.json();
+                    if (data.daily && data.daily.weathercode) {
+                        const code = data.daily.weathercode[0];
+                        const temp = Math.round(data.daily.temperature_2m_max[0]);
+                        const sunrise = data.daily.sunrise[0].split('T')[1].substring(0, 5);
+                        const sunset = data.daily.sunset[0].split('T')[1].substring(0, 5);
+                        
+                        document.getElementById(`sunrise-${project.id}-${index}`).textContent = sunrise;
+                        document.getElementById(`sunset-${project.id}-${index}`).textContent = sunset;
+
+                        // Определение типа погоды по коду Open-Meteo
+                        if (code >= 51 && code <= 67 || code >= 80) { weatherType = 'rain'; }
+                        else if (code >= 71 && code <= 77) { weatherType = 'snow'; }
+                        else if (code >= 1 && code <= 3) { weatherType = 'clouds'; }
+
+                        // Проверка ночного времени по таймингу проекта или текущему часу
+                        const checkHour = d.start ? parseInt(d.start.split(':')[0]) : new Date().getHours();
+                        if (checkHour < 6 || checkHour >= 21) { isNight = true; }
+
+                        let icon = '☀️';
+                        if (isNight) icon = '🌙';
+                        else if (weatherType === 'clouds') icon = '⛅';
+                        else if (weatherType === 'rain') icon = '🌧️';
+                        else if (weatherType === 'snow') icon = '❄️';
+
+                        const detBox = document.getElementById(`weather-det-${project.id}-${index}`);
+                        if(detBox) {
+                            detBox.innerHTML = `
+                                <div class="text-xl bg-black/50 backdrop-blur-md px-3.5 py-2 rounded-2xl border border-sky-500/30 text-center shadow-inner flex items-center gap-2">
+                                    <span class="weather-float">${icon}</span>
+                                    <span class="text-xs font-black text-white">${temp > 0 ? '+' : ''}°${temp}</span>
+                                </div>`;
+                        }
+                    }
+                } catch(e) {}
+
+                // Создание элементов анимации (Звезды, Облака, Капли дождя, Снежинки)
+                const stars = [];
+                if (isNight) {
+                    for (let s = 0; s < 35; s++) {
+                        stars.push({ x: Math.random() * canvas.width, y: Math.random() * (canvas.height * 0.7), r: Math.random() * 1.5 + 0.5, alpha: Math.random() });
+                    }
+                }
+
+                class Cloud {
                     constructor() { this.reset(true); }
                     reset(init = false) {
                         this.x = init ? Math.random() * canvas.width : -150;
-                        this.y = Math.random() * (canvas.height * 0.7);
-                        this.speed = Math.random() * 0.12 + 0.04;
-                        this.scale = Math.random() * 0.6 + 0.4;
-                        this.opacity = Math.random() * 0.35 + 0.2;
-                        this.puffs = [
-                            {dx: 0, dy: 0, r: 40 * this.scale},
-                            {dx: 30, dy: -10, r: 45 * this.scale},
-                            {dx: 65, dy: 5, r: 40 * this.scale},
-                            {dx: 25, dy: 15, r: 35 * this.scale}
-                        ];
+                        this.y = Math.random() * (canvas.height * 0.5);
+                        this.speed = Math.random() * 0.08 + 0.03;
+                        this.scale = Math.random() * 0.5 + 0.4;
+                        this.opacity = isNight ? 0.15 : 0.35;
+                        this.puffs = [{dx:0,dy:0,r:35*this.scale}, {dx:25,dy:-8,r:40*this.scale}, {dx:55,dy:4,r:35*this.scale}];
                     }
-                    update() {
-                        this.x += this.speed;
-                        if (this.x - 100 > canvas.width) this.reset(false);
-                    }
+                    update() { this.x += this.speed; if (this.x - 100 > canvas.width) this.reset(false); }
                     draw() {
                         ctx.save();
-                        ctx.fillStyle = `rgba(255, 255, 255, ${this.opacity})`;
-                        ctx.shadowColor = 'rgba(0, 0, 0, 0.3)';
-                        ctx.shadowBlur = 10;
+                        ctx.fillStyle = isNight ? `rgba(200,220,255,${this.opacity})` : `rgba(255,255,255,${this.opacity})`;
+                        ctx.shadowBlur = 8;
                         this.puffs.forEach(p => {
-                            ctx.beginPath();
-                            ctx.arc(this.x + p.dx, this.y + p.dy, p.r, 0, Math.PI * 2);
-                            ctx.fill();
+                            ctx.beginPath(); ctx.arc(this.x + p.dx, this.y + p.dy, p.r, 0, Math.PI * 2); ctx.fill();
                         });
                         ctx.restore();
                     }
                 }
 
                 const clouds = [];
-                for(let c=0; c<4; c++) clouds.push(new MiniCloud());
+                if (weatherType === 'clouds' || weatherType === 'rain' || weatherType === 'snow') {
+                    for (let c = 0; c < 3; c++) clouds.push(new Cloud());
+                }
 
-                function drawSky() {
-                    let grad = ctx.createLinearGradient(0, 0, canvas.width, canvas.height);
-                    grad.addColorStop(0, '#0f172a');
-                    grad.addColorStop(0.5, '#0369a1');
-                    grad.addColorStop(1, '#020617');
+                const particles = [];
+                if (weatherType === 'rain' || weatherType === 'snow') {
+                    for (let p = 0; p < 45; p++) {
+                        particles.push({
+                            x: Math.random() * canvas.width,
+                            y: Math.random() * canvas.height,
+                            length: weatherType === 'rain' ? Math.random() * 12 + 8 : Math.random() * 3 + 2,
+                            speed: weatherType === 'rain' ? Math.random() * 4 + 5 : Math.random() * 1 + 1,
+                            radius: weatherType === 'snow' ? Math.random() * 2 + 1 : 1
+                        });
+                    }
+                }
+
+                function animateSky() {
+                    // Фоновый градиент (День / Теплый закат / Ночь со звездами)
+                    let grad = ctx.createLinearGradient(0, 0, 0, canvas.height);
+                    if (isNight) {
+                        grad.addColorStop(0, '#020617'); grad.addColorStop(1, '#0f172a');
+                    } else {
+                        grad.addColorStop(0, '#0284c7'); grad.addColorStop(0.5, '#38bdf8'); grad.addColorStop(1, '#bae6fd');
+                    }
                     ctx.fillStyle = grad;
                     ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-                    clouds.forEach(cl => {
-                        cl.update();
-                        cl.draw();
-                    });
-                    requestAnimationFrame(drawSky);
-                }
-                drawSky();
-            }
-
-            try {
-                const res = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=55.7522&longitude=37.6156&daily=weathercode,temperature_2m_max,sunrise,sunset&timezone=Europe%2FMoscow&start_date=${d.date}&end_date=${d.date}`);
-                const data = await res.json();
-                if (data.daily && data.daily.weathercode) {
-                    const code = data.daily.weathercode[0];
-                    const temp = Math.round(data.daily.temperature_2m_max[0]);
-                    const sunrise = data.daily.sunrise[0].split('T')[1].substring(0, 5);
-                    const sunset = data.daily.sunset[0].split('T')[1].substring(0, 5);
-                    
-                    const srEl = document.getElementById(`sunrise-${project.id}-${index}`);
-                    const ssEl = document.getElementById(`sunset-${project.id}-${index}`);
-                    if(srEl) srEl.textContent = sunrise;
-                    if(ssEl) ssEl.textContent = sunset;
-
-                    let icon = '☀️';
-                    if (code >= 1 && code <= 3) icon = '⛅';
-                    else if (code >= 51) icon = '🌧️';
-
-                    const detBox = document.getElementById(`weather-det-${project.id}-${index}`);
-                    if(detBox) {
-                        detBox.innerHTML = `
-                            <div class="text-xl bg-black/50 backdrop-blur-md px-3.5 py-2 rounded-2xl border border-sky-500/30 text-center shadow-inner flex items-center gap-2">
-                                <span class="weather-float">${icon}</span>
-                                <span class="text-xs font-black text-white">${temp > 0 ? '+' : ''}°${temp}</span>
-                            </div>`;
+                    // Отрисовка звезд ночью
+                    if (isNight) {
+                        stars.forEach(st => {
+                            st.alpha += (Math.random() * 0.04 - 0.02);
+                            if (st.alpha < 0.1) st.alpha = 0.1; if (st.alpha > 1) st.alpha = 1;
+                            ctx.fillStyle = `rgba(255, 255, 255, ${st.alpha})`;
+                            ctx.beginPath(); ctx.arc(st.x, st.y, st.r, 0, Math.PI * 2); ctx.fill();
+                        });
                     }
+
+                    // Отрисовка облаков
+                    clouds.forEach(cl => { cl.update(); cl.draw(); });
+
+                    // Отрисовка дождя или снега
+                    particles.forEach(pt => {
+                        ctx.beginPath();
+                        if (weatherType === 'rain') {
+                            ctx.strokeStyle = 'rgba(186, 230, 253, 0.6)';
+                            ctx.lineWidth = 1.2;
+                            ctx.moveTo(pt.x, pt.y);
+                            ctx.lineTo(pt.x - 1, pt.y + pt.length);
+                            ctx.stroke();
+                        } else if (weatherType === 'snow') {
+                            ctx.fillStyle = 'rgba(255, 255, 255, 0.8)';
+                            ctx.arc(pt.x, pt.y, pt.radius, 0, Math.PI * 2);
+                            ctx.fill();
+                        }
+                        pt.y += pt.speed;
+                        if (weatherType === 'snow') pt.x += Math.sin(pt.y * 0.05) * 0.5;
+                        if (pt.y > canvas.height) { pt.y = -10; pt.x = Math.random() * canvas.width; }
+                    });
+
+                    requestAnimationFrame(animateSky);
                 }
-            } catch(e) {}
+                animateSky();
+            }
         });
 
         const teamContainer = document.getElementById('project-team-container');
@@ -721,17 +659,11 @@ document.addEventListener('DOMContentLoaded', () => {
             let teamTotal = 0;
             project.team.forEach(member => {
                 teamTotal += member.fee;
-                teamListHtml.innerHTML += `
-                    <div class="flex justify-between items-center py-1.5 border-b border-white/5 last:border-0">
-                        <span class="text-xs text-gray-300 flex items-center gap-2 font-medium truncate pr-2"><i data-lucide="user" class="w-3.5 h-3.5 text-sky-400"></i> ${member.name}</span>
-                        <span class="text-xs font-bold text-white shrink-0">${member.fee.toLocaleString('ru-RU')} ₽</span>
-                    </div>`;
+                teamListHtml.innerHTML += `<div class="flex justify-between items-center py-1.5 border-b border-white/5 last:border-0"><span class="text-xs text-gray-300 flex items-center gap-2 font-medium truncate pr-2"><i data-lucide="user" class="w-3.5 h-3.5 text-sky-400"></i> ${member.name}</span><span class="text-xs font-bold text-white shrink-0">${member.fee.toLocaleString('ru-RU')} ₽</span></div>`;
             });
             document.getElementById('project-team-total').textContent = `${teamTotal.toLocaleString('ru-RU')} ₽`;
             lucide.createIcons({root: teamContainer});
-        } else {
-            teamContainer.classList.add('hidden');
-        }
+        } else { teamContainer.classList.add('hidden'); }
 
         const financeBlock = document.getElementById('finance-block');
         const projectCostLabel = document.getElementById('project-cost-label');
@@ -744,21 +676,14 @@ document.addEventListener('DOMContentLoaded', () => {
             financeBlock.classList.remove('hidden');
             projectCostLabel.textContent = `${project.cost.toLocaleString('ru-RU')} ₽`;
             projectMethodLabel.textContent = project.method;
-            
             if (project.isPaid) {
-                markPaidBtn.classList.add('hidden');
-                paidStatus.classList.remove('hidden');
-                shareTelegramBtn.classList.remove('hidden');
+                markPaidBtn.classList.add('hidden'); paidStatus.classList.remove('hidden'); shareTelegramBtn.classList.remove('hidden');
                 projectCostLabel.className = 'text-2xl font-bold text-green-400';
             } else {
-                markPaidBtn.classList.remove('hidden');
-                paidStatus.classList.add('hidden');
-                shareTelegramBtn.classList.add('hidden');
+                markPaidBtn.classList.remove('hidden'); paidStatus.classList.add('hidden'); shareTelegramBtn.classList.add('hidden');
                 projectCostLabel.className = 'text-2xl font-bold text-white';
             }
-        } else {
-            financeBlock.classList.add('hidden');
-        }
+        } else { financeBlock.classList.add('hidden'); }
     }
 
     function renderCheckinSection(project) {
@@ -814,20 +739,16 @@ document.addEventListener('DOMContentLoaded', () => {
         container.querySelectorAll('.arrived-btn').forEach(btn => {
             btn.addEventListener('click', (e) => {
                 const idx = e.currentTarget.getAttribute('data-index');
-                const now = new Date().toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' });
-                project.checkinList[idx].arrivedTime = now;
-                syncData(project, null);
-                renderCheckinSection(project);
+                project.checkinList[idx].arrivedTime = new Date().toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' });
+                syncData(project, null); renderCheckinSection(project);
             });
         });
 
         container.querySelectorAll('.left-btn').forEach(btn => {
             btn.addEventListener('click', (e) => {
                 const idx = e.currentTarget.getAttribute('data-index');
-                const now = new Date().toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' });
-                project.checkinList[idx].leftTime = now;
-                syncData(project, null);
-                renderCheckinSection(project);
+                project.checkinList[idx].leftTime = new Date().toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' });
+                syncData(project, null); renderCheckinSection(project);
             });
         });
     }
@@ -844,13 +765,11 @@ document.addEventListener('DOMContentLoaded', () => {
         const container = document.getElementById('transport-list');
         if (!container) return;
         if (!project.transportList) project.transportList = [];
-
         container.innerHTML = '';
         if (project.transportList.length === 0) {
             container.innerHTML = `<div class="text-center text-gray-500 text-xs py-2">Транспорт не добавлен</div>`;
             return;
         }
-
         project.transportList.forEach((car, index) => {
             const item = document.createElement('div');
             item.className = "bg-black/30 p-3 rounded-2xl border border-white/5 flex flex-col gap-2";
@@ -872,13 +791,10 @@ document.addEventListener('DOMContentLoaded', () => {
             container.appendChild(item);
         });
         lucide.createIcons({root: container});
-
         container.querySelectorAll('.delete-car').forEach(btn => {
             btn.addEventListener('click', (e) => {
-                const idx = e.currentTarget.getAttribute('data-index');
-                project.transportList.splice(idx, 1);
-                syncData(project, null);
-                renderTransportSection(project);
+                project.transportList.splice(e.currentTarget.getAttribute('data-index'), 1);
+                syncData(project, null); renderTransportSection(project);
             });
         });
     }
@@ -889,78 +805,42 @@ document.addEventListener('DOMContentLoaded', () => {
         document.getElementById('tr-number').value = '';
         document.getElementById('tr-driver').value = '';
         document.getElementById('tr-phone').value = '';
-        transportModal.classList.remove('hidden');
-        transportModal.classList.add('flex');
+        transportModal.classList.remove('hidden'); transportModal.classList.add('flex');
     });
 
-    document.getElementById('cancel-transport').addEventListener('click', () => {
-        transportModal.classList.remove('flex');
-        transportModal.classList.add('hidden');
-    });
+    document.getElementById('cancel-transport').addEventListener('click', () => { transportModal.classList.remove('flex'); transportModal.classList.add('hidden'); });
 
     document.getElementById('save-transport').addEventListener('click', () => {
         const model = document.getElementById('tr-model').value.trim();
         const number = document.getElementById('tr-number').value.trim();
         const driver = document.getElementById('tr-driver').value.trim();
         const phone = document.getElementById('tr-phone').value.trim();
-
         if (!model && !number) { alert('Укажите марку или номер машины!'); return; }
-
         const project = activeProjects.find(p => p.id === selectedProjectId);
         if (project) {
             if (!project.transportList) project.transportList = [];
             project.transportList.push({ model: model || 'Автомобиль', number: number || 'Без номера', driver, phone });
-            syncData(project, null);
-            renderTransportSection(project);
+            syncData(project, null); renderTransportSection(project);
         }
-        transportModal.classList.remove('flex');
-        transportModal.classList.add('hidden');
-    });
-
-    document.getElementById('pick-contact-btn').addEventListener('click', async () => {
-        if ('contacts' in navigator && 'Picker' in window) {
-            try {
-                const contacts = await navigator.contacts.select(['name', 'tel'], { multiple: false });
-                if (contacts.length > 0) {
-                    if (contacts[0].name && contacts[0].name[0]) document.getElementById('tr-driver').value = contacts[0].name[0];
-                    if (contacts[0].tel && contacts[0].tel[0]) document.getElementById('tr-phone').value = contacts[0].tel[0];
-                }
-            } catch (ex) {}
-        } else {
-            const name = prompt('Введите ФИО водителя:');
-            if(name) document.getElementById('tr-driver').value = name;
-            const tel = prompt('Введите номер телефона:');
-            if(tel) document.getElementById('tr-phone').value = tel;
-        }
+        transportModal.classList.remove('flex'); transportModal.classList.add('hidden');
     });
 
     document.getElementById('mark-paid-btn').addEventListener('click', () => {
         const project = activeProjects.find(p => p.id === selectedProjectId);
-        if (project) {
-            project.isPaid = true;
-            syncData(project, null);
-            updateContentArea();
-            renderTimeline();
-        }
+        if (project) { project.isPaid = true; syncData(project, null); updateContentArea(); renderTimeline(); }
     });
 
     document.getElementById('paid-status').addEventListener('click', () => {
         const project = activeProjects.find(p => p.id === selectedProjectId);
-        if (project) {
-            project.isPaid = false;
-            syncData(project, null);
-            updateContentArea();
-            renderTimeline();
-        }
+        if (project) { project.isPaid = false; syncData(project, null); updateContentArea(); renderTimeline(); }
     });
 
     document.getElementById('share-telegram-btn').addEventListener('click', () => {
         const project = activeProjects.find(p => p.id === selectedProjectId);
         if (!project) return;
-
         let text = `✅ ОПЛАТА ПОЛУЧЕНА (ЧЕК)\n\n📁 Проект: ${project.title}\n`;
         if (project.contractor) text += `🏢 Контрагент: ${project.contractor}\n`;
-        text += `💰 Сумма: ${project.cost.toLocaleString('ru-RU')} ₽\n💳 Способ: ${project.method}\n📅 Дата: ${new Date().toLocaleDateString('ru-RU')}`;
+        text += `💰 Сумма: ${project.cost.toLocaleString('ru-RU')} ₽\n💳 Способ: ${project.method}\n`;
         window.open(`https://t.me/share/url?url=&text=${encodeURIComponent(text)}`, '_blank');
     });
 
@@ -969,8 +849,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const idToDelete = selectedProjectId;
             activeProjects = activeProjects.filter(p => p.id !== idToDelete);
             selectedProjectId = activeProjects.length > 0 ? activeProjects[0].id : null;
-            syncData(null, idToDelete);
-            renderTimeline();
+            syncData(null, idToDelete); renderTimeline();
             if(selectedProjectId) updateContentArea();
         }
     });
@@ -978,16 +857,11 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('edit-project-btn').addEventListener('click', () => {
         const project = activeProjects.find(p => p.id === selectedProjectId);
         if (project) {
-            titleInput.value = project.title;
-            contractorInput.value = project.contractor || '';
-            addressInput.value = project.address || '';
-            metroInput.value = project.metro || '';
-            costInput.value = project.cost;
-            methodInput.value = project.method || 'Наличные';
-            
+            titleInput.value = project.title; contractorInput.value = project.contractor || '';
+            addressInput.value = project.address || ''; metroInput.value = project.metro || '';
+            costInput.value = project.cost; methodInput.value = project.method || 'Наличные';
             dynamicDatesList.innerHTML = '';
             project.dates.forEach(d => addDateRow(d.date, d.start || '09:00', d.end || '23:00'));
-            
             renderTeamSelection(project.team);
             openModal(true);
         }
@@ -996,43 +870,22 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('share-project-btn').addEventListener('click', async () => {
         const project = activeProjects.find(p => p.id === selectedProjectId);
         if (!project) return;
-        
         let text = `📁 Проект: ${project.title}\n`;
         if (project.contractor) text += `🏢 Контрагент: ${project.contractor}\n`;
         if (project.address) text += `📍 Площадка: ${project.address}\n`;
-        if (project.metro) text += `🚇 Метро: ${project.metro}\n`;
-        
-        text += `\nГрафик работы:\n`;
+        if (project.metro) text += `🚇 Метро: ${project.metro}\n\nГрафик работы:\n`;
         project.dates.forEach(d => {
             const formatted = new Intl.DateTimeFormat('ru-RU', { day: 'numeric', month: 'long' }).format(new Date(d.date));
             text += `📅 ${formatted} ⏰ ${d.start || '09:00'} - ${d.end || '23:00'}\n`;
         });
-
         if (project.team && project.team.length > 0) {
-            text += `\n👥 Команда:\n`;
-            let teamSum = 0;
-            project.team.forEach(m => {
-                text += `• ${m.name} — ${m.fee.toLocaleString('ru-RU')} ₽\n`;
-                teamSum += m.fee;
-            });
+            text += `\n👥 Команда:\n`; let teamSum = 0;
+            project.team.forEach(m => { text += `• ${m.name} — ${m.fee.toLocaleString('ru-RU')} ₽\n`; teamSum += m.fee; });
             text += `ФОТ Итого: ${teamSum.toLocaleString('ru-RU')} ₽\n`;
         }
-
-        if (project.transportList && project.transportList.length > 0) {
-            text += `\n🚗 Транспорт:\n`;
-            project.transportList.forEach(t => {
-                text += `• ${t.model} (${t.number}) — ${t.driver} (${t.phone})\n`;
-            });
-        }
-        
         text += `\n💰 Смета: ${project.cost.toLocaleString('ru-RU')} ₽\n💵 Оплата: ${project.isPaid ? '✅ Оплачено' : '⏳ Ожидается'} (${project.method})`;
-        
-        if (navigator.share) {
-            try { await navigator.share({ title: 'Отчет по проекту', text: text }); } catch (err) {}
-        } else {
-            navigator.clipboard.writeText(text);
-            alert('Отчет скопирован в буфер обмена!');
-        }
+        if (navigator.share) { try { await navigator.share({ title: 'Отчет по проекту', text: text }); } catch (err) {} }
+        else { navigator.clipboard.writeText(text); alert('Отчет скопирован в буфер обмена!'); }
     });
 
     const uploadInput = document.getElementById('excel-upload');
@@ -1050,8 +903,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const json = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
             renderExcelData(json);
         };
-        reader.readAsArrayBuffer(file);
-        e.target.value = '';
+        reader.readAsArrayBuffer(file); e.target.value = '';
     });
 
     function renderExcelData(data) {
@@ -1065,10 +917,7 @@ document.addEventListener('DOMContentLoaded', () => {
             row.forEach((cell, index) => {
                 const headerName = headers[index] || `Колонка ${index + 1}`;
                 if (cell !== undefined && cell !== null && cell !== '') {
-                    cardHtml += `<div class="mb-1 last:mb-0 flex justify-between gap-4 border-b border-white/5 pb-1 last:border-0 last:pb-0">
-                                    <span class="text-[11px] text-gray-500 font-bold uppercase tracking-wider">${headerName}</span>
-                                    <span class="text-xs text-gray-200 text-right font-medium">${cell}</span>
-                                 </div>`;
+                    cardHtml += `<div class="mb-1 last:mb-0 flex justify-between gap-4 border-b border-white/5 pb-1 last:border-0 last:pb-0"><span class="text-[11px] text-gray-500 font-bold uppercase tracking-wider">${headerName}</span><span class="text-xs text-gray-200 text-right font-medium">${cell}</span></div>`;
                 }
             });
             cardHtml += `</div>`;
