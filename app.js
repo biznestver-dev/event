@@ -102,6 +102,41 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
+    // Пересылка базы через системное меню «Поделиться» (Telegram, WhatsApp, почта)
+    const shareBackupBtn = document.getElementById('share-backup-btn');
+    if (shareBackupBtn) {
+        shareBackupBtn.addEventListener('click', async () => {
+            if (activeProjects.length === 0) {
+                alert('Нет проектов для пересылки!');
+                return;
+            }
+            const jsonString = JSON.stringify(activeProjects, null, 2);
+            const blob = new Blob([jsonString], { type: 'application/json' });
+            const file = new File([blob], `event_kremlin_backup_${new Date().toISOString().slice(0, 10)}.json`, { type: 'application/json' });
+
+            if (navigator.canShare && navigator.canShare({ files: [file] })) {
+                try {
+                    await navigator.share({
+                        title: 'Резервная копия Event Kremlin',
+                        text: 'Актуальная база данных проектов',
+                        files: [file]
+                    });
+                } catch (err) {
+                    if (err.name !== 'AbortError') console.error(err);
+                }
+            } else {
+                // Запасной вариант для десктопов или браузеров без поддержки шаринга файлов
+                const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(jsonString);
+                const downloadAnchor = document.createElement('a');
+                downloadAnchor.setAttribute("href", dataStr);
+                downloadAnchor.setAttribute("download", file.name);
+                document.body.appendChild(downloadAnchor);
+                downloadAnchor.click();
+                downloadAnchor.remove();
+            }
+        });
+    }
+
     // Импорт (загрузить базу проектов из JSON)
     const importInput = document.getElementById('import-backup-input');
     if (importInput) {
@@ -116,7 +151,6 @@ document.addEventListener('DOMContentLoaded', () => {
                         activeProjects = importedProjects;
                         if (activeProjects.length > 0) selectedProjectId = activeProjects[0].id;
                         
-                        // Синхронизируем с localStorage и облаком
                         localStorage.setItem('amProdData', JSON.stringify(activeProjects));
                         if (_supabase) {
                             for (const proj of activeProjects) {
