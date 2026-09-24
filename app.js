@@ -444,15 +444,22 @@ document.addEventListener('DOMContentLoaded', () => {
             const firstDate = new Date(project.dates[0].date);
             const day = firstDate.getDate();
             const month = new Intl.DateTimeFormat('ru-RU', { month: 'short' }).format(firstDate).replace('.', '');
+            // Получаем день недели (например, "пн", "вт", "ср"...)
+            const weekday = new Intl.DateTimeFormat('ru-RU', { weekday: 'short' }).format(firstDate);
+            
             const multiBadge = project.dates.length > 1 ? `<div class="absolute top-1 right-1 bg-red-500 text-white text-[9px] font-bold px-1 rounded-full shadow">+${project.dates.length - 1}</div>` : '';
 
             const borderStyle = project.isPaid && !isActive ? 'border-green-500/40 text-green-400 bg-green-900/10' : 'border-white/10 text-gray-300 bg-gray-800/60';
             icon.className = `date-icon w-full rounded-2xl flex flex-col items-center justify-center border outline-none shadow-sm backdrop-blur-md ${isActive ? 'active text-white' : borderStyle}`;
+            
+            // Вывод: День недели -> Месяц -> Число
             icon.innerHTML = `
                 ${multiBadge}
-                <span class="text-[10px] uppercase font-bold ${isActive ? 'text-white' : 'opacity-60'} mb-1 tracking-widest z-10">${month}</span>
-                <span class="text-2xl font-black leading-none ${isActive ? 'text-white' : ''} z-10">${day}</span>
+                <span class="text-[9px] uppercase font-extrabold ${isActive ? 'text-blue-100' : 'text-blue-400'} tracking-wider z-10">${weekday}</span>
+                <span class="text-[9px] uppercase font-bold ${isActive ? 'text-white' : 'opacity-60'} tracking-widest z-10">${month}</span>
+                <span class="text-xl font-black leading-none ${isActive ? 'text-white' : ''} mt-0.5 z-10">${day}</span>
             `;
+
             icon.addEventListener('click', () => { 
                 selectedProjectId = project.id; 
                 renderTimeline(); 
@@ -1025,7 +1032,6 @@ document.addEventListener('DOMContentLoaded', () => {
         if (project.address) text += `🗺 Карта: https://yandex.ru/maps/?text=${encodeURIComponent(project.address)}\n`;
         
         text += `\nГрафик работы:\n`;
-        // Исправлено: используем project.dates вместо ошибочного project.dates.dates
         project.dates.forEach(d => {
             const formatted = new Intl.DateTimeFormat('ru-RU', { day: 'numeric', month: 'long' }).format(new Date(d.date));
             text += `📅 ${formatted}`;
