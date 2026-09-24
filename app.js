@@ -84,6 +84,63 @@ document.addEventListener('DOMContentLoaded', () => {
     if (selectedProjectId) updateContentArea();
     updateDashboard();
 
+    // Экспорт (скачать базу проектов в JSON)
+    const exportBtn = document.getElementById('export-backup-btn');
+    if (exportBtn) {
+        exportBtn.addEventListener('click', () => {
+            if (activeProjects.length === 0) {
+                alert('Нет проектов для экспорта!');
+                return;
+            }
+            const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(activeProjects, null, 2));
+            const downloadAnchor = document.createElement('a');
+            downloadAnchor.setAttribute("href", dataStr);
+            downloadAnchor.setAttribute("download", `event_kremlin_backup_${new Date().toISOString().slice(0, 10)}.json`);
+            document.body.appendChild(downloadAnchor);
+            downloadAnchor.click();
+            downloadAnchor.remove();
+        });
+    }
+
+    // Импорт (загрузить базу проектов из JSON)
+    const importInput = document.getElementById('import-backup-input');
+    if (importInput) {
+        importInput.addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = async (event) => {
+                try {
+                    const importedProjects = JSON.parse(event.target.result);
+                    if (Array.isArray(importedProjects)) {
+                        activeProjects = importedProjects;
+                        if (activeProjects.length > 0) selectedProjectId = activeProjects[0].id;
+                        
+                        // Синхронизируем с localStorage и облаком
+                        localStorage.setItem('amProdData', JSON.stringify(activeProjects));
+                        if (_supabase) {
+                            for (const proj of activeProjects) {
+                                await _supabase.from('am_projects').upsert({ id: proj.id, project_data: proj });
+                            }
+                        }
+
+                        renderDashboardFilters();
+                        renderTimeline();
+                        if (selectedProjectId) updateContentArea();
+                        updateDashboard();
+                        alert(`Успешно загружено проектов: ${activeProjects.length}`);
+                    } else {
+                        alert('Ошибка: неверный формат файла бэкапа.');
+                    }
+                } catch (err) {
+                    alert('Ошибка при чтении файла бэкапа.');
+                }
+            };
+            reader.readAsText(file);
+            e.target.value = '';
+        });
+    }
+
     // Кнопка отправки общей сводки по всем проектам
     const shareAllBtn = document.getElementById('share-all-projects-btn');
     if (shareAllBtn) {
@@ -93,7 +150,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 return;
             }
 
-            let summaryText = `📋 **ОБЩАЯ СВОДКА ПО ПРОЕКТАМ** 📋\n\n`;
+            let summaryText = `📋 *ОБЩАЯ СВОДКА ПО ПРОЕКТАМ* 📋\n\n`;
             let totalAllSum = 0;
 
             activeProjects.forEach((proj, idx) => {
@@ -114,7 +171,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 totalAllSum += proj.cost || 0;
             });
 
-            summaryText += `💎 **Общая сумма по всем проектам:** ${totalAllSum.toLocaleString('ru-RU')} ₽`;
+            summaryText += `💎 *Общая сумма по всем проектам:* ${totalAllSum.toLocaleString('ru-RU')} ₽`;
 
             if (navigator.share) {
                 try {
@@ -419,7 +476,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const existingProj = activeProjects.find(p => p.id === selectedProjectId);
         
-        // Дефолтные водители по умолчанию для новых проектов
         const defaultTransport = [
             { model: "Автомобиль", number: "—", driver: "Семенов Иван", phone: "+79263451616" },
             { model: "Автомобиль", number: "—", driver: "Юра", phone: "+79166298513" }
