@@ -12,6 +12,11 @@ try {
 document.addEventListener('DOMContentLoaded', () => {
     lucide.createIcons();
 
+    // Запрос разрешений на пуш-уведомления для напоминаний
+    if ('Notification' in window && Notification.permission !== 'granted') {
+        Notification.requestPermission();
+    }
+
     const timeline = document.getElementById('projects-timeline');
 
     const PREDEFINED_TEAM = [
@@ -30,7 +35,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (updateAppBtn) {
         updateAppBtn.addEventListener('click', async () => {
             const icon = document.getElementById('sync-icon');
-            icon.classList.add('animate-spin', 'text-yellow-400');
+            icon.classList.add('animate-spin', 'text-sky-400');
             
             try {
                 if ('serviceWorker' in navigator) {
@@ -47,7 +52,6 @@ document.addEventListener('DOMContentLoaded', () => {
                     window.location.reload(true);
                 }, 800);
             } catch(err) {
-                console.error('Update error:', err);
                 window.location.reload(true);
             }
         });
@@ -88,18 +92,41 @@ document.addEventListener('DOMContentLoaded', () => {
     if (selectedProjectId) updateContentArea();
     updateDashboard();
 
-    // Обработка кликов по быстрым площадкам в модальном окне
+    // Планировщик напоминаний за день
+    function scheduleProjectReminders() {
+        if (!('Notification' in window) || Notification.permission !== 'granted') return;
+        
+        activeProjects.forEach(project => {
+            if (!project.dates || project.dates.length === 0) return;
+            const firstDateStr = project.dates[0].date;
+            const eventDate = new Date(firstDateStr);
+            const reminderTime = new Date(eventDate.getTime() - (24 * 60 * 60 * 1000)); // За 24 часа
+            const now = new Date();
+
+            const timeDiff = reminderTime.getTime() - now.getTime();
+            if (timeDiff > 0 && timeDiff < 30 * 24 * 60 * 60 * 1000) {
+                setTimeout(() => {
+                    new Notification("📅 Напоминание о проекте", {
+                        body: `Завтра (${new Intl.DateTimeFormat('ru-RU', { day: 'numeric', month: 'long' }).format(eventDate)}) состоится проект: "${project.title}"`,
+                        icon: "./icon.jpg"
+                    });
+                }, timeDiff);
+            }
+        });
+    }
+    scheduleProjectReminders();
+
+    // Быстрые площадки
     document.querySelectorAll('.venue-tag').forEach(btn => {
         btn.addEventListener('click', () => {
             const addr = btn.getAttribute('data-address');
             const metro = btn.getAttribute('data-metro');
-            
             if (addressInput) addressInput.value = addr;
             if (metroInput) metroInput.value = metro;
             
-            btn.classList.add('bg-blue-600', 'text-white');
+            btn.classList.add('bg-sky-600', 'text-white');
             setTimeout(() => {
-                btn.classList.remove('bg-blue-600', 'text-white');
+                btn.classList.remove('bg-sky-600', 'text-white');
             }, 300);
         });
     });
@@ -118,6 +145,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 renderTimeline();
                 if(selectedProjectId) updateContentArea();
                 updateDashboard();
+                scheduleProjectReminders();
             }
         } catch (e) {}
     }
@@ -138,6 +166,7 @@ document.addEventListener('DOMContentLoaded', () => {
         localStorage.setItem('amProdData', JSON.stringify(activeProjects));
         renderDashboardFilters();
         updateDashboard();
+        scheduleProjectReminders();
 
         if (!_supabase) return;
         try {
@@ -169,7 +198,7 @@ document.addEventListener('DOMContentLoaded', () => {
         filters.forEach(f => {
             const item = document.createElement('div');
             const isSelected = currentDashFilter === f;
-            item.className = `px-4 py-3 rounded-xl text-xs font-bold cursor-pointer transition-colors flex items-center justify-between ${isSelected ? 'bg-blue-600/30 text-blue-400' : 'text-gray-300 hover:bg-gray-800'}`;
+            item.className = `px-4 py-3 rounded-xl text-xs font-bold cursor-pointer transition-colors flex items-center justify-between ${isSelected ? 'bg-sky-600/30 text-sky-400' : 'text-gray-300 hover:bg-gray-800'}`;
             item.innerHTML = `<span>${f}</span> ${isSelected ? '<i data-lucide="check" class="w-4 h-4"></i>' : ''}`;
             
             item.addEventListener('click', () => {
@@ -186,11 +215,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
         currentFilterText.textContent = currentDashFilter;
         if (currentDashFilter !== 'Все проекты' && currentDashFilter !== 'Весь ФОТ') {
-            dropdownBtn.classList.add('bg-blue-900/40', 'border-blue-500/50', 'text-blue-300');
-            filterIcon.classList.replace('text-blue-400', 'text-blue-300');
+            dropdownBtn.classList.add('bg-sky-900/40', 'border-sky-500/50', 'text-sky-300');
+            filterIcon.classList.replace('text-sky-400', 'text-sky-300');
         } else {
-            dropdownBtn.classList.remove('bg-blue-900/40', 'border-blue-500/50', 'text-blue-300');
-            filterIcon.classList.replace('text-blue-300', 'text-blue-400');
+            dropdownBtn.classList.remove('bg-sky-900/40', 'border-sky-500/50', 'text-sky-300');
+            filterIcon.classList.replace('text-sky-300', 'text-sky-400');
         }
     }
 
@@ -236,9 +265,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
     document.getElementById('add-date-btn').addEventListener('click', () => {
         titleInput.value = ''; contractorInput.value = ''; addressInput.value = ''; metroInput.value = '';
-        costInput.value = ''; methodInput.value = 'Наличные';
+        costInput.value = '15000'; methodInput.value = 'Наличные';
         dynamicDatesList.innerHTML = '';
-        addDateRow();
+        addDateRow('', '09:00', '23:00'); // Автоматическое время по умолчанию
         renderTeamSelection([]);
         openModal(false);
     });
@@ -282,7 +311,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         if(!fullAddress) fullAddress = data.display_name;
                         addressInput.value = fullAddress;
                     }
-                } catch(e) { console.error(e); alert('Не удалось получить адрес'); }
+                } catch(e) { alert('Не удалось получить адрес'); }
                 btn.innerHTML = originalHtml;
             }, () => {
                 alert('Доступ к геолокации запрещен');
@@ -294,15 +323,16 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    function addDateRow(dateVal='', startVal='', endVal='') {
+    // Функция добавления ряда дат с дефолтным временем 09:00 и 23:00
+    function addDateRow(dateVal='', startVal='09:00', endVal='23:00') {
         const row = document.createElement('div');
         row.className = "date-row flex gap-1 items-center";
         row.innerHTML = `
-            <input type="date" class="row-date w-[45%] bg-gray-950 text-white text-xs rounded-xl p-2 outline-none border border-gray-700" style="color-scheme: dark;" value="${dateVal}" required>
-            <input type="time" class="row-start w-[22%] bg-gray-950 text-white text-xs rounded-xl p-2 outline-none border border-gray-700" style="color-scheme: dark;" value="${startVal}">
-            <span class="text-gray-500 text-xs">-</span>
-            <input type="time" class="row-end w-[22%] bg-gray-950 text-white text-xs rounded-xl p-2 outline-none border border-gray-700" style="color-scheme: dark;" value="${endVal}">
-            <button type="button" class="remove-row-btn w-[10%] text-red-500/80 hover:text-red-400 p-1 flex justify-center"><i data-lucide="x-circle" class="w-4 h-4"></i></button>
+            <input type="date" class="row-date w-[43%] bg-gray-950 text-white text-xs rounded-xl p-2 outline-none border border-gray-700" style="color-scheme: dark;" value="${dateVal}" required>
+            <input type="time" class="row-start w-[23%] bg-gray-950 text-sky-300 text-xs rounded-xl p-2 outline-none border border-sky-500/50" style="color-scheme: dark;" value="${startVal}">
+            <span class="text-sky-400 text-xs font-bold">-</span>
+            <input type="time" class="row-end w-[23%] bg-gray-950 text-sky-300 text-xs rounded-xl p-2 outline-none border border-sky-500/50" style="color-scheme: dark;" value="${endVal}">
+            <button type="button" class="remove-row-btn w-[11%] text-red-500/80 hover:text-red-400 p-1 flex justify-center"><i data-lucide="x-circle" class="w-4 h-4"></i></button>
         `;
         dynamicDatesList.appendChild(row);
         lucide.createIcons({root: row});
@@ -312,12 +342,12 @@ document.addEventListener('DOMContentLoaded', () => {
             else alert('В проекте должен быть минимум один день!');
         });
     }
-    document.getElementById('add-dynamic-date-btn').addEventListener('click', () => addDateRow());
+    document.getElementById('add-dynamic-date-btn').addEventListener('click', () => addDateRow('', '09:00', '23:00'));
 
     function renderTeamSelection(existingTeam = []) {
         teamSelectionList.innerHTML = '';
         PREDEFINED_TEAM.forEach(name => {
-            const memberData = existingTeam.find(m => m.name === name) || { fee: '' };
+            const memberData = existingTeam.find(m => m.name === name) || { fee: 15000 };
             const isChecked = !!existingTeam.find(m => m.name === name);
             addTeamMemberRow(name, memberData.fee, isChecked, true);
         });
@@ -329,7 +359,7 @@ document.addEventListener('DOMContentLoaded', () => {
         calcTeamTotal();
     }
 
-    function addTeamMemberRow(name = '', fee = '', isChecked = false, isPredefined = false) {
+    function addTeamMemberRow(name = '', fee = 15000, isChecked = false, isPredefined = false) {
         const row = document.createElement('div');
         row.className = "custom-team-row flex justify-between items-center bg-gray-950 p-2 rounded-xl border border-gray-700/80 gap-2";
         
@@ -339,13 +369,13 @@ document.addEventListener('DOMContentLoaded', () => {
                     <input type="checkbox" class="team-checkbox shrink-0" value="${name}" ${isChecked ? 'checked' : ''}>
                     <span class="text-[11px] text-gray-300 font-medium truncate">${name}</span>
                 </label>
-                <input type="number" class="team-fee w-20 shrink-0 bg-gray-900 text-white text-xs rounded-xl p-1.5 outline-none border border-gray-600 focus:border-blue-500 transition-colors text-right ${isChecked ? '' : 'opacity-30'}" placeholder="0 ₽" value="${fee}" ${isChecked ? '' : 'disabled'}>
+                <input type="number" class="team-fee w-20 shrink-0 bg-gray-900 text-white text-xs rounded-xl p-1.5 outline-none border border-gray-600 focus:border-sky-500 transition-colors text-right ${isChecked ? '' : 'opacity-30'}" placeholder="0 ₽" value="${fee !== '' ? fee : 15000}" ${isChecked ? '' : 'disabled'}>
             `;
         } else {
             row.innerHTML = `
                 <input type="checkbox" class="team-checkbox shrink-0 hidden" value="custom" checked>
                 <input type="text" class="custom-team-name flex-1 bg-gray-900 text-white text-[11px] rounded-xl p-1.5 outline-none border border-gray-600 focus:border-purple-500" placeholder="ФИО или Роль" value="${name}">
-                <input type="number" class="team-fee w-20 shrink-0 bg-gray-900 text-white text-xs rounded-xl p-1.5 outline-none border border-gray-600 focus:border-purple-500 text-right" placeholder="0 ₽" value="${fee}">
+                <input type="number" class="team-fee w-20 shrink-0 bg-gray-900 text-white text-xs rounded-xl p-1.5 outline-none border border-gray-600 focus:border-purple-500 text-right" placeholder="0 ₽" value="${fee !== '' ? fee : 15000}">
                 <button type="button" class="text-red-500/80 hover:text-red-400 p-1 flex justify-center w-6 shrink-0" onclick="this.parentElement.remove(); calcTeamTotal();"><i data-lucide="x" class="w-4 h-4"></i></button>
             `;
         }
@@ -358,6 +388,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (e.target.checked) {
                     feeInput.disabled = false;
                     feeInput.classList.remove('opacity-30');
+                    if(!feeInput.value) feeInput.value = 15000;
                     feeInput.focus();
                 } else {
                     feeInput.disabled = true;
@@ -373,7 +404,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     document.getElementById('add-custom-member-btn').addEventListener('click', () => {
-        addTeamMemberRow('', '', true, false);
+        addTeamMemberRow('', 15000, true, false);
     });
 
     function calcTeamTotal() {
@@ -411,7 +442,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     memberName = nameInput ? nameInput.value.trim() : '';
                 }
                 const feeVal = row.querySelector('.team-fee').value;
-                if (memberName) extractedTeam.push({ name: memberName, fee: feeVal ? Number(feeVal) : 0 });
+                if (memberName) extractedTeam.push({ name: memberName, fee: feeVal ? Number(feeVal) : 15000 });
             }
         });
 
@@ -424,7 +455,7 @@ document.addEventListener('DOMContentLoaded', () => {
             metro: metroInput.value || '',
             dates: extractedDates,
             team: extractedTeam,
-            cost: costInput.value ? Number(costInput.value) : 0,
+            cost: costInput.value ? Number(costInput.value) : 15000,
             method: methodInput.value || 'Наличные',
             isPaid: isEditMode ? existingProj.isPaid : false,
             checkinList: isEditMode && existingProj ? existingProj.checkinList : [],
@@ -462,14 +493,15 @@ document.addEventListener('DOMContentLoaded', () => {
             const month = new Intl.DateTimeFormat('ru-RU', { month: 'short' }).format(firstDate).replace('.', '');
             const weekday = new Intl.DateTimeFormat('ru-RU', { weekday: 'short' }).format(firstDate);
             
-            const multiBadge = project.dates.length > 1 ? `<div class="absolute top-1 right-1 bg-red-500 text-white text-[9px] font-bold px-1 rounded-full shadow">+${project.dates.length - 1}</div>` : '';
+            const multiBadge = project.dates.length > 1 ? `<div class="absolute top-1 right-1 bg-sky-500 text-white text-[9px] font-bold px-1 rounded-full shadow">+${project.dates.length - 1}</div>` : '';
 
             const borderStyle = project.isPaid && !isActive ? 'border-green-500/40 text-green-400 bg-green-900/10' : 'border-white/10 text-gray-300 bg-gray-800/60';
             icon.className = `date-icon w-full rounded-2xl flex flex-col items-center justify-center border outline-none shadow-sm backdrop-blur-md ${isActive ? 'active text-white' : borderStyle}`;
             
+            // Вывод теплого голубого акцента для дней недели
             icon.innerHTML = `
                 ${multiBadge}
-                <span class="text-[9px] uppercase font-extrabold ${isActive ? 'text-blue-100' : 'text-blue-400'} tracking-wider z-10">${weekday}</span>
+                <span class="text-[9px] uppercase font-extrabold ${isActive ? 'text-sky-100' : 'text-sky-400'} tracking-wider z-10">${weekday}</span>
                 <span class="text-[9px] uppercase font-bold ${isActive ? 'text-white' : 'opacity-60'} tracking-widest z-10">${month}</span>
                 <span class="text-xl font-black leading-none ${isActive ? 'text-white' : ''} mt-0.5 z-10">${day}</span>
             `;
@@ -502,8 +534,8 @@ document.addEventListener('DOMContentLoaded', () => {
             if (project.address) {
                 locHtml += `
                 <div class="flex items-start gap-2 mb-2">
-                    <i data-lucide="map-pin" class="w-4 h-4 text-blue-400 shrink-0 mt-0.5"></i>
-                    <a href="https://yandex.ru/maps/?text=${encodeURIComponent(project.address)}" target="_blank" class="text-[13px] text-blue-100 font-medium hover:text-blue-300 underline underline-offset-4 decoration-blue-500/30">${project.address}</a>
+                    <i data-lucide="map-pin" class="w-4 h-4 text-sky-400 shrink-0 mt-0.5"></i>
+                    <a href="https://yandex.ru/maps/?text=${encodeURIComponent(project.address)}" target="_blank" class="text-[13px] text-sky-100 font-medium hover:text-sky-300 underline underline-offset-4 decoration-sky-500/30">${project.address}</a>
                 </div>`;
             }
             if (project.metro) {
@@ -521,80 +553,21 @@ document.addEventListener('DOMContentLoaded', () => {
             let transitBus = 'Остановка наземного транспорта в радиусе доступа';
             let transitParking = 'Городская парковка (380 ₽/ч). Служебный въезд через КПП по аккредитации.';
 
-            const addrLower = (project.address + " " + project.title).toLowerCase();
-            if (addrLower.includes('лайв арена') || addrLower.includes('live arena') || addrLower.includes('западная ул')) {
-                transitMetro = 'МЦД-1 ст. «Сколково» (15 мин пешком)';
-                transitBus = 'Автобус № 819К, маршрутное такси № 27, 44к (пересадка с МЦД)';
-                transitParking = 'Собственная парковка Live Arena (по предварительной брони).';
-            } else if (addrLower.includes('втб арена') || addrLower.includes('vtb arena') || addrLower.includes('динамо')) {
-                transitMetro = 'м. «Динамо», «Петровский парк» (2 мин пешком)';
-                transitBus = 'Автобусы № м1, т29, 318, с543 (пересадочный узел)';
-                transitParking = 'Подземный паркинг Арена Плаза (300 ₽/ч).';
-            } else if (addrLower.includes('лужники') || addrLower.includes('luzhniki')) {
-                transitMetro = 'м. «Спортивная», МЦК «Лужники» (7-10 мин пешком)';
-                transitBus = 'Автобусы № с249, с755, мs1 (пересадка на МЦК)';
-                transitParking = 'Официальная парковка спорткомплекса Лужники.';
-            } else if (addrLower.includes('крокус') || addrLower.includes('crocus')) {
-                transitMetro = 'м. «Мякинино» (прямой выход в павильоны)';
-                transitBus = 'Автобусы № 631, 640';
-                transitParking = 'Бесплатная парковка Крокус Экспо (более 6000 мест).';
-            } else if (addrLower.includes('манеж') || addrLower.includes('кремль')) {
-                transitMetro = 'м. «Охотный ряд», «Библиотека им. Ленина» (5-7 мин пешком)';
-                transitBus = 'Автобусы № м1, м2, с511, т54, н11 (пересадка с метро)';
-                transitParking = 'Городская парковка № 3001, 3002 (380 ₽/ч). Въезд через КПП.';
-            } else if (project.address) {
-                try {
-                    const geoRes = await fetch(`https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(project.address)}&format=json&limit=1`);
-                    const geoData = await geoRes.json();
-                    if (geoData && geoData.length > 0) {
-                        const lat = geoData[0].lat;
-                        const lon = geoData[0].lon;
-                        
-                        const overpassQuery = `[out:json][timeout:6];(node["railway"="station"]["station"="subway"](around:2000,${lat},${lon});node["station"="subway"](around:2000,${lat},${lon});node["highway"="bus_stop"](around:2000,${lat},${lon});node["public_transport"="platform"](around:2000,${lat},${lon}););out body;`;
-                        const opRes = await fetch(`https://overpass-api.de/api/interpreter?data=${encodeURIComponent(overpassQuery)}`);
-                        const opData = await opRes.json();
-                        
-                        if (opData && opData.elements && opData.elements.length > 0) {
-                            const stations = opData.elements.filter(el => el.tags && (el.tags.station === 'subway' || el.tags.railway === 'station' || el.tags.station));
-                            const stops = opData.elements.filter(el => el.tags && (el.tags.highway === 'bus_stop' || el.tags.public_transport === 'platform'));
-                            
-                            if (stations.length > 0) {
-                                const stName = stations[0].tags.name || 'Станция метро / МЦД';
-                                transitMetro = `м. / ст. «${stName}» (~2 км)`;
-                            }
-                            if (stops.length > 0) {
-                                const stopName = stops[0].tags.name || stops[0].tags.ref || 'Остановка в радиусе 2 км';
-                                transitBus = `Остановка «${stopName}» (доступна пересадка с общественного транспорта)`;
-                            } else if (stations.length > 0) {
-                                transitBus = `Доступны пересадочные маршруты наземного транспорта в зоне 2 км`;
-                            }
-                        }
-                    }
-                } catch(err) { console.error('Geo lookup error:', err); }
-            }
-
             locHtml += `
                 <div class="mt-4 pt-3 border-t border-white/10 space-y-3 text-xs">
                     <div class="flex items-start gap-2.5 text-gray-200">
                         <i data-lucide="train" class="w-4 h-4 text-red-400 shrink-0 mt-0.5"></i>
-                        <div>
-                            <span class="font-semibold text-white">Метро / МЦД:</span> <span class="text-gray-300">${transitMetro}</span>
-                        </div>
+                        <div><span class="font-semibold text-white">Метро / МЦД:</span> <span class="text-gray-300">${transitMetro}</span></div>
                     </div>
                     <div class="flex items-start gap-2.5 text-gray-200">
                         <i data-lucide="bus" class="w-4 h-4 text-purple-400 shrink-0 mt-0.5"></i>
-                        <div>
-                            <span class="font-semibold text-white">Общественный транспорт:</span> <span class="text-gray-300">${transitBus}</span>
-                        </div>
+                        <div><span class="font-semibold text-white">Общественный транспорт:</span> <span class="text-gray-300">${transitBus}</span></div>
                     </div>
                     <div class="flex items-start gap-2.5 text-gray-200">
                         <i data-lucide="parking-square" class="w-4 h-4 text-green-400 shrink-0 mt-0.5"></i>
-                        <div>
-                            <span class="font-semibold text-white">Парковки:</span> <span class="text-gray-300">${transitParking}</span>
-                        </div>
+                        <div><span class="font-semibold text-white">Парковки:</span> <span class="text-gray-300">${transitParking}</span></div>
                     </div>
-                </div>
-            `;
+                </div>`;
 
             locHtml += `</div>`;
             locContainer.innerHTML = locHtml;
@@ -610,19 +583,20 @@ document.addEventListener('DOMContentLoaded', () => {
             const formattedDate = new Intl.DateTimeFormat('ru-RU', { day: 'numeric', month: 'long', year: 'numeric' }).format(dateObj);
             let timeHtml = '';
             if(d.start || d.end) {
-                timeHtml = `<div class="flex items-center gap-1.5 text-purple-200 text-[11px] font-bold bg-purple-900/40 px-2.5 py-1 rounded-xl border border-purple-500/40 w-fit drop-shadow">
-                                <i data-lucide="clock" class="w-3.5 h-3.5"></i> ${d.start} ${d.start&&d.end?'-':''} ${d.end}
+                // Теплый голубой акцент для отображения времени в карточке проекта
+                timeHtml = `<div class="flex items-center gap-1.5 text-sky-200 text-[11px] font-bold bg-sky-950/60 px-2.5 py-1 rounded-xl border border-sky-500/50 w-fit drop-shadow">
+                                <i data-lucide="clock" class="w-3.5 h-3.5 text-sky-400"></i> ${d.start} ${d.start&&d.end?'-':''} ${d.end}
                             </div>`;
             }
             const row = document.createElement('div');
-            row.className = "animated-info-card glow-blue p-4 rounded-3xl shadow-2xl flex flex-col gap-3 backdrop-blur-md relative";
+            row.className = "animated-info-card glow-sky-warm p-4 rounded-3xl shadow-2xl flex flex-col gap-3 backdrop-blur-md relative";
             row.innerHTML = `
                 <canvas id="sky-canvas-${project.id}-${index}" class="absolute inset-0 w-full h-full pointer-events-none z-0"></canvas>
                 
                 <div class="card-content flex justify-between items-start z-10">
                     <div class="flex flex-col gap-1">
-                        <div class="flex items-center gap-2 text-blue-300 text-xs font-extrabold uppercase tracking-wide drop-shadow">
-                            <i data-lucide="calendar" class="w-4 h-4 text-blue-400"></i> ${formattedDate}
+                        <div class="flex items-center gap-2 text-sky-300 text-xs font-extrabold uppercase tracking-wide drop-shadow">
+                            <i data-lucide="calendar" class="w-4 h-4 text-sky-400"></i> ${formattedDate}
                         </div>
                         ${timeHtml}
                     </div>
@@ -694,9 +668,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
                 function drawSky() {
                     let grad = ctx.createLinearGradient(0, 0, canvas.width, canvas.height);
-                    grad.addColorStop(0, '#1e293b');
-                    grad.addColorStop(0.5, '#4338ca');
-                    grad.addColorStop(1, '#0f172a');
+                    grad.addColorStop(0, '#0f172a');
+                    grad.addColorStop(0.5, '#0369a1');
+                    grad.addColorStop(1, '#020617');
                     ctx.fillStyle = grad;
                     ctx.fillRect(0, 0, canvas.width, canvas.height);
 
@@ -730,11 +704,10 @@ document.addEventListener('DOMContentLoaded', () => {
                     const detBox = document.getElementById(`weather-det-${project.id}-${index}`);
                     if(detBox) {
                         detBox.innerHTML = `
-                            <div class="text-xl bg-black/50 backdrop-blur-md px-3.5 py-2 rounded-2xl border border-white/15 text-center shadow-inner flex items-center gap-2">
+                            <div class="text-xl bg-black/50 backdrop-blur-md px-3.5 py-2 rounded-2xl border border-sky-500/30 text-center shadow-inner flex items-center gap-2">
                                 <span class="weather-float">${icon}</span>
                                 <span class="text-xs font-black text-white">${temp > 0 ? '+' : ''}°${temp}</span>
-                            </div>
-                        `;
+                            </div>`;
                     }
                 }
             } catch(e) {}
@@ -750,10 +723,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 teamTotal += member.fee;
                 teamListHtml.innerHTML += `
                     <div class="flex justify-between items-center py-1.5 border-b border-white/5 last:border-0">
-                        <span class="text-xs text-gray-300 flex items-center gap-2 font-medium truncate pr-2"><i data-lucide="user" class="w-3.5 h-3.5 text-blue-400"></i> ${member.name}</span>
+                        <span class="text-xs text-gray-300 flex items-center gap-2 font-medium truncate pr-2"><i data-lucide="user" class="w-3.5 h-3.5 text-sky-400"></i> ${member.name}</span>
                         <span class="text-xs font-bold text-white shrink-0">${member.fee.toLocaleString('ru-RU')} ₽</span>
-                    </div>
-                `;
+                    </div>`;
             });
             document.getElementById('project-team-total').textContent = `${teamTotal.toLocaleString('ru-RU')} ₽`;
             lucide.createIcons({root: teamContainer});
@@ -810,10 +782,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         project.checkinList.forEach((person, index) => {
             if (person.arrivedTime && !person.leftTime) onSiteCount++;
-
-            if (filterText && !person.name.toLowerCase().includes(filterText) && !person.role.toLowerCase().includes(filterText)) {
-                return;
-            }
+            if (filterText && !person.name.toLowerCase().includes(filterText) && !person.role.toLowerCase().includes(filterText)) return;
 
             const item = document.createElement('div');
             item.className = "bg-black/30 p-3 rounded-2xl border border-white/5 flex flex-col gap-2";
@@ -835,8 +804,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     <button type="button" class="left-btn flex-1 bg-red-600/20 text-red-400 hover:bg-red-600/30 text-[11px] font-bold py-2 px-2 rounded-xl glow-red transition-colors flex justify-center items-center gap-1 active:scale-95" data-index="${index}">
                         <i data-lucide="log-out" class="w-3.5 h-3.5"></i> Уехал
                     </button>
-                </div>
-            `;
+                </div>`;
             container.appendChild(item);
         });
 
@@ -875,7 +843,6 @@ document.addEventListener('DOMContentLoaded', () => {
     function renderTransportSection(project) {
         const container = document.getElementById('transport-list');
         if (!container) return;
-
         if (!project.transportList) project.transportList = [];
 
         container.innerHTML = '';
@@ -901,8 +868,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         <div class="text-[10px] text-gray-500">${car.phone || 'Нет телефона'}</div>
                     </div>
                     ${car.phone ? `<a href="tel:${car.phone}" class="bg-green-600/20 text-green-400 hover:bg-green-600/30 p-2 rounded-xl glow-green flex items-center gap-1 text-xs font-bold"><i data-lucide="phone" class="w-3.5 h-3.5"></i> Звонок</a>` : ''}
-                </div>
-            `;
+                </div>`;
             container.appendChild(item);
         });
         lucide.createIcons({root: container});
@@ -954,15 +920,12 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('pick-contact-btn').addEventListener('click', async () => {
         if ('contacts' in navigator && 'Picker' in window) {
             try {
-                const props = ['name', 'tel'];
-                const opts = { multiple: false };
-                const contacts = await navigator.contacts.select(props, opts);
+                const contacts = await navigator.contacts.select(['name', 'tel'], { multiple: false });
                 if (contacts.length > 0) {
-                    const contact = contacts[0];
-                    if (contact.name && contact.name[0]) document.getElementById('tr-driver').value = contact.name[0];
-                    if (contact.tel && contact.tel[0]) document.getElementById('tr-phone').value = contact.tel[0];
+                    if (contacts[0].name && contacts[0].name[0]) document.getElementById('tr-driver').value = contacts[0].name[0];
+                    if (contacts[0].tel && contacts[0].tel[0]) document.getElementById('tr-phone').value = contacts[0].tel[0];
                 }
-            } catch (ex) { console.error(ex); }
+            } catch (ex) {}
         } else {
             const name = prompt('Введите ФИО водителя:');
             if(name) document.getElementById('tr-driver').value = name;
@@ -995,15 +958,10 @@ document.addEventListener('DOMContentLoaded', () => {
         const project = activeProjects.find(p => p.id === selectedProjectId);
         if (!project) return;
 
-        let text = `✅ ОПЛАТА ПОЛУЧЕНА (ЧЕК)\n\n`;
-        text += `📁 Проект: ${project.title}\n`;
+        let text = `✅ ОПЛАТА ПОЛУЧЕНА (ЧЕК)\n\n📁 Проект: ${project.title}\n`;
         if (project.contractor) text += `🏢 Контрагент: ${project.contractor}\n`;
-        text += `💰 Сумма: ${project.cost.toLocaleString('ru-RU')} ₽\n`;
-        text += `💳 Способ: ${project.method}\n`;
-        text += `📅 Дата отчета: ${new Date().toLocaleDateString('ru-RU')}`;
-
-        const tgUrl = `https://t.me/share/url?url=${encodeURIComponent('')}&text=${encodeURIComponent(text)}`;
-        window.open(tgUrl, '_blank');
+        text += `💰 Сумма: ${project.cost.toLocaleString('ru-RU')} ₽\n💳 Способ: ${project.method}\n📅 Дата: ${new Date().toLocaleDateString('ru-RU')}`;
+        window.open(`https://t.me/share/url?url=&text=${encodeURIComponent(text)}`, '_blank');
     });
 
     document.getElementById('delete-project-btn').addEventListener('click', () => {
@@ -1028,7 +986,7 @@ document.addEventListener('DOMContentLoaded', () => {
             methodInput.value = project.method || 'Наличные';
             
             dynamicDatesList.innerHTML = '';
-            project.dates.forEach(d => addDateRow(d.date, d.start, d.end));
+            project.dates.forEach(d => addDateRow(d.date, d.start || '09:00', d.end || '23:00'));
             
             renderTeamSelection(project.team);
             openModal(true);
@@ -1043,14 +1001,11 @@ document.addEventListener('DOMContentLoaded', () => {
         if (project.contractor) text += `🏢 Контрагент: ${project.contractor}\n`;
         if (project.address) text += `📍 Площадка: ${project.address}\n`;
         if (project.metro) text += `🚇 Метро: ${project.metro}\n`;
-        if (project.address) text += `🗺 Карта: https://yandex.ru/maps/?text=${encodeURIComponent(project.address)}\n`;
         
         text += `\nГрафик работы:\n`;
         project.dates.forEach(d => {
             const formatted = new Intl.DateTimeFormat('ru-RU', { day: 'numeric', month: 'long' }).format(new Date(d.date));
-            text += `📅 ${formatted}`;
-            if(d.start || d.end) text += ` ⏰ ${d.start ? d.start : ''}${d.start&&d.end?'-':''}${d.end ? d.end : ''}`;
-            text += '\n';
+            text += `📅 ${formatted} ⏰ ${d.start || '09:00'} - ${d.end || '23:00'}\n`;
         });
 
         if (project.team && project.team.length > 0) {
@@ -1073,11 +1028,10 @@ document.addEventListener('DOMContentLoaded', () => {
         text += `\n💰 Смета: ${project.cost.toLocaleString('ru-RU')} ₽\n💵 Оплата: ${project.isPaid ? '✅ Оплачено' : '⏳ Ожидается'} (${project.method})`;
         
         if (navigator.share) {
-            try { await navigator.share({ title: 'Отчет по проекту', text: text }); } 
-            catch (err) { console.log('Ошибка шаринга', err); }
+            try { await navigator.share({ title: 'Отчет по проекту', text: text }); } catch (err) {}
         } else {
             navigator.clipboard.writeText(text);
-            alert('Текущий отчет скопирован в буфер обмена!');
+            alert('Отчет скопирован в буфер обмена!');
         }
     });
 
@@ -1124,5 +1078,5 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 if ('serviceWorker' in navigator) {
-    window.addEventListener('load', () => navigator.serviceWorker.register('./sw.js').catch(err => console.log('SW', err)));
+    window.addEventListener('load', () => navigator.serviceWorker.register('./sw.js').catch(err => {}));
 }
