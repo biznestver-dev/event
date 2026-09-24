@@ -125,7 +125,6 @@ document.addEventListener('DOMContentLoaded', () => {
                     if (err.name !== 'AbortError') console.error(err);
                 }
             } else {
-                // Запасной вариант для десктопов или браузеров без поддержки шаринга файлов
                 const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(jsonString);
                 const downloadAnchor = document.createElement('a');
                 downloadAnchor.setAttribute("href", dataStr);
@@ -175,7 +174,7 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // Кнопка отправки общей сводки по всем проектам
+    // Кнопка отправки общей сводки по всем проектам в виде ФИНАНСОВОГО ЧЕКА
     const shareAllBtn = document.getElementById('share-all-projects-btn');
     if (shareAllBtn) {
         shareAllBtn.addEventListener('click', async () => {
@@ -184,36 +183,59 @@ document.addEventListener('DOMContentLoaded', () => {
                 return;
             }
 
-            let summaryText = `📋 *ОБЩАЯ СВОДКА ПО ПРОЕКТАМ* 📋\n\n`;
             let totalAllSum = 0;
+            let totalAllFot = 0;
+            const currentDate = new Intl.DateTimeFormat('ru-RU', { day: '2-digit', month: '2-digit', year: 'numeric' }).format(new Date());
+
+            let summaryText = `       🏛️ EVENT KREMLIN 🏛️       \n`;
+            summaryText += `     PROD / TECHNICAL DEPARTMENT     \n`;
+            summaryText += `═════════════════════════════\n`;
+            summaryText += `📄 ФИНАНСОВЫЙ ЧЕК • СВОДКА \n`;
+            summaryText += `📅 Дата формирования: ${currentDate}\n`;
+            summaryText += `═════════════════════════════\n\n`;
 
             activeProjects.forEach((proj, idx) => {
-                summaryText += `${idx + 1}. *${proj.title}*\n`;
-                if (proj.contractor) summaryText += `   🏢 Контрагент: ${proj.contractor}\n`;
-                if (proj.address) summaryText += `   📍 Площадка: ${proj.address}\n`;
+                summaryText += `${idx + 1}️⃣ ПРОЕКТ: ${proj.title}\n`;
+                if (proj.contractor) summaryText += ` 🏢 Контрагент: ${proj.contractor}\n`;
+                if (proj.address) summaryText += ` 📍 Площадка: ${proj.address}\n`;
                 
                 if (proj.dates && proj.dates.length > 0) {
-                    summaryText += `   📅 Даты: `;
                     const dateStrs = proj.dates.map(d => {
                         const formatted = new Intl.DateTimeFormat('ru-RU', { day: 'numeric', month: 'short' }).format(new Date(d.date));
-                        return `${formatted} (${d.start || '09:00'}-${d.end || '23:00'})`;
+                        return `${formatted} (${d.start || '09:00'} - ${d.end || '23:00'})`;
                     });
-                    summaryText += `${dateStrs.join(', ')}\n`;
+                    summaryText += ` 📅 ${dateStrs.join(', ')}\n`;
                 }
 
-                summaryText += `   💰 Смета: ${proj.cost ? proj.cost.toLocaleString('ru-RU') : 0} ₽ (${proj.isPaid ? '✅ Оплачено' : '⏳ Ожидается'})\n\n`;
-                totalAllSum += proj.cost || 0;
+                if (proj.team && proj.team.length > 0) {
+                    summaryText += ` 👥 Команда:\n`;
+                    proj.team.forEach(m => {
+                        summaryText += `  • ${m.name} — ${m.fee.toLocaleString('ru-RU')} ₽\n`;
+                        totalAllFot += m.fee || 0;
+                    });
+                }
+
+                const projCost = proj.cost || 0;
+                summaryText += ` 💳 Смета проекта: ${projCost.toLocaleString('ru-RU')} ₽\n`;
+                summaryText += ` 📌 Статус: ${proj.isPaid ? '✅ Оплачено' : '⏳ Ожидается'}\n`;
+                summaryText += `\n─────────────────────────────\n\n`;
+                
+                totalAllSum += projCost;
             });
 
-            summaryText += `💎 *Общая сумма по всем проектам:* ${totalAllSum.toLocaleString('ru-RU')} ₽`;
+            summaryText += `═════════════════════════════\n`;
+            summaryText += `💎 ИТОГО ПО СМЕТАМ:   ${totalAllSum.toLocaleString('ru-RU')} ₽\n`;
+            summaryText += `👥 ОБЩИЙ ФОТ КОМАНДЫ: ${totalAllFot.toLocaleString('ru-RU')} ₽\n`;
+            summaryText += `═════════════════════════════\n`;
+            summaryText += `          КОНЕЦ ЧЕКА          `;
 
             if (navigator.share) {
                 try {
-                    await navigator.share({ title: 'Сводка по всем проектам', text: summaryText });
+                    await navigator.share({ title: 'Финансовый чек • Сводка проектов', text: summaryText });
                 } catch (err) {}
             } else {
                 navigator.clipboard.writeText(summaryText);
-                alert('Общая сводка по всем проектам скопирована в буфер обмена!');
+                alert('Сводка в виде чека скопирована в буфер обмена!');
             }
         });
     }
