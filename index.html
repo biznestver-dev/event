@@ -376,6 +376,21 @@
                 <input type="text" id="new-project-contractor" placeholder="Контрагент (Агентство/Клиент)" class="w-full bg-gray-950 text-white text-sm rounded-xl p-3 outline-none border border-gray-700 block transition-colors focus:border-blue-500">
                 
                 <div class="flex flex-col gap-2 bg-gray-800/30 p-2 rounded-2xl border border-gray-700/50">
+                    <!-- Быстрые площадки -->
+                    <div class="mb-1">
+                        <div class="text-[9px] text-gray-400 font-bold uppercase mb-1.5 px-1">Быстрый выбор площадки:</div>
+                        <div class="flex flex-wrap gap-1.5 max-h-28 overflow-y-auto hidden-scrollbar pr-1" id="preset-venues-container">
+                            <button type="button" class="venue-tag bg-gray-900 hover:bg-blue-900/40 text-blue-300 border border-blue-500/30 text-[10px] font-semibold py-1 px-2.5 rounded-lg transition-all" data-address="Москва, Кремль / Манеж" data-metro="м. Охотный ряд / Библиотека им. Ленина">Кремль</button>
+                            <button type="button" class="venue-tag bg-gray-900 hover:bg-blue-900/40 text-blue-300 border border-blue-500/30 text-[10px] font-semibold py-1 px-2.5 rounded-lg transition-all" data-address="Москва, Сапожковская площадь, 2" data-metro="м. Охотный ряд / Александровский сад">Сапожковская пл.</button>
+                            <button type="button" class="venue-tag bg-gray-900 hover:bg-blue-900/40 text-blue-300 border border-blue-500/30 text-[10px] font-semibold py-1 px-2.5 rounded-lg transition-all" data-address="Москва, КЗ Москва" data-metro="м. Технопарк / ЗиЛ">КЗ Москва</button>
+                            <button type="button" class="venue-tag bg-gray-900 hover:bg-blue-900/40 text-blue-300 border border-blue-500/30 text-[10px] font-semibold py-1 px-2.5 rounded-lg transition-all" data-address="Москва, Остров Мечты" data-metro="м. Технопарк">Остров Мечты</button>
+                            <button type="button" class="venue-tag bg-gray-900 hover:bg-blue-900/40 text-blue-300 border border-blue-500/30 text-[10px] font-semibold py-1 px-2.5 rounded-lg transition-all" data-address="Москва, ЦСКА Арена" data-metro="м. Автозаводская / ЗиЛ">ЦСКА Арена</button>
+                            <button type="button" class="venue-tag bg-gray-900 hover:bg-blue-900/40 text-blue-300 border border-blue-500/30 text-[10px] font-semibold py-1 px-2.5 rounded-lg transition-all" data-address="Москва, ВТБ Арена" data-metro="м. Динамо / Петровский парк">ВТБ Арена</button>
+                            <button type="button" class="venue-tag bg-gray-900 hover:bg-blue-900/40 text-blue-300 border border-blue-500/30 text-[10px] font-semibold py-1 px-2.5 rounded-lg transition-all" data-address="Москва, Ленинградский проспект, 39с1" data-metro="м. Динамо / ЦСКА">Мегаспорт</button>
+                            <button type="button" class="venue-tag bg-gray-900 hover:bg-blue-900/40 text-blue-300 border border-blue-500/30 text-[10px] font-semibold py-1 px-2.5 rounded-lg transition-all" data-address="Москва, Лужнецкая набережная, 24" data-metro="м. Спортивная / Лужники">Лужники</button>
+                        </div>
+                    </div>
+
                     <div class="flex gap-2">
                         <div class="relative flex-1">
                             <span class="absolute left-3 top-3 text-gray-400"><i data-lucide="map-pin" class="w-4 h-4"></i></span>
