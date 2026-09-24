@@ -74,7 +74,6 @@
         
         .date-icon:active { transform: scale(0.9); }
 
-        /* Теплый голубой цвет и анимации свечения */
         @keyframes skyWarmGlow {
             0% { border-color: rgba(56, 189, 248, 0.7); box-shadow: 0 0 22px rgba(56, 189, 248, 0.3), inset 0 2px 10px rgba(255, 255, 255, 0.15); }
             50% { border-color: rgba(125, 211, 252, 0.95); box-shadow: 0 0 32px rgba(56, 189, 248, 0.55), inset 0 2px 12px rgba(255, 255, 255, 0.25); }
@@ -113,7 +112,7 @@
             border-radius: 1.5rem;
         }
 
-        #sky-canvas {
+        .sky-canvas {
             position: absolute;
             inset: 0;
             width: 100%;
@@ -344,7 +343,7 @@
                         <div class="flex flex-wrap gap-1.5 max-h-28 overflow-y-auto hidden-scrollbar pr-1" id="preset-venues-container">
                             <button type="button" class="venue-tag bg-gray-900 hover:bg-sky-900/40 text-sky-300 border border-sky-500/30 text-[10px] font-semibold py-1 px-2.5 rounded-lg transition-all" data-address="Москва, Кремль / Манеж" data-metro="м. Охотный ряд / Библиотека им. Ленина">Кремль</button>
                             <button type="button" class="venue-tag bg-gray-900 hover:bg-sky-900/40 text-sky-300 border border-sky-500/30 text-[10px] font-semibold py-1 px-2.5 rounded-lg transition-all" data-address="Москва, Сапожковская площадь, 2" data-metro="м. Охотный ряд / Александровский сад">Сапожковская пл.</button>
-                            <button type="button" class="venue-tag bg-gray-900 hover:bg-sky-900/40 text-sky-300 border border-sky-500/30 text-[10px] font-semibold py-1 px-2.5 rounded-lg transition-all" data-address="Москва, КЗ Москва" data-metro="м. Технопарк / ЗиЛ">КЗ Москва</button>
+                            <button type="button" class="venue-tag bg-gray-900 hover:bg-sky-900/40 text-sky-300 border border-sky-500/30 text-[10px] font-semibold py-1 px-2.5 rounded-lg transition-all" data-address="Москва, Центр гимнастики Ирины Винер" data-metro="м. Лужники / Спортивная">Центр гимнастики Ирины Винер</button>
                             <button type="button" class="venue-tag bg-gray-900 hover:bg-sky-900/40 text-sky-300 border border-sky-500/30 text-[10px] font-semibold py-1 px-2.5 rounded-lg transition-all" data-address="Москва, Остров Мечты" data-metro="м. Технопарк">Остров Мечты</button>
                             <button type="button" class="venue-tag bg-gray-900 hover:bg-sky-900/40 text-sky-300 border border-sky-500/30 text-[10px] font-semibold py-1 px-2.5 rounded-lg transition-all" data-address="Москва, ЦСКА Арена" data-metro="м. Автозаводская / ЗиЛ">ЦСКА Арена</button>
                             <button type="button" class="venue-tag bg-gray-900 hover:bg-sky-900/40 text-sky-300 border border-sky-500/30 text-[10px] font-semibold py-1 px-2.5 rounded-lg transition-all" data-address="Москва, ВТБ Арена" data-metro="м. Динамо / Петровский парк">ВТБ Арена</button>
